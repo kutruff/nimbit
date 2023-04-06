@@ -18,13 +18,13 @@
     "type-check": "turbo type-check"
   },
   "dependencies": {
-    "@kutruff-planner/eslint-config": "^0.1.0",
     "@ianvs/prettier-plugin-sort-imports": "^3.7.2",
+    "@kutruff-planner/eslint-config": "^0.1.0",
     "@manypkg/cli": "^0.20.0",
     "@types/prettier": "^2.7.2",
     "eslint": "^8.37.0",
     "prettier": "^2.8.7",
-    "prettier-plugin-tailwindcss": "^0.2.6",
+    "prettier-plugin-tailwindcss": "^0.2.7",
     "turbo": "^1.8.8",
     "typescript": "^5.0.3"
   }
