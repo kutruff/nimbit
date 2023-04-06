@@ -1,5 +1,5 @@
 {
-  "name": "create-t3-turbo",
+  "name": "kutruff-planner",
   "private": true,
   "engines": {
     "node": ">=v18.15.0"
