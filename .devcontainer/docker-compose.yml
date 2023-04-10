@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -30,7 +30,7 @@ services:
 
   db:
     image: postgres:latest
-    restart: unless-stopped
+    # restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
