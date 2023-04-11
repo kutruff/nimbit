@@ -1,5 +1,4 @@
-packages:
-  - apps/expo
+packages:  
   - apps/nextjs
   - packages/api
   - packages/auth
