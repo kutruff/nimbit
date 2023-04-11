@@ -10,6 +10,26 @@
       "inputs": ["prisma/schema.prisma"],
       "cache": false
     },
+    "db:migrate-dev": {
+      "inputs": ["prisma/schema.prisma"],
+      "cache": false
+    },
+    "db:migrate": {
+      "inputs": ["prisma/schema.prisma"],
+      "cache": false
+    },
+    "db:seed": {
+      "inputs": ["prisma/schema.prisma"],
+      "cache": false
+    },
+    "db:reset": {
+      "inputs": ["prisma/schema.prisma"],
+      "cache": false
+    },
+    "dx:db": {
+      "inputs": ["prisma/schema.prisma"],
+      "cache": false
+    },
     "dev": {
       "persistent": true,
       "cache": false

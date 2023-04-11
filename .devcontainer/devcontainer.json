@@ -31,7 +31,9 @@
 		"redhat.vscode-yaml",
 		"mtxr.sqltools",
 		"mtxr.sqltools-driver-pg",
-		"ckolkman.vscode-postgres"
+		"ckolkman.vscode-postgres",
+		"GitHub.copilot",
+		"GitHub.copilot-labs"
 	],
       "settings": {
         "sqltools.connections": [
