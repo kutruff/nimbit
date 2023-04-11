@@ -8,11 +8,11 @@
     "clean": "rm -rf .turbo node_modules",
     "db:generate": "pnpm with-env prisma generate",
     "db:push": "pnpm with-env prisma db push --skip-generate",
+    "db:push-reset": "pnpm with-env prisma db push --force-reset && pnpm db:seed",
     "db:migrate-dev": "pnpm with-env prisma migrate dev",
     "db:migrate": "pnpm with-env prisma migrate deploy",
     "db:seed": "pnpm with-env prisma db seed",
     "db:reset": "pnpm with-env prisma migrate reset",
-    "dx:db": "pnpm with-env prisma migrate dev reset && pnpm db:seed",
     "dev": "pnpm with-env prisma studio --port 5556",
     "with-env": "dotenv -e ../../.env --"
   },

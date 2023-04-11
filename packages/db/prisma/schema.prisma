@@ -11,6 +11,7 @@ datasource db {
 }
 
 model Post {
+    //TODO: investigate client-side id generation
     id      String @id @default(cuid())
     title   String
     content String
@@ -19,10 +20,7 @@ model Post {
 }
 
 // NextAuth.js Models
-// NOTE: When using postgresql, mysql or sqlserver, 
-// uncomment the @db.Text annotations below
-// @see https://next-auth.js.org/schemas/models
-model Account {
+model Account {    
     id                String  @id @default(cuid())
     userId            String
     type              String
