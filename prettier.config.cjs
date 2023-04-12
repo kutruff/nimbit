@@ -15,6 +15,7 @@ const config = {
   plugins: [
     "@ianvs/prettier-plugin-sort-imports",
     "prettier-plugin-tailwindcss",
+    "prettier-plugin-prisma",
   ],
   tailwindConfig: "./packages/config/tailwind",
   importOrder: [
