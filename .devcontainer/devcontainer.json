@@ -33,7 +33,8 @@
 		"mtxr.sqltools-driver-pg",
 		"ckolkman.vscode-postgres",
 		"GitHub.copilot",
-		"GitHub.copilot-labs"
+		"GitHub.copilot-labs",
+		"netcorext.uuid-generator"
 	],
       "settings": {
         "sqltools.connections": [

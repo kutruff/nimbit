@@ -2,64 +2,175 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Post {
-    //TODO: investigate client-side id generation
-    id      String @id @default(cuid())
-    title   String
-    content String
-    note String
-    secondNote String @default("")
+  //TODO: investigate client-side id generation
+  id         String @id @default(cuid())
+  title      String
+  content    String
+  note       String
+  secondNote String @default("")
+}
+
+model Experience {
+  id               String           @id @default(cuid())
+  title            String
+  description      String
+  schedules        Schedule[]
+  itineraryEntries ItineraryEntry[]
+  restaurant       Restaurant?
+  ride             Ride?
+  Event            Event?
+}
+
+// Use db-migrate with sql files.
+// Use slonik with zod types.
+//// JSON aggregation of hierarchies 
+// WITH 
+// itineraries AS (
+// 	SELECT *
+// 	FROM "Itinerary" it	
+//  	WHERE id='7b2a5c02-b3b1-47c9-ab22-632ebb01c512'		
+// -- 	LIMIT 100
+// ),
+// entries AS (
+// 	SELECT DISTINCT ON (ie.id) ie.*
+// 	FROM "ItineraryEntry" ie	
+//     JOIN itineraries it 
+//     ON it.id = ie."itineraryId"	
+// ),
+// itinerary_to_entries AS (
+// 	SELECT ie."itineraryId" itinerary_id, jsonb_agg(ie.id) entries
+// 	FROM entries ie
+//     GROUP BY ie."itineraryId"	 
+// ),
+// experiences AS (
+// 	SELECT DISTINCT ON (e.id) e.* 
+// 	FROM "Experience" e
+// 	JOIN entries ie
+// 	ON e.id = ie."experienceId"
+// ),
+// experience_to_entries AS (
+// 	SELECT ie."experienceId" experience_id, jsonb_agg(ie.id) entries
+// 	FROM entries ie
+// 	GROUP BY ie."experienceId"
+// )
+// SELECT
+//    (SELECT jsonb_agg(itinerary_to_entries) itinerary_to_entries FROM itinerary_to_entries), 
+//    (SELECT jsonb_agg(experience_to_entries) experience_to_entries FROM experience_to_entries), 
+//    (SELECT jsonb_agg(itineraries) itineraries FROM itineraries), 
+//    (SELECT jsonb_agg(entries) entries FROM entries),
+//    (SELECT jsonb_agg(experiences) experiences FROM experiences);
+
+model Ride {
+  id            String     @id @default(cuid())
+  minimumHeight Int
+  experienceId  String     @unique
+  experience    Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+}
+
+model Restaurant {
+  id            String     @id @default(cuid())
+  cuisine       String
+  servesAlcohol Boolean
+  experienceId  String     @unique
+  experience    Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+}
+
+model Itinerary {
+  id               String           @id @default(cuid())
+  title            String
+  description      String
+  itineraryEntries ItineraryEntry[]
+}
+
+model ItineraryEntry {
+  id           String      @id @default(cuid())
+  startTime    DateTime
+  endTime      DateTime
+  notes        String?
+  itineraryId  String?
+  itinerary    Itinerary?  @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  experienceId String?
+  experience   Experience? @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([itineraryId])
+  @@index([experienceId])
+}
+
+model Event {
+  id              String     @id @default(cuid())
+  requiresTickets Boolean
+  experienceId    String     @unique
+  experience      Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+}
+
+model Trip {
+  id          String @id @default(cuid())
+  title       String
+  description String
+}
+
+model Schedule {
+  id                 String     @id @default(cuid())
+  title              String?
+  description        String?
+  startTime          DateTime
+  endTime            DateTime
+  //TODO: figure out how to represent when when something repeats 
+  repetitionInterval String
+  experienceId       String
+  experience         Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
 }
 
 // NextAuth.js Models
-model Account {    
-    id                String  @id @default(cuid())
-    userId            String
-    type              String
-    provider          String
-    providerAccountId String
-    refresh_token     String? 
-    access_token      String? 
-    expires_at        Int?
-    token_type        String?
-    scope             String?
-    id_token          String? 
-    session_state     String?
-    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([provider, providerAccountId])
+  @@unique([provider, providerAccountId])
 }
 
 model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
 }
 
 model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
-    @@unique([identifier, token])
+  @@unique([identifier, token])
 }
