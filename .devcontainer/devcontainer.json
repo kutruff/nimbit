@@ -20,22 +20,22 @@
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-		"esbenp.prettier-vscode",
-		"dbaeumer.vscode-eslint",
-		"bradlc.vscode-tailwindcss",
-		"Prisma.prisma",
-		"ms-azuretools.vscode-docker",
-		"GitHub.vscode-pull-request-github",
-		"eamodio.gitlens",
-		"pflannery.vscode-versionlens",
-		"redhat.vscode-yaml",
-		"mtxr.sqltools",
-		"mtxr.sqltools-driver-pg",
-		"ckolkman.vscode-postgres",
-		"GitHub.copilot",
-		"GitHub.copilot-labs",
-		"netcorext.uuid-generator"
-	],
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "Prisma.prisma",
+        "ms-azuretools.vscode-docker",
+        "GitHub.vscode-pull-request-github",
+        "eamodio.gitlens",
+        "pflannery.vscode-versionlens",
+        "redhat.vscode-yaml",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "ckolkman.vscode-postgres",
+        "GitHub.copilot",
+        "GitHub.copilot-labs",
+        "netcorext.uuid-generator"
+      ],
       "settings": {
         "sqltools.connections": [
           {
@@ -65,6 +65,6 @@
     "PGPASSWORD": "postgres"
   },
   "features": {
-    "docker-from-docker": "latest"
+    "docker-in-docker": "latest"
   }
 }
