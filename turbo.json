@@ -54,6 +54,10 @@
   "globalEnv": [
     "CI",
     "DATABASE_URL",
+    "PGDBNAME",
+    "PGHOST",
+    "PGUSER",
+    "PGPASSWORD",
     "DISCORD_CLIENT_ID",
     "DISCORD_CLIENT_SECRET",
     "EXPO_ROUTER_APP_ROOT",
