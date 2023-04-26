@@ -1,47 +1,47 @@
-import type { Knex } from "knex";
+import type { Knex } from 'knex';
 
 // Update with your config settings.
 
 const config: { [key: string]: Knex.Config } = {
   development: {
-    client: "postgresql",
+    client: 'postgresql',
     connection: {
-      database: "knexplanner",
-      host: "localhost",
+      database: 'knexplanner',
+      host: 'localhost',
       user: process.env.PGUSER,
       password: process.env.PGPASSWORD,
     },
   },
 
   staging: {
-    client: "postgresql",
+    client: 'postgresql',
     connection: {
-      database: "my_db",
-      user: "username",
-      password: "password",
+      database: 'my_db',
+      user: 'username',
+      password: 'password',
     },
     pool: {
       min: 2,
       max: 10,
     },
     migrations: {
-      tableName: "knex_migrations",
+      tableName: 'knex_migrations',
     },
   },
 
   production: {
-    client: "postgresql",
+    client: 'postgresql',
     connection: {
-      database: "my_db",
-      user: "username",
-      password: "password",
+      database: 'my_db',
+      user: 'username',
+      password: 'password',
     },
     pool: {
       min: 2,
       max: 10,
     },
     migrations: {
-      tableName: "knex_migrations",
+      tableName: 'knex_migrations',
     },
   },
 };
