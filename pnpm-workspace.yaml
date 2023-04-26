@@ -3,5 +3,6 @@ packages:
   - packages/api
   - packages/auth
   - packages/db
+  - packages/slonikdb
   - packages/knexdb
   - packages/config/*

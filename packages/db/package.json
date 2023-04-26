@@ -13,7 +13,7 @@
     "db:migrate": "pnpm with-env prisma migrate deploy",
     "db:seed": "pnpm with-env prisma db seed",
     "db:reset": "pnpm with-env prisma migrate reset",
-    "dev": "pnpm with-env prisma studio --port 5556",
+    "disabled-dev": "pnpm with-env prisma studio --port 5556",
     "with-env": "dotenv -e ../../.env --"
   },
   "prisma": {
