@@ -14,10 +14,10 @@
   },
   "devDependencies": {
     "dotenv-cli": "^7.2.1",
-    "tsx": "^3.12.6",
-    "typescript": "^5.0.4",
     "knex": "^2.4.2",
-    "pg": "^8.10.0"
+    "pg": "^8.10.0",
+    "tsx": "^3.12.6",
+    "typescript": "^5.0.4"
   },
   "dependencies": {}
 }
