@@ -10,14 +10,14 @@ const config = {
       './tsconfig.json',
       './apps/*/tsconfig.json',
       './packages/*/tsconfig.json',
-      './packages/*/tsconfig.eslint.json',
-    ],
+      './packages/*/tsconfig.eslint.json'
+    ]
   },
   settings: {
     next: {
-      rootDir: ['apps/nextjs'],
-    },
-  },
+      rootDir: ['apps/nextjs']
+    }
+  }
 };
 
 module.exports = config;

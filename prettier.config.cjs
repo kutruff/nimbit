@@ -9,7 +9,7 @@ const config = {
   singleQuote: true,
   jsxSingleQuote: false,
   semi: true,
-  trailingComma: 'all',
+  trailingComma: 'none',
   tabWidth: 2,
   // pluginSearchDirs: false,
   plugins: ['@ianvs/prettier-plugin-sort-imports', 'prettier-plugin-tailwindcss', 'prettier-plugin-prisma'],
@@ -26,14 +26,14 @@ const config = {
     '^~/components/(.*)$',
     '^~/styles/(.*)$',
     '^~/(.*)$',
-    '^[./]',
+    '^[./]'
   ],
   importOrderSeparation: false,
   importOrderSortSpecifiers: true,
   importOrderBuiltinModulesToTop: true,
   importOrderParserPlugins: ['typescript', 'jsx', 'decorators-legacy'],
   importOrderMergeDuplicateImports: true,
-  importOrderCombineTypeAndValueImports: true,
+  importOrderCombineTypeAndValueImports: true
 };
 
 module.exports = config;

@@ -5,7 +5,7 @@ const config = {
     'turbo',
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    'prettier',
+    'prettier'
   ],
   rules: {
     '@next/next/no-html-link-for-pages': 'off',
@@ -15,16 +15,13 @@ const config = {
       {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_',
-      },
+        caughtErrorsIgnorePattern: '^_'
+      }
     ],
-    '@typescript-eslint/consistent-type-imports': [
-      'error',
-      { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
-    ],
+    '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }]
   },
   ignorePatterns: ['**/*.config.js', '**/*.config.cjs', 'packages/config/**'],
-  reportUnusedDisableDirectives: true,
+  reportUnusedDisableDirectives: true
 };
 
 module.exports = config;
