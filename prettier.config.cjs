@@ -4,7 +4,7 @@
 
 /** @type { PrettierConfig | SortImportsConfig | TailwindConfig } */
 const config = {
-  arrowParens: 'always',
+  arrowParens: 'avoid',
   printWidth: 120,
   singleQuote: true,
   jsxSingleQuote: false,
