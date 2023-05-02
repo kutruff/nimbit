@@ -55,6 +55,9 @@ importers:
       '@kutruff-planner/knexdb':
         specifier: ^0.1.0
         version: link:../../packages/knexdb
+      '@kutruff-planner/slonikdb':
+        specifier: ^0.1.0
+        version: link:../../packages/slonikdb
       '@kutruff-planner/tailwind-config':
         specifier: ^0.1.0
         version: link:../../packages/config/tailwind
@@ -174,6 +177,9 @@ importers:
       '@kutruff-planner/knexdb':
         specifier: ^0.1.0
         version: link:../knexdb
+      '@kutruff-planner/slonikdb':
+        specifier: ^0.1.0
+        version: link:../slonikdb
       '@next-auth/prisma-adapter':
         specifier: ^1.0.5
         version: 1.0.5(@prisma/client@4.12.0)(next-auth@4.22.0)
