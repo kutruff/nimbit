@@ -2,7 +2,6 @@ packages:
   - apps/nextjs
   - packages/api
   - packages/auth
-  - packages/db
+  - packages/schema
   - packages/slonikdb
-  - packages/knexdb
   - packages/config/*
