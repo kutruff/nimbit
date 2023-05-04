@@ -22,9 +22,6 @@ importers:
       prettier:
         specifier: ^2.8.8
         version: 2.8.8
-      prettier-plugin-prisma:
-        specifier: ^4.13.0
-        version: 4.13.0(prettier@2.8.8)
       prettier-plugin-tailwindcss:
         specifier: ^0.2.8
         version: 0.2.8(@ianvs/prettier-plugin-sort-imports@3.7.2)(prettier@2.8.8)
@@ -73,6 +70,9 @@ importers:
       '@trpc/server':
         specifier: ^10.25.0
         version: 10.25.0
+      clsx:
+        specifier: ^1.2.1
+        version: 1.2.1
       next:
         specifier: ^13.3.4
         version: 13.3.4(@babel/core@7.21.8)(react-dom@18.2.0)(react@18.2.0)
@@ -227,6 +227,9 @@ importers:
 
   packages/config/tailwind:
     devDependencies:
+      '@tailwindcss/forms':
+        specifier: ^0.5.3
+        version: 0.5.3(tailwindcss@3.3.2)
       autoprefixer:
         specifier: ^10.4.14
         version: 10.4.14(postcss@8.4.23)
@@ -1017,10 +1020,6 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@prisma/prisma-fmt-wasm@4.13.0-52.integration-mobc-upstream-d100a9299fcb9cffb064301998e9a94ce2722c49:
-    resolution: {integrity: sha512-12dZRXW36s3hRHLeD8c4S3o1ZZcnFt1NxhBrSlYepnMxatfkj5S8aIDP/G+zzUqucB//kGZZWNX3eUcmxMsEqw==}
-    dev: false
-
   /@rushstack/eslint-patch@1.2.0:
     resolution: {integrity: sha512-sXo/qW2/pAcmT43VoRKOJbDOfV3cYpq3szSVfIThQXNt+E4DfKj361vaAt3c88U5tPUxzEswam7GW48PJqtKAg==}
     dev: false
@@ -1042,6 +1041,15 @@ packages:
     dependencies:
       defer-to-connect: 1.1.3
     dev: false
+
+  /@tailwindcss/forms@0.5.3(tailwindcss@3.3.2):
+    resolution: {integrity: sha512-y5mb86JUoiUgBjY/o6FJSFZSEttfb3Q5gllE4xoKjAAD+vBrnIhE4dViwUuow3va8mpH4s9jyUbUbrRGoRdc2Q==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
+    dependencies:
+      mini-svg-data-uri: 1.4.4
+      tailwindcss: 3.3.2
+    dev: true
 
   /@tanstack/query-core@4.29.5:
     resolution: {integrity: sha512-xXIiyQ/4r9KfaJ3k6kejqcaqFXXBTzN2aOJ5H1J6aTJE9hl/nbgAdfF6oiIu0CD5xowejJEJ6bBg8TO7BN4NuQ==}
@@ -1652,6 +1660,11 @@ packages:
     resolution: {integrity: sha512-ROoL94jJH2dUVML2Y/5PEDNaSHgeOdSDicUyS7izcF63G6sTc/FTjLub4b8Il9S8S0beOfYt0TaA5qvFK+w0wA==}
     dependencies:
       mimic-response: 1.0.1
+    dev: false
+
+  /clsx@1.2.1:
+    resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
+    engines: {node: '>=6'}
     dev: false
 
   /color-convert@1.9.3:
@@ -3191,6 +3204,11 @@ packages:
     engines: {node: '>=4'}
     dev: false
 
+  /mini-svg-data-uri@1.4.4:
+    resolution: {integrity: sha512-r9deDe9p5FJUPZAk3A59wGH7Ii9YrjjWw0jmw/liSbHl2CHiyXj6FcDXDu2K3TjVAXqiJdaw3xxwlZZr9E6nHg==}
+    hasBin: true
+    dev: true
+
   /minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
     dependencies:
@@ -3832,16 +3850,6 @@ packages:
   /prepend-http@2.0.0:
     resolution: {integrity: sha512-ravE6m9Atw9Z/jjttRUZ+clIXogdghyZAuWJ3qEzjT+jI/dL1ifAqhZeC5VHzQp1MSt1+jxKkFNemj/iO7tVUA==}
     engines: {node: '>=4'}
-    dev: false
-
-  /prettier-plugin-prisma@4.13.0(prettier@2.8.8):
-    resolution: {integrity: sha512-bnOWoQTVXM9VWBErPGE6rVgI8kCQts+DMQolg7Sj/Q0/oAlpDYOhce4ljQKf5BhJW061yrB3+CRVps6tNcUkQg==}
-    engines: {node: '>=14', npm: '>=8'}
-    peerDependencies:
-      prettier: '>=2'
-    dependencies:
-      '@prisma/prisma-fmt-wasm': 4.13.0-52.integration-mobc-upstream-d100a9299fcb9cffb064301998e9a94ce2722c49
-      prettier: 2.8.8
     dev: false
 
   /prettier-plugin-tailwindcss@0.2.8(@ianvs/prettier-plugin-sort-imports@3.7.2)(prettier@2.8.8):

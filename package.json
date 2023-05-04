@@ -29,7 +29,6 @@
     "@types/prettier": "^2.7.2",
     "eslint": "^8.39.0",
     "prettier": "^2.8.8",
-    "prettier-plugin-prisma": "^4.13.0",
     "prettier-plugin-tailwindcss": "^0.2.8",
     "turbo": "^1.9.3",
     "typescript": "^5.0.4"
