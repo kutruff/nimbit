@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   app:
@@ -11,7 +11,7 @@ services:
         # Use -bullseye variants on local arm64/Apple Silicon.
         VARIANT: 18-bullseye
         # Optional Node.js version to install
-        NODE_VERSION: "lts/*"
+        NODE_VERSION: 'lts/*'
 
     volumes:
       - ../..:/workspaces:cached
@@ -38,7 +38,7 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "8080:80"
+      - '8080:80'
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
@@ -49,7 +49,7 @@ services:
       - pgAdmin-data:/var/lib/pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: foo@foo.com
-      PGADMIN_DEFAULT_PASSWORD: "1234"
+      PGADMIN_DEFAULT_PASSWORD: '1234'
 
 volumes:
   postgres-data: {}

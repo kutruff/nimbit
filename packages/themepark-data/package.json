@@ -1,0 +1,27 @@
+{
+  "name": "@kutruff-planner/themepark-data",
+  "version": "0.1.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit",
+    "dev": "tsx index.ts"
+  },
+  "dependencies": {
+    "@paralleldrive/cuid2": "2.2.0",
+    "node-fetch": "^3.3.1",
+    "themeparks": "^5.1.53",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@kutruff-planner/eslint-config": "^0.1.0",
+    "eslint": "^8.39.0",
+    "tsx": "^3.12.7",
+    "typescript": "^5.0.4"
+  }
+}
