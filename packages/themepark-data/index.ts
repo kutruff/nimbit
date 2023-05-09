@@ -3,7 +3,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
-import Themeparks from 'themeparks';
+// import Themeparks from 'themeparks';
 
 // configure where SQLite DB sits
 // optional - will be created in node working directory if not configured

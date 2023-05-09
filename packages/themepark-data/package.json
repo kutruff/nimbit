@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit",
-    "dev": "tsx index.ts"
+    "load-themepark-data": "tsx index.ts"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "2.2.0",
