@@ -4,5 +4,6 @@ packages:
   - packages/auth
   - packages/schema
   - packages/slonikdb
+  - packages/supabasedb
   - packages/themeparks-data
   - packages/config/*
