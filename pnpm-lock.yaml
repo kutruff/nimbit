@@ -293,7 +293,7 @@ importers:
         specifier: ^1.61.5
         version: 1.61.5
       tsx:
-        specifier: ^3.12.6
+        specifier: ^3.12.7
         version: 3.12.7
       typescript:
         specifier: ^5.0.4
@@ -304,6 +304,9 @@ importers:
       '@kutruff-planner/schema':
         specifier: ^0.1.0
         version: link:../schema
+      '@kutruff-planner/slonikdb':
+        specifier: ^0.1.0
+        version: link:../slonikdb
       '@paralleldrive/cuid2':
         specifier: 2.2.0
         version: 2.2.0
@@ -320,6 +323,9 @@ importers:
       '@types/node-fetch':
         specifier: ^2.6.4
         version: 2.6.4
+      dotenv-cli:
+        specifier: ^7.2.1
+        version: 7.2.1
       eslint:
         specifier: ^8.39.0
         version: 8.39.0
