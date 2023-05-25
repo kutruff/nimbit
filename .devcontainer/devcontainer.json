@@ -45,7 +45,7 @@
             "driver": "PostgreSQL",
             "previewLimit": 50,
             "server": "localhost",
-            "port": 5432,
+            "port": 54322,
             "database": "postgres",
             "username": "postgres",
             "password": "postgres"
@@ -63,7 +63,7 @@
   "remoteUser": "node",
   "remoteEnv": {
     "PGHOST": "localhost",
-    "PGPORT": "5432",
+    "PGPORT": "54322",
     "PGUSER": "postgres",
     "PGPASSWORD": "postgres"
   },
