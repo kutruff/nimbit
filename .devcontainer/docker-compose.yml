@@ -16,6 +16,7 @@ services:
     volumes:
       - ../..:/workspaces:cached
       - aws-credentials:/home/node/.aws
+      - project-data:/data
 
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
@@ -76,6 +77,7 @@ services:
 volumes:
   aws-credentials: {}
   postgres-data: {}
+  project-data: {}
   pgAdmin-data: {}
   pgAdmin-user-data: {}
   grafana: {}

@@ -66,8 +66,7 @@
     "PGPORT": "54322",
     "PGUSER": "postgres",
     "PGPASSWORD": "postgres"
-  },
-  "mounts": ["source=${localEnv:HOME}${localEnv:USERPROFILE}/devhome,target=/mnt/devhome,type=bind,consistency=cached"],
+  },  
   "features": {
     "docker-from-docker": "latest"
   }

@@ -9,7 +9,9 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends postgresql-client \
     && bash /tmp/user-devcontainer-scripts/install-aws-cli.sh \
     && mkdir -p /home/node/.aws \
-    && chown node:node /home/node/.aws
+    && chown node:node /home/node/.aws \
+    && mkdir -p /data \
+    && chown -R node:node /data
 
 # [Optional] Uncomment if you want to install an additional version of node using nvm
 # ARG EXTRA_NODE_VERSION=10
