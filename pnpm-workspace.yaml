@@ -2,8 +2,10 @@ packages:
   - apps/nextjs
   - packages/api
   - packages/auth
+  - packages/jest-presets
   - packages/schema
   - packages/slonikdb
   - packages/supabasedb
   - packages/themeparks-data
+  - packages/typedecl
   - packages/config/*

@@ -1,0 +1,36 @@
+{
+  "name": "@kutruff-planner/typedecl",
+  "version": "0.1.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit",
+    "test": "jest --detectOpenHandles",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@kutruff-planner/schema": "^0.1.0",
+    "@kutruff-planner/slonikdb": "^0.1.0",
+    "@paralleldrive/cuid2": "2.2.0",
+    "date-fns": "^2.30.0",
+    "date-fns-tz": "^2.0.0",
+    "node-fetch": "^3.3.1",
+    "zod": "^3.21.4"
+  },
+  "jest": {
+    "preset": "jest-presets/jest/node"
+  },
+  "devDependencies": {
+    "@kutruff-planner/eslint-config": "^0.1.0",
+    "@types/node-fetch": "^2.6.4",
+    "dotenv-cli": "^7.2.1",
+    "eslint": "^8.39.0",
+    "jest-presets": "workspace:*",
+    "tsx": "^3.12.7",
+    "typescript": "^5.1.3"
+  }
+}
