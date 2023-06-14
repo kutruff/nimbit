@@ -7,7 +7,7 @@ describe('Type equality', () => {
       [t.str, t.bool, false],
       [t.str, { kind: 'string' } as t.Type<'string'>, true],
       [t.str, { kind: 'boolean' } as t.Type<'boolean'>, false],
-      [t.array(t.bigint), { kind: 'array', elementType: { kind: 'bigint' } } as t.ArrayType<typeof t.bigint>, true],
+      [t.array(t.bgint), { kind: 'array', elementType: { kind: 'bigint' } } as t.ArrayType<typeof t.bgint>, true],
       [
         t.array(t.literal('fooLiteral')),
         { kind: 'array', elementType: { kind: 'literal', literal: 'fooLiteral' } } as t.ArrayType<
@@ -21,14 +21,14 @@ describe('Type equality', () => {
         t.union({ kind: 'boolean' } as t.Type<'boolean'>, { kind: 'string' } as t.Type<'string'>),
         true
       ],
-      [t.union(t.str, t.bool, t.bigint), t.union(t.bool, t.str), false],
+      [t.union(t.str, t.bool, t.bgint), t.union(t.bool, t.str), false],
       [t.obj({ p0: t.str }), t.obj({ p0: t.optProp(t.str) }), false],
       [t.obj({ p0: t.str }), t.obj({ p0: t.str }), true],
       [t.obj({ p0: t.str }), t.obj({ p1: t.str }), false],
       [t.obj({ p0: t.str }), t.obj({ p0: t.bool }), false],
       [t.obj({ p0: t.str }), t.obj({ p0: t.str, p1: t.undef }), false], // Interesting case.  An object with an undefined property is wider than the other type
       [t.obj({ p0: t.str, p1: t.obj({ n: t.num }) }), t.obj({ p0: t.str, p1: t.obj({ n: t.num }) }), true]
-    ])('areEqual(%s, %s)', (a: t.Types, b: t.Types, expected: boolean) => {
+    ])('areEqual(%s, %s)', (a: t.Type, b: t.Type, expected: boolean) => {
       expect(t.areEqual(a, b)).toEqual(expected);
     });
 
@@ -65,7 +65,7 @@ describe('Type equality', () => {
         const SelfReferencingA = t.declareObj<SelfReferencingA>();
         t.defineDeclaration(SelfReferencingA, {
           child: SelfReferencingA,
-          prop: t.bigint
+          prop: t.bgint
         });
 
         interface SelfReferencingB {
@@ -76,7 +76,7 @@ describe('Type equality', () => {
         const SelfReferencingB = t.declareObj<SelfReferencingB>();
         t.defineDeclaration(SelfReferencingB, {
           child: SelfReferencingB,
-          prop: t.bigint
+          prop: t.bgint
         });
 
         expect(t.areEqual(SelfReferencingA, SelfReferencingA)).toEqual(true);

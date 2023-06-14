@@ -8,7 +8,7 @@ describe('Unions of types', () => {
       const Target = t.union(t.str, t.bool);
       type Target = t.ToTsType<typeof Target>;
 
-      type ExpectedDefinitionType = t.UnionType<t.Type<'string'> | t.Type<'boolean'>>;
+      type ExpectedDefinitionType = t.UnionType<t.Type<'string', string> | t.Type<'boolean', boolean>>;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
       expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
 
@@ -22,7 +22,7 @@ describe('Unions of types', () => {
       const Target = t.union(t.bool);
       type Target = t.ToTsType<typeof Target>;
 
-      type ExpectedDefinitionType = t.Type<'boolean'>;
+      type ExpectedDefinitionType = t.Type<'boolean', boolean>;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
       expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
 
@@ -54,11 +54,11 @@ describe('Unions of types', () => {
 
     describe('union of unions', () => {
       it('combines peer unions', () => {
-        const Target = t.union(t.union(t.str, t.num), t.union(t.bool, t.bigint));
+        const Target = t.union(t.union(t.str, t.num), t.union(t.bool, t.bgint));
         type Target = t.ToTsType<typeof Target>;
 
         type ExpectedDefinitionType = t.UnionType<
-          t.Type<'string'> | t.Type<'number'> | t.Type<'boolean'> | t.Type<'bigint'>
+          t.Type<'string', string> | t.Type<'number', number> | t.Type<'boolean', boolean> | t.Type<'bigint', bigint>
         >;
         expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
         expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
@@ -68,15 +68,18 @@ describe('Unions of types', () => {
         expect(Target.memberTypes).toContain(t.str);
         expect(Target.memberTypes).toContain(t.num);
         expect(Target.memberTypes).toContain(t.bool);
-        expect(Target.memberTypes).toContain(t.bigint);
+        expect(Target.memberTypes).toContain(t.bgint);
       });
 
       describe('nested unions', () => {
         it('combines depth 1 unions', () => {
-          const Target = t.union(t.str, t.union(t.bool, t.bigint));
+          const Target = t.union(t.str, t.union(t.bool, t.bgint));
           type Target = t.ToTsType<typeof Target>;
 
-          type ExpectedDefinitionType = t.UnionType<t.Type<'string'> | t.Type<'boolean'> | t.Type<'bigint'>>;
+          type ExpectedDefinitionType = t.UnionType<
+            t.Type<'string', string> | t.Type<'boolean', boolean> | t.Type<'bigint', bigint>
+          >;
+
           expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
           expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
 
@@ -84,15 +87,15 @@ describe('Unions of types', () => {
           expect(Target.memberTypes.length).toEqual(3);
           expect(Target.memberTypes).toContain(t.str);
           expect(Target.memberTypes).toContain(t.bool);
-          expect(Target.memberTypes).toContain(t.bigint);
+          expect(Target.memberTypes).toContain(t.bgint);
         });
 
         it('combines depth 3 unions', () => {
-          const Target = t.union(t.str, t.union(t.bool, t.union(t.num, t.bigint)));
+          const Target = t.union(t.str, t.union(t.bool, t.union(t.num, t.bgint)));
           type Target = t.ToTsType<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
-            t.Type<'string'> | t.Type<'boolean'> | t.Type<'number'> | t.Type<'bigint'>
+            t.Type<'string', string> | t.Type<'boolean', boolean> | t.Type<'number', number> | t.Type<'bigint', bigint>
           >;
           expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
           expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
@@ -102,14 +105,14 @@ describe('Unions of types', () => {
           expect(Target.memberTypes).toContain(t.str);
           expect(Target.memberTypes).toContain(t.bool);
           expect(Target.memberTypes).toContain(t.num);
-          expect(Target.memberTypes).toContain(t.bigint);
+          expect(Target.memberTypes).toContain(t.bgint);
         });
 
         it('collapses duplicates to single type', () => {
           const Target = t.union(t.str, t.union(t.str, t.union(t.str)));
           type Target = t.ToTsType<typeof Target>;
 
-          type ExpectedDefinitionType = t.Type<'string'>;
+          type ExpectedDefinitionType = t.Type<'string', string>;
           expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
           expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
 
@@ -123,7 +126,7 @@ describe('Unions of types', () => {
     it('compresses duplicates', () => {
       const target = t.compressUnionMembers([t.str, t.str, t.str]);
 
-      type ExpectedDefinitionType = Array<t.Type<'string'>>;
+      type ExpectedDefinitionType = Array<t.Type<'string', string>>;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
       expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
 
@@ -140,11 +143,11 @@ describe('Unions of types', () => {
         subUnion0: t.union(
           t.obj({
             prop: t.str,
-            subUnion00: t.union(t.bool, t.union(t.num, t.bigint))
+            subUnion00: t.union(t.bool, t.union(t.num, t.bgint))
           }),
           t.obj({
             prop: t.str,
-            subUnion01: t.union(t.bool, t.union(t.num, t.bigint))
+            subUnion01: t.union(t.bool, t.union(t.num, t.bgint))
           })
         )
       });

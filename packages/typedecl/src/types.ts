@@ -8,19 +8,11 @@ import {
   ReadonlyPropertyNames
 } from './generics';
 
-export interface Type<T> {
-  kind: T;
+export interface Type<TKind = unknown, T = unknown> {
+  kind: TKind;
 }
 
-export const str: Type<'string'> = { kind: 'string' };
-export const num: Type<'number'> = { kind: 'number' };
-export const bool: Type<'boolean'> = { kind: 'boolean' };
-export const bigint: Type<'bigint'> = { kind: 'bigint' };
-export const nul: Type<'null'> = { kind: 'null' };
-export const undef: Type<'undefined'> = { kind: 'undefined' };
-export const nevr: Type<'never'> = { kind: 'never' };
-
-export interface LiteralType<TLiteralValue> extends Type<'literal'> {
+export interface LiteralType<TLiteralValue> extends Type<'literal', TLiteralValue> {
   kind: 'literal';
   literal: TLiteralValue;
 }
@@ -30,22 +22,23 @@ export const literal = <T, TLiteralValue>(literalValue: Literal<T, TLiteralValue
   literal: literalValue
 });
 
-export const array = <T extends Types>(element: T): ArrayType<T> => ({
-  kind: 'array',
-  elementType: element
-});
-
-export interface ArrayType<TElement> extends Type<'array'> {
+export interface ArrayType<TElement extends Type<unknown, unknown> = Type<unknown, unknown>>
+  extends Type<'array', Array<ToTsType<TElement>>> {
   kind: 'array';
   elementType: TElement;
 }
 
-export interface UnionType<TMembers> extends Type<'union'> {
+export const array = <T extends Type<unknown, unknown>>(element: T): ArrayType<T> => ({
+  kind: 'array',
+  elementType: element
+});
+
+export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', TMembers> {
   kind: 'union';
   memberTypes: Array<TMembers>;
 }
 
-export interface ObjType<TObjectDefinition> extends Type<'object'> {
+export interface ObjType<TObjectDefinition> extends Type<'object', ToTsType<TObjectDefinition>> {
   kind: 'object';
   objectDefinition: TObjectDefinition;
 }
@@ -58,28 +51,17 @@ export type Prop<T, TOptional, TReadonly> = {
   };
 };
 
-export interface IObjectDefinition {
-  [key: string]: Prop<Types, unknown, unknown>;
+export interface ObjectDefinition {
+  [key: string]: Prop<Type<unknown, unknown>, unknown, unknown>;
 }
 
-//TODO: UnionType should be able to be UnionType<Types> but there is a depth hueristic that blows up.
-//    That means functions and types have to cast until it's fixed
-//     https://github.com/microsoft/TypeScript/issues/34933
-export type Types =
-  | Type<'string'>
-  | Type<'number'>
-  | Type<'boolean'>
-  | Type<'bigint'>
-  | Type<'null'>
-  | Type<'undefined'>
-  | Type<'never'>
-  | LiteralType<unknown>
-  | ArrayType<Types>
-  | UnionType<unknown>
-  | ObjType<IObjectDefinition>;
+//TODO: This may be old, but leaving this very important link
+// UnionType should be able to be UnionType<Types> but there is a depth hueristic that blows up.
+// That means functions and types have to cast until it's fixed
+// https://github.com/microsoft/TypeScript/issues/34933
 
-type MapPropDefinitionsToTsOptionals<T> = PickPartially<T, PropsOfType<T, Prop<unknown, true, unknown>>>;
-type MapPropDefinitionsToTsReadonly<T> = PickReadonly<T, PropsOfType<T, Prop<unknown, unknown, true>>>;
+type MapPropDefinitionsToTsOptionals<T> = PickPartially<T, PropsOfType<T, Prop<Type<unknown, unknown>, true, unknown>>>;
+type MapPropDefinitionsToTsReadonly<T> = PickReadonly<T, PropsOfType<T, Prop<Type<unknown, unknown>, unknown, true>>>;
 
 // This converts an ObjectDefintion's properties from { prop0: Prop<T, true, true> } to {readonly prop0? : Prop<T, true, true>}
 // It does this in preparation of converting the Props<> to their TypesScript types.
@@ -94,22 +76,10 @@ type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown> ? U : n
 
 export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer LiteralKind>
   ? LiteralKind
-  : TDefinition extends Type<'string'>
-  ? string
-  : TDefinition extends Type<'number'>
-  ? number
-  : TDefinition extends Type<'boolean'>
-  ? boolean
-  : TDefinition extends Type<'bigint'>
-  ? bigint
-  : TDefinition extends Type<'null'>
-  ? null
-  : TDefinition extends Type<'undefined'>
-  ? undefined
   : TDefinition extends ArrayType<infer ElementDefinition>
   ? Array<ToTsType<ElementDefinition>>
-  : TDefinition extends UnionType<infer MemberDefintions>
-  ? ToTsType<MemberDefintions>
+  : TDefinition extends UnionType<infer MemberDefinitions>
+  ? ToTsType<MemberDefinitions>
   : TDefinition extends ObjType<infer TObjectDefinition>
   ? {
       //First add optional/readonly property modifiers to the DEFINITION, and then those modifiers will just get copied over to the TsType!
@@ -117,6 +87,8 @@ export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer Litera
         TypeOfPropDefinition<MapPropDefinitionsToTsPropertyModifiers<TObjectDefinition>[P]>
       >;
     }
+  : TDefinition extends Type<unknown, infer T>
+  ? T
   : never;
 
 //Main entry to convert a TypeScript type to an ObjectDefinition.  First need to detect a typescript union and then
@@ -124,22 +96,25 @@ export type ToDefinitionType<TsType> = NotAUnion<TsType> extends never
   ? UnionType<ToDefinitionTypeDistribute<TsType>>
   : ToDefinitionTypeDistribute<TsType>;
 
+//TODO: should 'never' be part if this?
 type ToDefinitionTypeDistribute<TsType> = TsType extends Literal<string, TsType>
   ? LiteralType<TsType>
   : TsType extends Literal<number, TsType>
   ? LiteralType<TsType>
   : TsType extends string
-  ? Type<'string'>
+  ? Type<'string', string>
   : TsType extends number
-  ? Type<'number'>
+  ? Type<'number', number>
   : TsType extends boolean
-  ? Type<'boolean'>
+  ? Type<'boolean', boolean>
   : TsType extends bigint
-  ? Type<'bigint'>
+  ? Type<'bigint', bigint>
+  : TsType extends Date
+  ? Type<'date', Date>
   : TsType extends null
-  ? Type<'null'>
+  ? Type<'null', null>
   : TsType extends undefined
-  ? Type<'undefined'>
+  ? Type<'undefined', undefined>
   : TsType extends Array<infer TElementType>
   ? ArrayType<ToDefinitionType<TElementType>>
   : TsType extends object
@@ -155,12 +130,16 @@ type ToDefinitionTypeDistribute<TsType> = TsType extends Literal<string, TsType>
     }>
   : never;
 
-export type AsTypes<T> = T extends Types ? T : never;
+export type AsTypes<T> = T extends Type<unknown, unknown> ? T : never;
 
 //TODO: try to see if wrapping AsTypes is still necessary, or if that can happen higher up
-export type FlattenedUnion<T> = AsTypes<T extends UnionType<infer K> ? FlattenedUnion<K> : T>;
+export type FlattenedUnion<T extends Type<unknown, unknown>> = AsTypes<
+  T extends UnionType<infer K> ? FlattenedUnion<K> : T
+>;
 
-export type CollapseSingleMemberUnionType<T> = NotAUnion<T> extends never ? UnionType<T> : T;
+export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
+  ? UnionType<T>
+  : T;
 
 // How to prevent conditional from being distributed
 // type NoDistribute<T> = [T] extends [T] ? T : never;

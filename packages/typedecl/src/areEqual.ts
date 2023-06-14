@@ -1,6 +1,6 @@
-import { type IObjectDefinition, type ObjType, type Types } from './types';
+import { ArrayType, LiteralType, UnionType, type ObjType, type ObjectDefinition, type Type } from './types';
 
-export const areEqual = (a: Types, b: Types, comparisonCache?: Map<Types, Map<Types, boolean>>): boolean => {
+export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type, boolean>>): boolean => {
   if (a === b) return true;
 
   if (a.kind !== b.kind) return false;
@@ -25,30 +25,31 @@ export const areEqual = (a: Types, b: Types, comparisonCache?: Map<Types, Map<Ty
 
   switch (a.kind) {
     case 'literal': {
-      const bTyped = b as typeof a;
-      result = a.literal === bTyped.literal;
+      const aTyped = a as LiteralType<unknown>;
+      const bTyped = b as typeof aTyped;
+      result = aTyped.literal === bTyped.literal;
       break;
     }
     case 'array': {
-      const bTyped = b as typeof a;
-      result = areEqual(a.elementType, bTyped.elementType, comparisonCache);
+      const aTyped = a as ArrayType<Type>;
+      const bTyped = b as typeof aTyped;
+      result = areEqual(aTyped.elementType, bTyped.elementType, comparisonCache);
       break;
     }
     case 'union': {
-      const bTyped = b as typeof a;
-      if (a.memberTypes.length !== bTyped.memberTypes.length) {
+      const aTyped = a as UnionType<Type>;
+      const bTyped = b as typeof aTyped;
+
+      if (aTyped.memberTypes.length !== bTyped.memberTypes.length) {
         result = false;
         break;
       }
 
       let didFindMatchingMember = false;
-      const remaining = new Set(bTyped.memberTypes);
-
-      for (const memberA of a.memberTypes) {
+      for (const memberA of aTyped.memberTypes) {
         didFindMatchingMember = false;
         for (const memberB of bTyped.memberTypes) {
-          if (areEqual(memberA as Types, memberB as Types, comparisonCache)) {
-            remaining.delete(memberB);
+          if (areEqual(memberA as Type, memberB as Type, comparisonCache)) {
             didFindMatchingMember = true;
             break;
           }
@@ -61,14 +62,12 @@ export const areEqual = (a: Types, b: Types, comparisonCache?: Map<Types, Map<Ty
       break;
     }
     case 'object': {
-      const bTyped = b as ObjType<IObjectDefinition>;
-      const aDefinition = a.objectDefinition;
+      const aTyped = a as ObjType<ObjectDefinition>;
+      const bTyped = b as typeof aTyped;
+
+      const aDefinition = aTyped.objectDefinition;
       const bDefinition = bTyped.objectDefinition;
 
-      if (bDefinition === undefined) {
-        console.log('b :>> ', b);
-        console.log('aShape :>> ', aDefinition);
-      }
       const aKeys = Object.keys(aDefinition);
       const bKeys = Object.keys(bDefinition);
 

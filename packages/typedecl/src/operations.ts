@@ -1,12 +1,10 @@
 import { areEqual } from './areEqual';
 import {
   ElementType,
-  IObjectDefinition,
   ObjType,
+  ObjectDefinition,
   Prop,
-  ToDefinitionType,
-  ToTsType,
-  Types,
+  Type,
   UnionType,
   makeOptional,
   makeReadonly,
@@ -14,18 +12,17 @@ import {
   makeWritable,
   nevr,
   obj,
-  prop,
-  undef
+  prop
 } from './index';
 import { union } from './union';
 
-export type Intersection<ObjTypeA, ObjTypeB> = ToDefinitionType<ToTsType<ObjTypeA> & ToTsType<ObjTypeB>>;
+export type Intersection<ObjTypeA, ObjTypeB> = ObjTypeA & ObjTypeB;
 
-export function intersection<TObjectDefintionA extends IObjectDefinition, TObjectDefinitionB extends IObjectDefinition>(
+export function intersection<TObjectDefintionA extends ObjectDefinition, TObjectDefinitionB extends ObjectDefinition>(
   objectTypeA: ObjType<TObjectDefintionA>,
   objectTypeB: ObjType<TObjectDefinitionB>
 ): Intersection<typeof objectTypeA, typeof objectTypeB> {
-  const merged = {} as IObjectDefinition;
+  const merged = {} as ObjectDefinition;
 
   const objectDefinitionA = objectTypeA.objectDefinition;
   const objectDefinitionB = objectTypeB.objectDefinition;
@@ -46,7 +43,8 @@ export function intersection<TObjectDefintionA extends IObjectDefinition, TObjec
           if (propertyB.type.kind !== 'object') {
             return nevr as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
           }
-          merged[key] = prop(intersection(propertyA.type, propertyB.type) as any);
+
+          merged[key] = prop(intersection(propertyA.type as any, propertyB.type as any) as any);
           break;
         }
         default: {
@@ -70,8 +68,8 @@ export type PartialType<T> = {
   [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R> ? Prop<T, true, R> : never;
 };
 
-export function partial<T extends IObjectDefinition>(objType: ObjType<T>): ObjType<PartialType<T>> {
-  const result = {} as IObjectDefinition;
+export function partial<T extends ObjectDefinition>(objType: ObjType<T>): ObjType<PartialType<T>> {
+  const result = {} as ObjectDefinition;
 
   for (const key of Object.keys(objType.objectDefinition)) {
     result[key] = makeOptional(objType.objectDefinition[key] as any);
@@ -84,8 +82,8 @@ export type RequiredType<T> = {
   [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R> ? Prop<T, false, R> : never;
 };
 
-export function required<T extends IObjectDefinition>(objType: ObjType<T>) {
-  const result = {} as IObjectDefinition;
+export function required<T extends ObjectDefinition>(objType: ObjType<T>) {
+  const result = {} as ObjectDefinition;
 
   for (const key of Object.keys(objType.objectDefinition)) {
     result[key] = makeRequired(objType.objectDefinition[key] as any);
@@ -98,8 +96,8 @@ export type ReadonlyType<T> = {
   [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, true> : never;
 };
 
-export function readonly<T extends IObjectDefinition>(objType: ObjType<T>): ObjType<ReadonlyType<T>> {
-  const result = {} as IObjectDefinition;
+export function readonly<T extends ObjectDefinition>(objType: ObjType<T>): ObjType<ReadonlyType<T>> {
+  const result = {} as ObjectDefinition;
 
   for (const key of Object.keys(objType.objectDefinition)) {
     result[key] = makeReadonly(objType.objectDefinition[key] as any);
@@ -112,8 +110,8 @@ export type WritableType<T> = {
   [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, false> : never;
 };
 
-export function writable<T extends IObjectDefinition>(objType: ObjType<T>): ObjType<WritableType<T>> {
-  const result = {} as IObjectDefinition;
+export function writable<T extends ObjectDefinition>(objType: ObjType<T>): ObjType<WritableType<T>> {
+  const result = {} as ObjectDefinition;
 
   for (const key of Object.keys(objType.objectDefinition)) {
     result[key] = makeWritable(objType.objectDefinition[key] as any);
@@ -122,7 +120,7 @@ export function writable<T extends IObjectDefinition>(objType: ObjType<T>): ObjT
   return obj(result) as ObjType<WritableType<T>>;
 }
 
-export function pick<T extends IObjectDefinition, K extends keyof T>(
+export function pick<T extends ObjectDefinition, K extends keyof T>(
   objectDefinition: ObjType<T>,
   ...keys: Array<K>
 ): ObjType<Pick<T, K>> {
@@ -135,7 +133,7 @@ export function pick<T extends IObjectDefinition, K extends keyof T>(
   return obj(result) as ObjType<Pick<T, K>>;
 }
 
-export function omit<T extends IObjectDefinition, K extends keyof T>(
+export function omit<T extends ObjectDefinition, K extends keyof T>(
   objectDefinition: ObjType<T>,
   ...keys: Array<K>
 ): ObjType<Omit<T, K>> {
@@ -148,7 +146,7 @@ export function omit<T extends IObjectDefinition, K extends keyof T>(
   return obj(result) as ObjType<Omit<T, K>>;
 }
 
-export function exclude<T extends Types, K extends Types[]>(unionType: UnionType<T>, ...types: K) {
+export function exclude<T extends Type, K extends Type[]>(unionType: UnionType<T>, ...types: K) {
   const result = { ...unionType, memberTypes: unionType.memberTypes.filter(x => !types.find(k => areEqual(x, k))) };
 
   if (result.memberTypes.length === 0) {
@@ -158,7 +156,7 @@ export function exclude<T extends Types, K extends Types[]>(unionType: UnionType
   return union(result as UnionType<Exclude<T, ElementType<K>>>);
 }
 
-export function extract<T extends Types, K extends Types[]>(unionType: UnionType<T>, ...keys: K) {
+export function extract<T extends Type, K extends Type[]>(unionType: UnionType<T>, ...keys: K) {
   const result = { ...unionType, memberTypes: unionType.memberTypes.filter(x => keys.find(k => areEqual(x, k))) };
 
   if (result.memberTypes.length === 0) {
@@ -167,26 +165,3 @@ export function extract<T extends Types, K extends Types[]>(unionType: UnionType
 
   return union(result as UnionType<Extract<T, ElementType<K>>>);
 }
-
-// type NameTypeAsLiteral<TsType> =
-//     TsType extends StringLiteral<TsType>// `${string & TsType}`
-//     ? TsType
-//     : TsType extends string
-//     ? 'string'
-//     : TsType extends number
-//     ? 'number'
-//     : TsType extends bigint
-//     ? 'bigint'
-//     : TsType extends boolean
-//     ? 'boolean'
-//     : TsType extends null
-//     ? 'null'
-//     : TsType extends undefined
-//     ? 'undefined'
-//     : TsType extends Array<infer Element>
-//     ? `${NameTypeAsLiteral<Element>}[]`
-//     : TsType extends object
-//     ? 'obj found'
-//     : never;
-
-// type TypeToLiteral<T> = `${NameTypeAsLiteral<T>}`;

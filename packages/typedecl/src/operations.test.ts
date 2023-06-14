@@ -286,7 +286,7 @@ describe('Type operations', () => {
     });
 
     it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.bigint });
+      const nestedObj = t.obj({ prop: t.bgint });
       const target = t.obj({ prop: t.str, nested: nestedObj });
       const result = t.partial(target);
 
@@ -294,7 +294,7 @@ describe('Type operations', () => {
         prop: t.optProp(t.str),
         nested: t.optProp(
           t.obj({
-            prop: t.bigint
+            prop: t.bgint
           })
         )
       });
@@ -331,14 +331,14 @@ describe('Type operations', () => {
     });
 
     it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.optProp(t.bigint) });
+      const nestedObj = t.obj({ prop: t.optProp(t.bgint) });
       const target = t.obj({ prop: t.optProp(t.str), nested: t.optProp(nestedObj) });
       const result = t.required(target);
 
       const ExpectedResult = t.obj({
         prop: t.str,
         nested: t.obj({
-          prop: t.optProp(t.bigint)
+          prop: t.optProp(t.bgint)
         })
       });
 
@@ -374,7 +374,7 @@ describe('Type operations', () => {
     });
 
     it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.bigint });
+      const nestedObj = t.obj({ prop: t.bgint });
       const target = t.obj({ prop: t.str, nested: nestedObj });
       const result = t.readonly(target);
 
@@ -382,7 +382,7 @@ describe('Type operations', () => {
         prop: t.roProp(t.str),
         nested: t.roProp(
           t.obj({
-            prop: t.bigint
+            prop: t.bgint
           })
         )
       });
@@ -402,7 +402,7 @@ describe('Type operations', () => {
 
   describe('pick()', () => {
     it('selects correct properties', () => {
-      const target = t.obj({ prop0: t.str, prop1: t.bigint });
+      const target = t.obj({ prop0: t.str, prop1: t.bgint });
       const result = t.pick(target, 'prop0');
       type ResultTsType = t.ToTsType<typeof result>;
       expect(t.areEqual(result.objectDefinition.prop0.type, t.str)).toEqual(true);
@@ -412,18 +412,18 @@ describe('Type operations', () => {
 
   describe('omit()', () => {
     it('removes correct properties', () => {
-      const target = t.obj({ prop0: t.str, prop1: t.bigint });
+      const target = t.obj({ prop0: t.str, prop1: t.bgint });
       const result = t.omit(target, 'prop0');
       type ResultTsType = t.ToTsType<typeof result>;
-      expect(t.areEqual(result.objectDefinition.prop1.type, t.bigint)).toEqual(true);
+      expect(t.areEqual(result.objectDefinition.prop1.type, t.bgint)).toEqual(true);
       expect(result.objectDefinition).not.toHaveProperty('prop0');
     });
   });
 
   describe('exclude()', () => {
     it('removes correct types from union', () => {
-      const target = t.union(t.str, t.num, t.bigint);
-      const result = t.exclude(target, t.bigint);
+      const target = t.union(t.str, t.num, t.bgint);
+      const result = t.exclude(target, t.bgint);
       type ResultTsType = t.ToTsType<typeof result>;
       if (result.kind === 'never') {
         throw Error();
@@ -434,8 +434,8 @@ describe('Type operations', () => {
     });
 
     it('collapses from union to single type when single element left', () => {
-      const target = t.union(t.num, t.bigint, t.str);
-      const result = t.exclude(target, t.bigint, t.str);
+      const target = t.union(t.num, t.bgint, t.str);
+      const result = t.exclude(target, t.bgint, t.str);
 
       expect(result).toEqual(t.num);
     });
@@ -443,32 +443,32 @@ describe('Type operations', () => {
 
   describe('extract()', () => {
     it('returns types from union in extraction set', () => {
-      const target = t.union(t.str, t.num, t.bigint);
+      const target = t.union(t.str, t.num, t.bgint);
 
-      const result = t.extract(target, t.bigint, t.num);
+      const result = t.extract(target, t.bgint, t.num);
       type ResultTsType = t.ToTsType<typeof result>;
       if (result.kind === 'never') {
         throw Error();
       }
 
       expect(result.memberTypes.length).toEqual(2);
-      expect(result.memberTypes).toContain(t.bigint);
+      expect(result.memberTypes).toContain(t.bgint);
       expect(result.memberTypes).toContain(t.num);
     });
 
     it('collapses from union to single type when single element returned', () => {
-      const target = t.union(t.num, t.bigint, t.bool);
-      const result = t.extract(target, t.bigint);
+      const target = t.union(t.num, t.bgint, t.bool);
+      const result = t.extract(target, t.bgint);
 
       if (result.kind === 'never') {
         throw Error();
       }
 
-      expect(result).toEqual(t.bigint);
+      expect(result).toEqual(t.bgint);
     });
 
     it('extracting from outside the set returns empty', () => {
-      const target = t.union(t.num, t.bigint, t.bool);
+      const target = t.union(t.num, t.bgint, t.bool);
       const result = t.extract(target, t.literal('foo'));
 
       expect(result.kind).toEqual('never');
@@ -508,14 +508,14 @@ describe('stress tests', () => {
     t.defineDeclaration(A, {
       propBool: t.bool,
       propNum: t.num,
-      propBigInt: t.bigint,
+      propBigInt: t.bgint,
       propString: t.str,
       propArray: t.array(t.str),
       propRecursive: t.array(A),
       propStringLiteral: t.literal('hello'),
       propNumberLiteral: t.literal(1),
 
-      propUnion: t.union(t.num, t.bigint, C, B),
+      propUnion: t.union(t.num, t.bgint, C, B),
       propB: B,
       propC: t.optProp(C)
     });

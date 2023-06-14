@@ -2,11 +2,6 @@ export type AnyFunc = (...args: any[]) => any;
 export type AnyObject = Record<string, unknown>;
 export type AnyArray = readonly unknown[];
 
-//export type PickNonFunctionProperties<T> = PickPropsNotOfType<T, AnyFunc>;
-
-//export type PickPropsNotOfType<T, TPropTypes> = Pick<T, PropsNotOfType<T, TPropTypes>>;
-//export type PickPropsOfType<T, TPropTypes> = Pick<T, PropsOfType<T, TPropTypes>>;
-
 export type PropsOfType<T, TPropTypes> = {
   [K in keyof T]: T[K] extends TPropTypes ? K : never;
 }[keyof T];
@@ -78,10 +73,19 @@ export type NumberLiteral<T> = Literal<number, T>;
 
 export type ElementType<T extends Array<unknown>> = T extends Array<infer TElement> ? TElement : never;
 
-export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
+//Supposedly simplifies a type.
+//export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
 
-type GetChars<S> = GetCharsHelper<S, never>;
-type GetCharsHelper<S, Acc> = S extends `${infer Char}${infer Rest}` ? GetCharsHelper<Rest, Char | Acc> : Acc;
+// type GetChars<S> = GetCharsHelper<S, never>;
+// type GetCharsHelper<S, Acc> = S extends `${infer Char}${infer Rest}` ? GetCharsHelper<Rest, Char | Acc> : Acc;
 
 // export type Resolve<S> = ResolveHelper<S, never>;
 // type ResolveHelper<T, Acc> = T extends object ? {} & { [P in keyof T]: ResolveHelper<T[P]> } : T;
+
+// The following is a way to have a user defined mapping list of types to types.
+// type TTypeListMotha = [[Date, Type<'date', Date>], [Buffer, Type<'buffer', Buffer>]];
+// type MapIt<T, TList> = TList extends [infer H, ...infer TRest]
+//   ? H extends [infer A extends T, infer TType]
+//     ? TType
+//     : MapIt<T, TRest>
+//   : never;

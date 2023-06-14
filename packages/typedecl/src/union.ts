@@ -1,17 +1,18 @@
 import { areEqual } from './areEqual';
-import { CollapseSingleMemberUnionType, ElementType, FlattenedUnion, Types, UnionType } from './index';
+import { CollapseSingleMemberUnionType, ElementType, FlattenedUnion, Type, UnionType } from './index';
 
-export const flattenUnionMembers = <T extends Types[]>(members: T): Array<FlattenedUnion<T>> => {
-  const flattened: Array<Types> = [];
-  const visited = new Set<Types>();
+export const flattenUnionMembers = <T extends Type<unknown, unknown> | UnionType<Type<unknown, unknown>>>(members: Array<T>): Array<FlattenedUnion<T>> => {
+  const flattened: Array<Type<unknown, unknown>> = [];
+  const visited = new Set<Type>();
 
-  function visit(currentType: Types) {
+  function visit(currentType: Type<unknown, unknown>) {
     if (visited.has(currentType)) {
       return;
     }
     visited.add(currentType);
     if (currentType.kind === 'union') {
-      currentType.memberTypes.forEach(x => visit(x as Types));
+      const union = currentType as UnionType<Type<unknown, unknown>>;
+      union.memberTypes.forEach(x => visit(x as Type));
     } else {
       flattened.push(currentType);
     }
@@ -19,7 +20,7 @@ export const flattenUnionMembers = <T extends Types[]>(members: T): Array<Flatte
 
   for (const element of members) {
     if (element.kind === 'union') {
-      visit(element as UnionType<Types>);
+      visit(element as UnionType<Type<unknown, unknown>>);
     } else {
       flattened.push(element);
     }
@@ -28,10 +29,10 @@ export const flattenUnionMembers = <T extends Types[]>(members: T): Array<Flatte
   return flattened as Array<FlattenedUnion<T>>;
 };
 
-export const compressUnionMembers = <T extends Types[]>(unionMembers: T) => {
+export const compressUnionMembers = <T extends Type<unknown, unknown>[]>(unionMembers: T) => {
   const result = [...unionMembers];
 
-  const comparisonCache = new Map<Types, Map<Types, boolean>>();
+  const comparisonCache = new Map<Type, Map<Type<unknown, unknown>, boolean>>();
 
   for (let iForward = 0; iForward < result.length; iForward++) {
     const elementForward = result[iForward];
@@ -47,9 +48,9 @@ export const compressUnionMembers = <T extends Types[]>(unionMembers: T) => {
   return result;
 };
 
-export type UnionOrSingleType<T> = CollapseSingleMemberUnionType<FlattenedUnion<T>>;
+export type UnionOrSingleType<T extends Type<unknown, unknown>> = CollapseSingleMemberUnionType<FlattenedUnion<T>>;
 
-export const union = <T extends Types[]>(...args: T): UnionOrSingleType<ElementType<T>> => {
+export const union = <T extends Type<unknown, unknown>[]>(...args: T): UnionOrSingleType<ElementType<T>> => {
   const flattenedMembers = flattenUnionMembers(args);
   const compressed = compressUnionMembers(flattenedMembers);
 

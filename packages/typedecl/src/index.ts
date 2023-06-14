@@ -4,3 +4,4 @@ export * from './operations';
 export * from './areEqual';
 export * from './union';
 export * from './generics';
+export * from './primitives';
