@@ -39,13 +39,13 @@ export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type
   memberTypes: Array<TMembers>;
 }
 
-export interface ObjType<TObjectDefinition> extends Type<'object', unknown> {
+export interface ObjType<TShapeDefinition> extends Type<'object', unknown> {
   kind: 'object';
   name?: string;
-  objectDefinition: TObjectDefinition;
+  shape: TShapeDefinition;
 }
 
-export type Prop<T, TOptional, TReadonly, TNameType = unknown> = {
+export type Prop<T, TOptional, TReadonly, TNameType = string> = {
   type: T;
   name?: TNameType;
   attributes: {
@@ -54,7 +54,7 @@ export type Prop<T, TOptional, TReadonly, TNameType = unknown> = {
   };
 };
 
-export interface ObjectDefinition {
+export interface ShapeDefinition {
   [key: string]: Prop<Type<unknown, unknown>, unknown, unknown>;
 }
 
@@ -63,14 +63,20 @@ export interface ObjectDefinition {
 // That means functions and types have to cast until it's fixed
 // https://github.com/microsoft/TypeScript/issues/34933
 
-type MapPropDefinitionsToTsOptionals<T> = PickPartially<T, PropsOfType<T, Prop<Type<unknown, unknown>, true, unknown>>>;
-type MapPropDefinitionsToTsReadonly<T> = PickReadonly<T, PropsOfType<T, Prop<Type<unknown, unknown>, unknown, true>>>;
+type MapPropDefinitionsToTsOptionals<T> = PickPartially<
+  T,
+  PropsOfType<T, Prop<Type<unknown, unknown>, true, unknown, unknown>>
+>;
+type MapPropDefinitionsToTsReadonly<T> = PickReadonly<
+  T,
+  PropsOfType<T, Prop<Type<unknown, unknown>, unknown, true, unknown>>
+>;
 
 // This converts an ObjectDefintion's properties from { prop0: Prop<T, true, true> } to {readonly prop0? : Prop<T, true, true>}
 // It does this in preparation of converting the Props<> to their TypesScript types.
 type MapPropDefinitionsToTsPropertyModifiers<T> = MapPropDefinitionsToTsOptionals<MapPropDefinitionsToTsReadonly<T>>;
 
-type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown> ? U : never;
+type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown, unknown> ? U : never;
 
 // Introducing additional helpers typers that increase clarity causes inference to go crazy.
 //  basically, only recurse inside of yourself.
@@ -83,18 +89,18 @@ export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer Litera
   ? Array<ToTsType<ElementDefinition>>
   : TDefinition extends UnionType<infer MemberDefinitions>
   ? ToTsType<MemberDefinitions>
-  : TDefinition extends ObjType<infer TObjectDefinition>
+  : TDefinition extends ObjType<infer TShapeDefinition>
   ? {
       //First add optional/readonly property modifiers to the DEFINITION, and then those modifiers will just get copied over to the TsType!
-      [P in keyof MapPropDefinitionsToTsPropertyModifiers<TObjectDefinition>]: ToTsType<
-        TypeOfPropDefinition<MapPropDefinitionsToTsPropertyModifiers<TObjectDefinition>[P]>
+      [P in keyof MapPropDefinitionsToTsPropertyModifiers<TShapeDefinition>]: ToTsType<
+        TypeOfPropDefinition<MapPropDefinitionsToTsPropertyModifiers<TShapeDefinition>[P]>
       >;
     }
   : TDefinition extends Type<unknown, infer T>
   ? T
   : never;
 
-//Main entry to convert a TypeScript type to an ObjectDefinition.  First need to detect a typescript union and then
+//Main entry to convert a TypeScript type to an ShapeDefinition.  First need to detect a typescript union and then
 export type ToDefinitionType<TsType> = NotAUnion<TsType> extends never
   ? UnionType<ToDefinitionTypeDistribute<TsType>>
   : ToDefinitionTypeDistribute<TsType>;
@@ -128,7 +134,8 @@ type ToDefinitionTypeDistribute<TsType> = TsType extends Literal<string, TsType>
       -readonly [P in keyof TsType]-?: Prop<
         ToDefinitionType<Exclude<TsType[P], undefined>>,
         P extends OptionalPropertyNames<TsType> ? true : false,
-        P extends ReadonlyPropertyNames<TsType> ? true : false
+        P extends ReadonlyPropertyNames<TsType> ? true : false,
+        P
       >;
     }>
   : never;
@@ -146,3 +153,4 @@ export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = No
 
 // How to prevent conditional from being distributed
 // type NoDistribute<T> = [T] extends [T] ? T : never;
+

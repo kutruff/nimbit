@@ -405,8 +405,8 @@ describe('Type operations', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.pick(target, 'prop0');
       type ResultTsType = t.ToTsType<typeof result>;
-      expect(t.areEqual(result.objectDefinition.prop0.type, t.string)).toEqual(true);
-      expect(result.objectDefinition).not.toHaveProperty('prop1');
+      expect(t.areEqual(result.shape.prop0.type, t.string)).toEqual(true);
+      expect(result.shape).not.toHaveProperty('prop1');
     });
   });
 
@@ -415,8 +415,8 @@ describe('Type operations', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.omit(target, 'prop0');
       type ResultTsType = t.ToTsType<typeof result>;
-      expect(t.areEqual(result.objectDefinition.prop1.type, t.bigint)).toEqual(true);
-      expect(result.objectDefinition).not.toHaveProperty('prop0');
+      expect(t.areEqual(result.shape.prop1.type, t.bigint)).toEqual(true);
+      expect(result.shape).not.toHaveProperty('prop0');
     });
   });
 

@@ -5,3 +5,4 @@ export * from './areEqual';
 export * from './union';
 export * from './generics';
 export * from './primitives';
+export * from './reflection';

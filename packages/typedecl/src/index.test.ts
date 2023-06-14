@@ -26,8 +26,8 @@ describe('Type declaration', () => {
       },
       'PersonTwo'
     );
-    const result = PersonTwo.objectDefinition.age;
-    const name = PersonTwo.objectDefinition.age;
+    const result = PersonTwo.shape.age;
+    const name = PersonTwo.shape.age;
 
     type PersonTwo = t.ToTsType<typeof PersonTwo>;
 
@@ -36,7 +36,7 @@ describe('Type declaration', () => {
     const roundTrippedInstance: PersonTwoShapeDefinitionRoundTripped = {
       kind: 'object',
       name: 'PersonTwo',
-      objectDefinition: {
+      shape: {
         name: { ...t.prop(t.string), name: 'name' },
         age: { ...t.optProp(t.number), name: 'age' },
         isActive: { ...t.prop(t.boolean), name: 'isActive' }
@@ -119,8 +119,8 @@ describe('Type declaration', () => {
   });
 
   it('allows interfaces', () => {
-    expect(Person.objectDefinition.name.type).toEqual(t.string);
-    expect(Address.objectDefinition.owner.type).toEqual(Person);
+    expect(Person.shape.name.type).toEqual(t.string);
+    expect(Address.shape.owner.type).toEqual(Person);
   });
 
   it('infers correct primitive types', () => {

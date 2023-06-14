@@ -2,8 +2,8 @@ import { areEqual } from './areEqual';
 import {
   ElementType,
   ObjType,
-  ObjectDefinition,
   Prop,
+  ShapeDefinition,
   Type,
   UnionType,
   makeOptional,
@@ -18,20 +18,20 @@ import { union } from './union';
 
 export type Intersection<ObjTypeA, ObjTypeB> = ObjTypeA & ObjTypeB;
 
-export function intersection<TObjectDefintionA extends ObjectDefinition, TObjectDefinitionB extends ObjectDefinition>(
+export function intersection<TObjectDefintionA extends ShapeDefinition, TShapeDefinitionB extends ShapeDefinition>(
   objectTypeA: ObjType<TObjectDefintionA>,
-  objectTypeB: ObjType<TObjectDefinitionB>
+  objectTypeB: ObjType<TShapeDefinitionB>
 ): Intersection<typeof objectTypeA, typeof objectTypeB> {
-  const merged = {} as ObjectDefinition;
+  const merged = {} as ShapeDefinition;
 
-  const objectDefinitionA = objectTypeA.objectDefinition;
-  const objectDefinitionB = objectTypeB.objectDefinition;
+  const shapeDefinitionA = objectTypeA.shape;
+  const shapeDefinitionB = objectTypeB.shape;
 
-  const allKeysInAB = [...new Set(Object.keys(objectDefinitionA).concat(Object.keys(objectDefinitionB)))];
+  const allKeysInAB = [...new Set(Object.keys(shapeDefinitionA).concat(Object.keys(shapeDefinitionB)))];
 
   for (const key of allKeysInAB) {
-    const propertyA = objectDefinitionA[key];
-    const propertyB = objectDefinitionB[key];
+    const propertyA = shapeDefinitionA[key];
+    const propertyB = shapeDefinitionB[key];
 
     if (propertyA == null && propertyB != null) {
       merged[key] = propertyB;
@@ -65,85 +65,85 @@ export function intersection<TObjectDefintionA extends ObjectDefinition, TObject
 }
 
 export type PartialType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R> ? Prop<T, true, R> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R, infer TKey extends P> ? Prop<T, true, R, TKey> : never;
 };
 
-export function partial<T extends ObjectDefinition>(objType: ObjType<T>): ObjType<PartialType<T>> {
-  const result = {} as ObjectDefinition;
+export function partial<T extends ShapeDefinition>(objType: ObjType<T>): ObjType<PartialType<T>> {
+  const result = {} as ShapeDefinition;
 
-  for (const key of Object.keys(objType.objectDefinition)) {
-    result[key] = makeOptional(objType.objectDefinition[key] as any);
+  for (const key of Object.keys(objType.shape)) {
+    result[key] = makeOptional(objType.shape[key] as any);
   }
 
   return obj(result) as ObjType<PartialType<T>>;
 }
 
 export type RequiredType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R> ? Prop<T, false, R> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R, infer TKey extends P> ? Prop<T, false, R, TKey> : never;
 };
 
-export function required<T extends ObjectDefinition>(objType: ObjType<T>) {
-  const result = {} as ObjectDefinition;
+export function required<T extends ShapeDefinition>(objType: ObjType<T>): ObjType<RequiredType<T>> {
+  const result = {} as ShapeDefinition;
 
-  for (const key of Object.keys(objType.objectDefinition)) {
-    result[key] = makeRequired(objType.objectDefinition[key] as any);
+  for (const key of Object.keys(objType.shape)) {
+    result[key] = makeRequired(objType.shape[key] as any);
   }
 
   return obj(result) as ObjType<RequiredType<T>>;
 }
 
 export type ReadonlyType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, true> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown, infer TKey extends P> ? Prop<T, O, true, TKey> : never;
 };
 
-export function readonly<T extends ObjectDefinition>(objType: ObjType<T>): ObjType<ReadonlyType<T>> {
-  const result = {} as ObjectDefinition;
+export function readonly<T extends ShapeDefinition>(objType: ObjType<T>): ObjType<ReadonlyType<T>> {
+  const result = {} as ShapeDefinition;
 
-  for (const key of Object.keys(objType.objectDefinition)) {
-    result[key] = makeReadonly(objType.objectDefinition[key] as any);
+  for (const key of Object.keys(objType.shape)) {
+    result[key] = makeReadonly(objType.shape[key] as any);
   }
 
   return obj(result) as ObjType<ReadonlyType<T>>;
 }
 
 export type WritableType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, false> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown, infer TKey extends P> ? Prop<T, O, false, TKey> : never;
 };
 
-export function writable<T extends ObjectDefinition>(objType: ObjType<T>): ObjType<WritableType<T>> {
-  const result = {} as ObjectDefinition;
+export function writable<T extends ShapeDefinition>(objType: ObjType<T>): ObjType<WritableType<T>> {
+  const result = {} as ShapeDefinition;
 
-  for (const key of Object.keys(objType.objectDefinition)) {
-    result[key] = makeWritable(objType.objectDefinition[key] as any);
+  for (const key of Object.keys(objType.shape)) {
+    result[key] = makeWritable(objType.shape[key] as any);
   }
 
   return obj(result) as ObjType<WritableType<T>>;
 }
 
-export function pick<T extends ObjectDefinition, K extends keyof T>(
-  objectDefinition: ObjType<T>,
+export function pick<T extends ShapeDefinition, K extends keyof T>(
+  shapeDefinition: ObjType<T>,
   ...keys: Array<K>
 ): ObjType<Pick<T, K>> {
   const result = {} as Pick<T, K>;
 
   for (const key of keys) {
-    result[key] = objectDefinition.objectDefinition[key];
+    result[key] = shapeDefinition.shape[key];
   }
 
-  return obj(result) as ObjType<Pick<T, K>>;
+  return obj(result) as unknown as ObjType<Pick<T, K>>;
 }
 
-export function omit<T extends ObjectDefinition, K extends keyof T>(
-  objectDefinition: ObjType<T>,
+export function omit<T extends ShapeDefinition, K extends keyof T>(
+  shapeDefinition: ObjType<T>,
   ...keys: Array<K>
 ): ObjType<Omit<T, K>> {
-  const result = { ...objectDefinition.objectDefinition };
+  const result = { ...shapeDefinition.shape };
 
   for (const key of keys) {
     delete result[key];
   }
 
-  return obj(result) as ObjType<Omit<T, K>>;
+  return obj(result) as unknown as ObjType<Omit<T, K>>;
 }
 
 export function exclude<T extends Type, K extends Type[]>(unionType: UnionType<T>, ...types: K) {

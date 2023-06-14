@@ -1,4 +1,4 @@
-import { ArrayType, LiteralType, UnionType, type ObjType, type ObjectDefinition, type Type } from './types';
+import { ArrayType, LiteralType, UnionType, type ObjType, type ShapeDefinition, type Type } from './types';
 
 export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type, boolean>>): boolean => {
   if (a === b) return true;
@@ -62,11 +62,11 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
       break;
     }
     case 'object': {
-      const aTyped = a as ObjType<ObjectDefinition>;
+      const aTyped = a as ObjType<ShapeDefinition>;
       const bTyped = b as typeof aTyped;
 
-      const aDefinition = aTyped.objectDefinition;
-      const bDefinition = bTyped.objectDefinition;
+      const aDefinition = aTyped.shape;
+      const bDefinition = bTyped.shape;
 
       const aKeys = Object.keys(aDefinition);
       const bKeys = Object.keys(bDefinition);
