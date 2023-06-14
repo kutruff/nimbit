@@ -10,12 +10,16 @@ export type MapObjectDefParamsToPropDefinitions<T> = {
   [P in keyof T]: T[P] extends Prop<unknown, unknown, unknown> ? T[P] : Prop<T[P], false, false>;
 };
 
+export const name = <T extends ObjType<unknown>>(objType: T, name: string): T => ({ ...objType, name });
+
 export function obj<TObjectDefinitionParams extends ObjectDefinitionParameters>(
-  objectDefinitionParms: TObjectDefinitionParams
+  objectDefinitionParms: TObjectDefinitionParams,
+  name?: string
 ): ObjType<MapObjectDefParamsToPropDefinitions<TObjectDefinitionParams>> {
   const objectDefinition = getObjectDefinition(objectDefinitionParms);
   return {
     kind: 'object',
+    name,
     objectDefinition
   };
 }
@@ -24,19 +28,18 @@ export function getObjectDefinition<TObjectDefinitionParams extends ObjectDefini
   objectDefinition: TObjectDefinitionParams
 ): MapObjectDefParamsToPropDefinitions<TObjectDefinitionParams> {
   const result = {} as any;
-
   for (const key of Object.keys(objectDefinition)) {
     result[key] = isProp(objectDefinition[key])
       ? objectDefinition[key]
       : createPropDefinition(objectDefinition[key] as Type, false, false);
   }
-
   return result as MapObjectDefParamsToPropDefinitions<TObjectDefinitionParams>;
 }
 
-export function declareObj<TShape>(): ToDefinitionType<TShape> {
+export function declareObj<TShape>(name?: string): ToDefinitionType<TShape> {
   return {
     kind: 'object',
+    name,
     objectDefintion: {}
   } as unknown as ToDefinitionType<TShape>;
 }
@@ -47,8 +50,6 @@ export function defineDeclaration<TObjectDefintionParameters extends ObjectDefin
 ) {
   declaredObjType.objectDefinition = getObjectDefinition(objectDefinitionParams);
 }
-
-//Property Definitions
 
 export function prop<T extends Type>(propOrType: T) {
   return createPropDefinition(propOrType, false as const, false as const);

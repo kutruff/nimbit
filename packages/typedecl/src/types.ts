@@ -40,6 +40,7 @@ export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type
 
 export interface ObjType<TObjectDefinition> extends Type<'object', ToTsType<TObjectDefinition>> {
   kind: 'object';
+  name?: string;
   objectDefinition: TObjectDefinition;
 }
 
