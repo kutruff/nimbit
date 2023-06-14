@@ -5,7 +5,8 @@
   "types": "./index.ts",
   "type": "module",
   "scripts": {
-    "clean": "rm -rf .turbo node_modules",
+    "clean": "rm -rf .turbo node_modules dist",
+    "build": "tsup ./index.ts --format esm,cjs --dts --clean --minify --sourcemap",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit",
@@ -30,6 +31,7 @@
     "dotenv-cli": "^7.2.1",
     "eslint": "^8.39.0",
     "jest-presets": "workspace:*",
+    "tsup": "^6.7.0",
     "tsx": "^3.12.7",
     "typescript": "^5.1.3"
   }
