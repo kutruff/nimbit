@@ -12,6 +12,8 @@ export interface Type<TKind = unknown, T = unknown> {
   kind: TKind;
 }
 
+export const createType = <TKind, T>(kind: TKind): Type<TKind, T> => ({ kind });
+
 export interface LiteralType<TLiteralValue> extends Type<'literal', TLiteralValue> {
   kind: 'literal';
   literal: TLiteralValue;
@@ -22,8 +24,7 @@ export const literal = <T, TLiteralValue>(literalValue: Literal<T, TLiteralValue
   literal: literalValue
 });
 
-export interface ArrayType<TElement extends Type<unknown, unknown> = Type<unknown, unknown>>
-  extends Type<'array', Array<ToTsType<TElement>>> {
+export interface ArrayType<TElement extends Type<unknown, unknown>> extends Type<'array', unknown> {
   kind: 'array';
   elementType: TElement;
 }
@@ -33,19 +34,20 @@ export const array = <T extends Type<unknown, unknown>>(element: T): ArrayType<T
   elementType: element
 });
 
-export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', TMembers> {
+export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', unknown> {
   kind: 'union';
   memberTypes: Array<TMembers>;
 }
 
-export interface ObjType<TObjectDefinition> extends Type<'object', ToTsType<TObjectDefinition>> {
+export interface ObjType<TObjectDefinition> extends Type<'object', unknown> {
   kind: 'object';
   name?: string;
   objectDefinition: TObjectDefinition;
 }
 
-export type Prop<T, TOptional, TReadonly> = {
+export type Prop<T, TOptional, TReadonly, TNameType = unknown> = {
   type: T;
+  name?: TNameType;
   attributes: {
     isOptional: TOptional;
     isReadonly: TReadonly;

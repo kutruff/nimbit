@@ -6,9 +6,9 @@ import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('Type declaration', () => {
   const Person = t.obj({
-    name: t.str,
-    age: t.num,
-    isActive: t.bool
+    name: t.string,
+    age: t.number,
+    isActive: t.boolean
   });
 
   const Address = t.obj({
@@ -18,11 +18,14 @@ describe('Type declaration', () => {
   type Address = t.ToTsType<typeof Address>;
 
   it('compiles with round trips between definition and TypeScript types', () => {
-    const PersonTwo = t.obj({
-      name: t.str,
-      age: t.optProp(t.num),
-      isActive: t.bool
-    });
+    const PersonTwo = t.obj(
+      {
+        name: t.string,
+        age: t.optProp(t.number),
+        isActive: t.boolean
+      },
+      'PersonTwo'
+    );
     const result = PersonTwo.objectDefinition.age;
     const name = PersonTwo.objectDefinition.age;
 
@@ -32,10 +35,11 @@ describe('Type declaration', () => {
 
     const roundTrippedInstance: PersonTwoShapeDefinitionRoundTripped = {
       kind: 'object',
+      name: 'PersonTwo',
       objectDefinition: {
-        name: t.prop(t.str),
-        age: t.optProp(t.num),
-        isActive: t.prop(t.bool)
+        name: { ...t.prop(t.string), name: 'name' },
+        age: { ...t.optProp(t.number), name: 'age' },
+        isActive: { ...t.prop(t.boolean), name: 'isActive' }
       }
     };
 
@@ -44,7 +48,7 @@ describe('Type declaration', () => {
 
   it('compiles and supports nested objects', () => {
     const ObjA = t.obj({
-      name: t.str
+      name: t.string
     });
 
     const ObjB = t.obj({
@@ -60,15 +64,15 @@ describe('Type declaration', () => {
   });
 
   it('allows mapping of primitive defintions to TypeScript types', () => {
-    type strType = typeof t.str;
-    type MapPrimitiveStringTest = t.ToTsType<typeof t.str>;
-    type MapPrimitiveNumTest = t.ToTsType<typeof t.num>;
-    type MapPrimitiveBoolTest = t.ToTsType<typeof t.bool>;
+    type strType = typeof t.string;
+    type MapPrimitiveStringTest = t.ToTsType<typeof t.string>;
+    type MapPrimitiveNumTest = t.ToTsType<typeof t.number>;
+    type MapPrimitiveBoolTest = t.ToTsType<typeof t.boolean>;
 
     type MappedString = t.ToTsType<t.Type<'string'>>;
-    type MappedStringTypeOf = t.ToTsType<typeof t.str>;
-    type MappedNumber = t.ToTsType<typeof t.num>;
-    type MappedBoolean = t.ToTsType<typeof t.bool>;
+    type MappedStringTypeOf = t.ToTsType<typeof t.string>;
+    type MappedNumber = t.ToTsType<typeof t.number>;
+    type MappedBoolean = t.ToTsType<typeof t.boolean>;
 
     //type MapPrimitiveObjTestShouldBeNever = t.Shape<typeof t.obj>;
   });
@@ -78,22 +82,22 @@ describe('Type declaration', () => {
 
     const Circle = t.obj({
       discriminator: t.literal('circle' as const),
-      radius: t.num
+      radius: t.number
     });
     type Circle = t.ToTsType<typeof Circle>;
     type CircleDefintion = t.ToDefinitionType<Circle>;
 
     const Square = t.obj({
       discriminator: t.literal('square' as const),
-      width: t.num,
-      length: t.num
+      width: t.number,
+      length: t.number
     });
 
     type Square = t.ToTsType<typeof Square>;
   });
 
   it('allows mapping of TypeScript types to primitive defintions', () => {
-    type strType = typeof t.str;
+    type strType = typeof t.string;
     type MapPrimitiveStringTest = t.ToDefinitionType<string>;
     type MapPrimitiveNumTest = t.ToDefinitionType<number>;
     type MapPrimitiveObjTest = t.ToDefinitionType<AnyObject>;
@@ -115,7 +119,7 @@ describe('Type declaration', () => {
   });
 
   it('allows interfaces', () => {
-    expect(Person.objectDefinition.name.type).toEqual(t.str);
+    expect(Person.objectDefinition.name.type).toEqual(t.string);
     expect(Address.objectDefinition.owner.type).toEqual(Person);
   });
 
@@ -226,7 +230,7 @@ describe('Type declaration', () => {
     });
 
     t.defineDeclaration(Bar, {
-      barProp: t.str,
+      barProp: t.string,
       foo: Foo
     });
 
@@ -242,10 +246,10 @@ describe('Type declaration', () => {
 
   describe('Arrays', () => {
     it('allows simple arrays', () => {
-      const arrayOfNumbers = t.array(t.num);
+      const arrayOfNumbers = t.array(t.number);
 
       const ObjectWithArray = t.obj({
-        anArrayProp: t.array(t.str)
+        anArrayProp: t.array(t.string)
       });
       type ObjectWithArray = t.ToTsType<typeof ObjectWithArray>;
       type ObjectWithArrayDefinitionFromShape = t.ToDefinitionType<ObjectWithArray>;
@@ -255,12 +259,12 @@ describe('Type declaration', () => {
     });
 
     it('allows arrays of objects', () => {
-      const arrayOfNumbers = t.array(t.num);
+      const arrayOfNumbers = t.array(t.number);
 
       const ObjectWithArray = t.obj({
         anArrayProp: t.array(
           t.obj({
-            someProp: t.str
+            someProp: t.string
           })
         )
       });
@@ -274,10 +278,10 @@ describe('Type declaration', () => {
 
   describe('property modifiers', () => {
     it('makes optional property defintions into optional TS properties', () => {
-      const target = t.obj({ prop: t.optProp(t.str) });
+      const target = t.obj({ prop: t.optProp(t.string) });
 
       const ExpectedResult = t.obj({
-        prop: { type: t.str, attributes: { isOptional: true as const, isReadonly: false as const } }
+        prop: { type: t.string, attributes: { isOptional: true as const, isReadonly: false as const } }
       });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
@@ -290,10 +294,10 @@ describe('Type declaration', () => {
     });
 
     it('makes readonly property defintions into readonly TS properties', () => {
-      const target = t.obj({ prop: t.roProp(t.str) });
+      const target = t.obj({ prop: t.roProp(t.string) });
 
       const ExpectedResult = t.obj({
-        prop: { type: t.str, attributes: { isOptional: false as const, isReadonly: true as const } }
+        prop: { type: t.string, attributes: { isOptional: false as const, isReadonly: true as const } }
       });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
@@ -306,10 +310,10 @@ describe('Type declaration', () => {
     });
 
     it('makes optional readonly property defintions into optional readonly TS properties', () => {
-      const target = t.obj({ prop: t.optRoProp(t.str) });
+      const target = t.obj({ prop: t.optRoProp(t.string) });
 
       const ExpectedResult = t.obj({
-        prop: { type: t.str, attributes: { isOptional: true as const, isReadonly: true as const } }
+        prop: { type: t.string, attributes: { isOptional: true as const, isReadonly: true as const } }
       });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();

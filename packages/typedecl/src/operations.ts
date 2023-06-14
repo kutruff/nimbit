@@ -10,7 +10,7 @@ import {
   makeReadonly,
   makeRequired,
   makeWritable,
-  nevr,
+  never,
   obj,
   prop
 } from './index';
@@ -41,7 +41,7 @@ export function intersection<TObjectDefintionA extends ObjectDefinition, TObject
       switch (propertyA.type.kind) {
         case 'object': {
           if (propertyB.type.kind !== 'object') {
-            return nevr as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
+            return never as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
           }
 
           merged[key] = prop(intersection(propertyA.type as any, propertyB.type as any) as any);
@@ -52,7 +52,7 @@ export function intersection<TObjectDefintionA extends ObjectDefinition, TObject
           if (areEqual(propertyA.type, propertyB.type)) {
             merged[key] = prop(propertyA.type);
           } else {
-            return nevr as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
+            return never as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
           }
           break;
         }
@@ -150,7 +150,7 @@ export function exclude<T extends Type, K extends Type[]>(unionType: UnionType<T
   const result = { ...unionType, memberTypes: unionType.memberTypes.filter(x => !types.find(k => areEqual(x, k))) };
 
   if (result.memberTypes.length === 0) {
-    return nevr;
+    return never;
   }
 
   return union(result as UnionType<Exclude<T, ElementType<K>>>);
@@ -160,7 +160,7 @@ export function extract<T extends Type, K extends Type[]>(unionType: UnionType<T
   const result = { ...unionType, memberTypes: unionType.memberTypes.filter(x => keys.find(k => areEqual(x, k))) };
 
   if (result.memberTypes.length === 0) {
-    return nevr;
+    return never;
   }
 
   return union(result as UnionType<Extract<T, ElementType<K>>>);

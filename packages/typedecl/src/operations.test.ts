@@ -4,13 +4,13 @@ import { expectTypesSupportAssignment } from './test/utilities';
 describe('Type operations', () => {
   describe('intersection()', () => {
     it('objects with distinct properties are merged', () => {
-      const objA = t.obj({ propA: t.str });
-      const objB = t.obj({ propB: t.num });
+      const objA = t.obj({ propA: t.string });
+      const objB = t.obj({ propB: t.number });
       const result = t.intersection(objA, objB);
 
       const ExpectedDefinitionType = t.obj({
-        propA: t.str,
-        propB: t.num
+        propA: t.string,
+        propB: t.number
       });
       type ExpectedDefinitionType = typeof ExpectedDefinitionType;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
@@ -56,9 +56,9 @@ describe('Type operations', () => {
           }
         };
 
-        const ObjD = t.obj({ prop0: t.bool });
-        const ObjE = t.obj({ prop0: t.bool });
-        const ObjF = t.obj({ prop0: t.bool, distinctProp: t.num });
+        const ObjD = t.obj({ prop0: t.boolean });
+        const ObjE = t.obj({ prop0: t.boolean });
+        const ObjF = t.obj({ prop0: t.boolean, distinctProp: t.number });
         const ObjA = t.obj({ x: ObjD });
         const ObjB = t.obj({ x: ObjE });
         const ObjC = t.obj({ x: ObjF });
@@ -70,8 +70,8 @@ describe('Type operations', () => {
         expect(ObjABC).toEqual(
           t.obj({
             x: t.obj({
-              prop0: t.bool,
-              distinctProp: t.num
+              prop0: t.boolean,
+              distinctProp: t.number
             })
           })
         );
@@ -102,8 +102,8 @@ describe('Type operations', () => {
         const cd: CD = { prop0: false, distinctProp: 'it compiles' };
 
         //We set them as matching here. Hard to test prop0 set to t.num because it breaks the compilation which is intended
-        const ObjC = t.obj({ prop0: t.bool });
-        const ObjD = t.obj({ prop0: t.bool, distinctProp: t.str });
+        const ObjC = t.obj({ prop0: t.boolean });
+        const ObjD = t.obj({ prop0: t.boolean, distinctProp: t.string });
 
         const ObjA = t.obj({ x: ObjC });
         const ObjB = t.obj({ x: ObjD });
@@ -120,8 +120,8 @@ describe('Type operations', () => {
         type ObjCDIntersect = typeof ObjC & typeof ObjD;
 
         const instanceTestObjCDIntersect: ObjCDIntersect = t.obj({
-          prop0: t.bool,
-          distinctProp: t.str
+          prop0: t.boolean,
+          distinctProp: t.string
         });
 
         type ObjCDTsIntersect = t.ToTsType<typeof ObjC> & t.ToTsType<typeof ObjD>;
@@ -134,8 +134,8 @@ describe('Type operations', () => {
         expect(ObjAB).toEqual(
           t.obj({
             x: t.obj({
-              prop0: t.bool,
-              distinctProp: t.str
+              prop0: t.boolean,
+              distinctProp: t.string
             })
           })
         );
@@ -167,8 +167,8 @@ describe('Type operations', () => {
         //const cd : CD = {};
 
         //We set them as matching here. Hard to test prop0 set to t.num because it breaks the compilation which is intended
-        const ObjC = t.obj({ prop0: t.bool });
-        const ObjD = t.obj({ prop0: t.num, distinctProp: t.str });
+        const ObjC = t.obj({ prop0: t.boolean });
+        const ObjD = t.obj({ prop0: t.number, distinctProp: t.string });
 
         const ObjA = t.obj({ x: ObjC });
         const ObjB = t.obj({ x: ObjD });
@@ -181,7 +181,7 @@ describe('Type operations', () => {
 
         expect(ObjAB).toEqual(
           t.obj({
-            x: t.nevr
+            x: t.never
           })
         );
       });
@@ -269,10 +269,10 @@ describe('Type operations', () => {
 
   describe('partial()', () => {
     it('makes required properites into optionals', () => {
-      const target = t.obj({ prop: t.str });
+      const target = t.obj({ prop: t.string });
       const result = t.partial(target);
 
-      const ExpectedResult = t.obj({ prop: t.optProp(t.str) });
+      const ExpectedResult = t.obj({ prop: t.optProp(t.string) });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
@@ -286,15 +286,15 @@ describe('Type operations', () => {
     });
 
     it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.bgint });
-      const target = t.obj({ prop: t.str, nested: nestedObj });
+      const nestedObj = t.obj({ prop: t.bigint });
+      const target = t.obj({ prop: t.string, nested: nestedObj });
       const result = t.partial(target);
 
       const ExpectedResult = t.obj({
-        prop: t.optProp(t.str),
+        prop: t.optProp(t.string),
         nested: t.optProp(
           t.obj({
-            prop: t.bgint
+            prop: t.bigint
           })
         )
       });
@@ -314,10 +314,10 @@ describe('Type operations', () => {
 
   describe('required()', () => {
     it('makes optional properites into required properties', () => {
-      const target = t.obj({ prop: t.optProp(t.str) });
+      const target = t.obj({ prop: t.optProp(t.string) });
       const result = t.required(target);
 
-      const ExpectedResult = t.obj({ prop: t.str });
+      const ExpectedResult = t.obj({ prop: t.string });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
@@ -331,14 +331,14 @@ describe('Type operations', () => {
     });
 
     it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.optProp(t.bgint) });
-      const target = t.obj({ prop: t.optProp(t.str), nested: t.optProp(nestedObj) });
+      const nestedObj = t.obj({ prop: t.optProp(t.bigint) });
+      const target = t.obj({ prop: t.optProp(t.string), nested: t.optProp(nestedObj) });
       const result = t.required(target);
 
       const ExpectedResult = t.obj({
-        prop: t.str,
+        prop: t.string,
         nested: t.obj({
-          prop: t.optProp(t.bgint)
+          prop: t.optProp(t.bigint)
         })
       });
 
@@ -357,10 +357,10 @@ describe('Type operations', () => {
 
   describe('readonly()', () => {
     it('makes writable properites into readonly', () => {
-      const target = t.obj({ prop: t.str });
+      const target = t.obj({ prop: t.string });
       const result = t.readonly(target);
 
-      const ExpectedResult = t.obj({ prop: t.roProp(t.str) });
+      const ExpectedResult = t.obj({ prop: t.roProp(t.string) });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
@@ -374,15 +374,15 @@ describe('Type operations', () => {
     });
 
     it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.bgint });
-      const target = t.obj({ prop: t.str, nested: nestedObj });
+      const nestedObj = t.obj({ prop: t.bigint });
+      const target = t.obj({ prop: t.string, nested: nestedObj });
       const result = t.readonly(target);
 
       const ExpectedResult = t.obj({
-        prop: t.roProp(t.str),
+        prop: t.roProp(t.string),
         nested: t.roProp(
           t.obj({
-            prop: t.bgint
+            prop: t.bigint
           })
         )
       });
@@ -402,73 +402,73 @@ describe('Type operations', () => {
 
   describe('pick()', () => {
     it('selects correct properties', () => {
-      const target = t.obj({ prop0: t.str, prop1: t.bgint });
+      const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.pick(target, 'prop0');
       type ResultTsType = t.ToTsType<typeof result>;
-      expect(t.areEqual(result.objectDefinition.prop0.type, t.str)).toEqual(true);
+      expect(t.areEqual(result.objectDefinition.prop0.type, t.string)).toEqual(true);
       expect(result.objectDefinition).not.toHaveProperty('prop1');
     });
   });
 
   describe('omit()', () => {
     it('removes correct properties', () => {
-      const target = t.obj({ prop0: t.str, prop1: t.bgint });
+      const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.omit(target, 'prop0');
       type ResultTsType = t.ToTsType<typeof result>;
-      expect(t.areEqual(result.objectDefinition.prop1.type, t.bgint)).toEqual(true);
+      expect(t.areEqual(result.objectDefinition.prop1.type, t.bigint)).toEqual(true);
       expect(result.objectDefinition).not.toHaveProperty('prop0');
     });
   });
 
   describe('exclude()', () => {
     it('removes correct types from union', () => {
-      const target = t.union(t.str, t.num, t.bgint);
-      const result = t.exclude(target, t.bgint);
+      const target = t.union(t.string, t.number, t.bigint);
+      const result = t.exclude(target, t.bigint);
       type ResultTsType = t.ToTsType<typeof result>;
       if (result.kind === 'never') {
         throw Error();
       }
       expect(result.memberTypes.length).toEqual(2);
-      expect(result.memberTypes).toContain(t.num);
-      expect(result.memberTypes).toContain(t.str);
+      expect(result.memberTypes).toContain(t.number);
+      expect(result.memberTypes).toContain(t.string);
     });
 
     it('collapses from union to single type when single element left', () => {
-      const target = t.union(t.num, t.bgint, t.str);
-      const result = t.exclude(target, t.bgint, t.str);
+      const target = t.union(t.number, t.bigint, t.string);
+      const result = t.exclude(target, t.bigint, t.string);
 
-      expect(result).toEqual(t.num);
+      expect(result).toEqual(t.number);
     });
   });
 
   describe('extract()', () => {
     it('returns types from union in extraction set', () => {
-      const target = t.union(t.str, t.num, t.bgint);
+      const target = t.union(t.string, t.number, t.bigint);
 
-      const result = t.extract(target, t.bgint, t.num);
+      const result = t.extract(target, t.bigint, t.number);
       type ResultTsType = t.ToTsType<typeof result>;
       if (result.kind === 'never') {
         throw Error();
       }
 
       expect(result.memberTypes.length).toEqual(2);
-      expect(result.memberTypes).toContain(t.bgint);
-      expect(result.memberTypes).toContain(t.num);
+      expect(result.memberTypes).toContain(t.bigint);
+      expect(result.memberTypes).toContain(t.number);
     });
 
     it('collapses from union to single type when single element returned', () => {
-      const target = t.union(t.num, t.bgint, t.bool);
-      const result = t.extract(target, t.bgint);
+      const target = t.union(t.number, t.bigint, t.boolean);
+      const result = t.extract(target, t.bigint);
 
       if (result.kind === 'never') {
         throw Error();
       }
 
-      expect(result).toEqual(t.bgint);
+      expect(result).toEqual(t.bigint);
     });
 
     it('extracting from outside the set returns empty', () => {
-      const target = t.union(t.num, t.bgint, t.bool);
+      const target = t.union(t.number, t.bigint, t.boolean);
       const result = t.extract(target, t.literal('foo'));
 
       expect(result.kind).toEqual('never');
@@ -502,20 +502,20 @@ describe('stress tests', () => {
     }
 
     const A = t.declareObj<IA>();
-    const C = t.obj({ prop0: t.bool, distinctProp: t.num });
-    const B = t.obj({ prop0: t.bool });
+    const C = t.obj({ prop0: t.boolean, distinctProp: t.number });
+    const B = t.obj({ prop0: t.boolean });
 
     t.defineDeclaration(A, {
-      propBool: t.bool,
-      propNum: t.num,
-      propBigInt: t.bgint,
-      propString: t.str,
-      propArray: t.array(t.str),
+      propBool: t.boolean,
+      propNum: t.number,
+      propBigInt: t.bigint,
+      propString: t.string,
+      propArray: t.array(t.string),
       propRecursive: t.array(A),
       propStringLiteral: t.literal('hello'),
       propNumberLiteral: t.literal(1),
 
-      propUnion: t.union(t.num, t.bgint, C, B),
+      propUnion: t.union(t.number, t.bigint, C, B),
       propB: B,
       propC: t.optProp(C)
     });

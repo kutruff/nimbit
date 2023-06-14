@@ -1,13 +1,13 @@
-import { Type } from './types';
+import { Type, createType } from './types';
 
-export const str: Type<'string', string> = { kind: 'string' };
-export const num: Type<'number', number> = { kind: 'number' };
-export const bool: Type<'boolean', boolean> = { kind: 'boolean' };
-export const bgint: Type<'bigint', bigint> = { kind: 'bigint' };
-export const dte: Type<'date', Date> = { kind: 'date' };
+export const string: Type<'string', string> = { kind: 'string' };
+export const number: Type<'number', number> = { kind: 'number' };
+export const boolean: Type<'boolean', boolean> = { kind: 'boolean' };
+export const bigint: Type<'bigint', bigint> = { kind: 'bigint' };
+export const date: Type<'date', Date> = { kind: 'date' };
 export const nul: Type<'null', null> = { kind: 'null' };
 export const undef: Type<'undefined', undefined> = { kind: 'undefined' };
-export const nevr: Type<'never', never> = { kind: 'never' };
+export const never: Type<'never', never> = { kind: 'never' };
 
 export const int8Array: Type<'Int8Array', Int8Array> = { kind: 'Int8Array' };
 export const uint8Array: Type<'Uint8Array', Uint8Array> = { kind: 'Uint8Array' };
