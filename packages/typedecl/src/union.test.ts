@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import * as t from './index';
 import { expectTypesSupportAssignment } from './test/utilities';
 
@@ -136,8 +136,7 @@ describe('Unions of types', () => {
   });
 
   describe('type inference', () => {
-    // eslint-disable-next-line jest/expect-expect
-    it('infers well with obbject hierarchies of unions', () => {
+    it('infers well with object hierarchies of unions', () => {
       const Target = t.obj({
         prop: t.string,
         subUnion0: t.union(

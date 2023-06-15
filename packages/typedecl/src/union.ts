@@ -1,7 +1,15 @@
 import { areEqual } from './areEqual';
-import { CollapseSingleMemberUnionType, ElementType, FlattenedUnion, Type, UnionType } from './index';
+import {
+  type CollapseSingleMemberUnionType,
+  type ElementType,
+  type FlattenedUnion,
+  type Type,
+  type UnionType
+} from './index';
 
-export const flattenUnionMembers = <T extends Type<unknown, unknown> | UnionType<Type<unknown, unknown>>>(members: Array<T>): Array<FlattenedUnion<T>> => {
+export const flattenUnionMembers = <T extends Type<unknown, unknown> | UnionType<Type<unknown, unknown>>>(
+  members: Array<T>
+): Array<FlattenedUnion<T>> => {
   const flattened: Array<Type<unknown, unknown>> = [];
   const visited = new Set<Type>();
 
@@ -12,7 +20,7 @@ export const flattenUnionMembers = <T extends Type<unknown, unknown> | UnionType
     visited.add(currentType);
     if (currentType.kind === 'union') {
       const union = currentType as UnionType<Type<unknown, unknown>>;
-      union.memberTypes.forEach(x => visit(x as Type));
+      union.memberTypes.forEach(x => visit(x));
     } else {
       flattened.push(currentType);
     }

@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  Literal,
-  NotAUnion,
-  OptionalPropertyNames,
-  PickPartially,
-  PickReadonly,
-  PropsOfType,
-  ReadonlyPropertyNames
+  type Literal,
+  type NotAUnion,
+  type OptionalPropertyNames,
+  type PickPartially,
+  type PickReadonly,
+  type PropsOfType,
+  type ReadonlyPropertyNames
 } from './generics';
 
 export interface Type<TKind = unknown, T = unknown> {
@@ -29,10 +30,17 @@ export interface ArrayType<TElement extends Type<unknown, unknown>> extends Type
   elementType: TElement;
 }
 
-export const array = <T extends Type<unknown, unknown>>(element: T): ArrayType<T> => ({
+export const array = <TElement extends Type<unknown, unknown>>(element: TElement): ArrayType<TElement> => ({
   kind: 'array',
   elementType: element
 });
+
+export interface EnumType<TEnumValues, TMapOfTupleKeys> extends Type<'enum', TEnumValues> {
+  kind: 'enum';
+  name: string;
+  values: TEnumValues;
+  enum: TMapOfTupleKeys;
+}
 
 export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', unknown> {
   kind: 'union';
@@ -89,6 +97,8 @@ export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer Litera
   ? Array<ToTsType<ElementDefinition>>
   : TDefinition extends UnionType<infer MemberDefinitions>
   ? ToTsType<MemberDefinitions>
+  : TDefinition extends EnumType<infer U, infer TEnumValues>
+  ? TEnumValues
   : TDefinition extends ObjType<infer TShapeDefinition>
   ? {
       //First add optional/readonly property modifiers to the DEFINITION, and then those modifiers will just get copied over to the TsType!
@@ -153,4 +163,3 @@ export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = No
 
 // How to prevent conditional from being distributed
 // type NoDistribute<T> = [T] extends [T] ? T : never;
-

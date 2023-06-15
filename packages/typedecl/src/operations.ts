@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { areEqual } from './areEqual';
 import {
-  ElementType,
-  ObjType,
-  Prop,
-  ShapeDefinition,
-  Type,
-  UnionType,
+  type ElementType,
+  type ObjType,
+  type Prop,
+  type ShapeDefinition,
+  type Type,
+  type UnionType,
   makeOptional,
   makeReadonly,
   makeRequired,
@@ -18,8 +20,8 @@ import { union } from './union';
 
 export type Intersection<ObjTypeA, ObjTypeB> = ObjTypeA & ObjTypeB;
 
-export function intersection<TObjectDefintionA extends ShapeDefinition, TShapeDefinitionB extends ShapeDefinition>(
-  objectTypeA: ObjType<TObjectDefintionA>,
+export function intersection<TShapeDefinitionA extends ShapeDefinition, TShapeDefinitionB extends ShapeDefinition>(
+  objectTypeA: ObjType<TShapeDefinitionA>,
   objectTypeB: ObjType<TShapeDefinitionB>
 ): Intersection<typeof objectTypeA, typeof objectTypeB> {
   const merged = {} as ShapeDefinition;

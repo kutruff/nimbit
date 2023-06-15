@@ -428,7 +428,7 @@ importers:
         specifier: ^8.42.0
         version: 8.42.0
       jest-presets:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jest-presets
       tsup:
         specifier: ^6.7.0

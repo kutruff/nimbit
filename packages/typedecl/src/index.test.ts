@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable jest/expect-expect */
-import { AnyObject } from './generics';
+import { type AnyObject } from './generics';
 import * as t from './index';
+import { ShapeKeys } from './index';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('Type declaration', () => {
@@ -21,7 +21,7 @@ describe('Type declaration', () => {
     const PersonTwo = t.obj(
       {
         name: t.string,
-        age: t.optProp(t.number),
+        age: t.opt(t.number),
         isActive: t.boolean
       },
       'PersonTwo'
@@ -38,7 +38,7 @@ describe('Type declaration', () => {
       name: 'PersonTwo',
       shape: {
         name: { ...t.prop(t.string), name: 'name' },
-        age: { ...t.optProp(t.number), name: 'age' },
+        age: { ...t.opt(t.number), name: 'age' },
         isActive: { ...t.prop(t.boolean), name: 'isActive' }
       }
     };
@@ -60,7 +60,7 @@ describe('Type declaration', () => {
 
     const objBInstance: ObjB = { refToA: { name: 'hello' } };
     const testFoo: ObjBRoundTripped = ObjB;
-    const testReverse: typeof ObjB = {} as any as ObjBRoundTripped;
+    const testReverse: typeof ObjB = {} as unknown as ObjBRoundTripped;
   });
 
   it('allows mapping of primitive defintions to TypeScript types', () => {
@@ -176,6 +176,60 @@ describe('Type declaration', () => {
     });
   });
 
+  const recursiveRef = Symbol('recursiveRef');
+
+  it('has smarter recursiveReferences', () => {
+    const recRefType = t.createType<'recursiveRef', 'A'>('recursiveRef');
+
+    const table0Unlinked = t.obj(
+      {
+        name: t.string,
+        self: recRefType
+      },
+      'table0'
+    );
+
+    type RemapRecs<T, TRef, TTarget> = {
+      [P in keyof T]: T[P] extends t.Prop<infer T, unknown, infer R, infer TKey extends P>
+        ? t.Prop<T, true, R, TKey>
+        : never;
+    };
+
+    type fadfad = (typeof table0Unlinked)['shape']['self']['type'];
+    type res = (typeof table0Unlinked)['shape']['self'] extends typeof recRefType ? true : false;
+    function linkRecRefs<TShapeDefinitionA extends t.ShapeDefinition, TShapeDefinitionB extends t.ShapeDefinition>(
+      objectTypeA: t.ObjType<TShapeDefinitionA>,
+      objectTypeB: t.ObjType<TShapeDefinitionB>
+    ): {
+      [K in keyof TShapeDefinitionA]: TShapeDefinitionA[K]['type'] extends typeof recRefType
+        ? typeof objectTypeB
+        : TShapeDefinitionA[K];
+    } {
+      type LinkedType = {
+        [K in keyof TShapeDefinitionA]: TShapeDefinitionA[K]['type'] extends typeof recRefType
+          ? typeof objectTypeB
+          : TShapeDefinitionA[K];
+      };
+
+      return {} as unknown as {
+        [K in keyof TShapeDefinitionA]: TShapeDefinitionA[K]['type'] extends typeof recRefType
+          ? typeof objectTypeB
+          : TShapeDefinitionA[K];
+      };
+    }
+
+    const table0 = linkRecRefs(table0Unlinked, table0Unlinked);
+
+    interface SelfReferencing {
+      child: SelfReferencing;
+    }
+
+    const SelfReferencing = t.declareObj<SelfReferencing>();
+    t.defineDeclaration(SelfReferencing, {
+      child: SelfReferencing
+    });
+  });
+
   it('infers recursively', () => {
     interface SelfReferencing {
       child: SelfReferencing;
@@ -278,7 +332,7 @@ describe('Type declaration', () => {
 
   describe('property modifiers', () => {
     it('makes optional property defintions into optional TS properties', () => {
-      const target = t.obj({ prop: t.optProp(t.string) });
+      const target = t.obj({ prop: t.opt(t.string) });
 
       const ExpectedResult = t.obj({
         prop: { type: t.string, attributes: { isOptional: true as const, isReadonly: false as const } }
@@ -294,7 +348,7 @@ describe('Type declaration', () => {
     });
 
     it('makes readonly property defintions into readonly TS properties', () => {
-      const target = t.obj({ prop: t.roProp(t.string) });
+      const target = t.obj({ prop: t.ro(t.string) });
 
       const ExpectedResult = t.obj({
         prop: { type: t.string, attributes: { isOptional: false as const, isReadonly: true as const } }
@@ -310,7 +364,7 @@ describe('Type declaration', () => {
     });
 
     it('makes optional readonly property defintions into optional readonly TS properties', () => {
-      const target = t.obj({ prop: t.optRoProp(t.string) });
+      const target = t.obj({ prop: t.optRo(t.string) });
 
       const ExpectedResult = t.obj({
         prop: { type: t.string, attributes: { isOptional: true as const, isReadonly: true as const } }

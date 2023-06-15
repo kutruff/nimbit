@@ -1,4 +1,5 @@
-export type AnyFunc = (...args: any[]) => any;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type AnyFunc = (...args: unknown[]) => unknown;
 export type AnyObject = Record<string, unknown>;
 export type AnyArray = readonly unknown[];
 
@@ -72,6 +73,20 @@ export type StringLiteral<T> = Literal<string, T>;
 export type NumberLiteral<T> = Literal<number, T>;
 
 export type ElementType<T extends Array<unknown>> = T extends Array<infer TElement> ? TElement : never;
+
+export type Writeable<T> = {
+  -readonly [P in keyof T]: Writeable<T[P]>;
+};
+
+export type TupleKeysToUnion<T extends readonly unknown[]> = TupleKeysToUnionRec<T, never>;
+type TupleKeysToUnionRec<T extends readonly unknown[], Acc> = T extends readonly [infer U, ...infer TRest]
+  ? TupleKeysToUnionRec<TRest, Acc | U>
+  : Acc;
+
+export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K };
+export type MapOfTupleKeysReadonly<T extends readonly unknown[]> = {
+  [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K;
+};
 
 //Supposedly simplifies a type.
 //export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;

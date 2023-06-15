@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from './index';
 import { expectTypesSupportAssignment } from './test/utilities';
 
@@ -229,8 +230,7 @@ describe('Type operations', () => {
 
         expect(abc.x.y.e).toEqual('what');
       });
-
-      // eslint-disable-next-line jest/expect-expect
+      
       it('sets conflicting types to never', () => {
         interface D {
           conflictingProp: boolean;
@@ -272,7 +272,7 @@ describe('Type operations', () => {
       const target = t.obj({ prop: t.string });
       const result = t.partial(target);
 
-      const ExpectedResult = t.obj({ prop: t.optProp(t.string) });
+      const ExpectedResult = t.obj({ prop: t.opt(t.string) });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
@@ -291,8 +291,8 @@ describe('Type operations', () => {
       const result = t.partial(target);
 
       const ExpectedResult = t.obj({
-        prop: t.optProp(t.string),
-        nested: t.optProp(
+        prop: t.opt(t.string),
+        nested: t.opt(
           t.obj({
             prop: t.bigint
           })
@@ -314,7 +314,7 @@ describe('Type operations', () => {
 
   describe('required()', () => {
     it('makes optional properites into required properties', () => {
-      const target = t.obj({ prop: t.optProp(t.string) });
+      const target = t.obj({ prop: t.opt(t.string) });
       const result = t.required(target);
 
       const ExpectedResult = t.obj({ prop: t.string });
@@ -331,14 +331,14 @@ describe('Type operations', () => {
     });
 
     it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.optProp(t.bigint) });
-      const target = t.obj({ prop: t.optProp(t.string), nested: t.optProp(nestedObj) });
+      const nestedObj = t.obj({ prop: t.opt(t.bigint) });
+      const target = t.obj({ prop: t.opt(t.string), nested: t.opt(nestedObj) });
       const result = t.required(target);
 
       const ExpectedResult = t.obj({
         prop: t.string,
         nested: t.obj({
-          prop: t.optProp(t.bigint)
+          prop: t.opt(t.bigint)
         })
       });
 
@@ -360,7 +360,7 @@ describe('Type operations', () => {
       const target = t.obj({ prop: t.string });
       const result = t.readonly(target);
 
-      const ExpectedResult = t.obj({ prop: t.roProp(t.string) });
+      const ExpectedResult = t.obj({ prop: t.ro(t.string) });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
@@ -379,8 +379,8 @@ describe('Type operations', () => {
       const result = t.readonly(target);
 
       const ExpectedResult = t.obj({
-        prop: t.roProp(t.string),
-        nested: t.roProp(
+        prop: t.ro(t.string),
+        nested: t.ro(
           t.obj({
             prop: t.bigint
           })
@@ -476,8 +476,7 @@ describe('Type operations', () => {
   });
 });
 
-describe('stress tests', () => {
-  // eslint-disable-next-line jest/expect-expect
+describe('stress tests', () => {  
   it('can handle a very complex object hierarchy with optionals', () => {
     interface IC {
       prop0: boolean;
@@ -517,7 +516,7 @@ describe('stress tests', () => {
 
       propUnion: t.union(t.number, t.bigint, C, B),
       propB: B,
-      propC: t.optProp(C)
+      propC: t.opt(C)
     });
 
     type A = typeof A;

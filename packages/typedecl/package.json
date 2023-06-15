@@ -21,7 +21,7 @@
     "@kutruff-planner/eslint-config": "^0.1.0",
     "dotenv-cli": "^7.2.1",
     "eslint": "^8.42.0",
-    "jest-presets": "workspace:*",
+    "jest-presets": "workspace:^",
     "tsup": "^6.7.0",
     "tsx": "^3.12.7",
     "typescript": "^5.1.3"

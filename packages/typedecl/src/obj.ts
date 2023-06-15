@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { nul, undef } from './primitives';
-import { ObjType, Prop, ToDefinitionType, Type } from './types';
+import { type ObjType, type Prop, type ToDefinitionType, type Type } from './types';
 import { union } from './union';
 
 // Object definition parameters allow either a property defintion or a type directly
@@ -65,15 +68,19 @@ export function prop<T extends Type>(type: T) {
   return createPropDefinition(type, false as const, false as const);
 }
 
-export function optProp<T extends Type>(type: T) {
+export function opt<T extends Type>(type: T) {
   return createPropDefinition(type, true as const, false as const);
 }
 
-export function roProp<T extends Type>(type: T) {
+export function optN<T extends Type>(type: T) {
+  return createPropDefinition(union(type, nul), true as const, false as const);
+}
+
+export function ro<T extends Type>(type: T) {
   return createPropDefinition(type, false as const, true as const);
 }
 
-export function optRoProp<T extends Type>(type: T) {
+export function optRo<T extends Type>(type: T) {
   return createPropDefinition(type, true as const, true as const);
 }
 
@@ -133,5 +140,6 @@ export function changePropAttributes<T extends Type, TOptional = true, TReadonly
 }
 
 export function isProp<T, O, R>(possibleProp: T | Prop<T, O, R>): possibleProp is Prop<T, O, R> {
-  return (possibleProp as Prop<T, O, R>).attributes !== undefined;
+  const prop = possibleProp as unknown as any;
+  return prop.attributes != null && prop.type != null && prop.type.kind != null;
 }

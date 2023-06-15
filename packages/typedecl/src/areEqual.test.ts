@@ -22,7 +22,7 @@ describe('Type equality', () => {
         true
       ],
       [t.union(t.string, t.boolean, t.bigint), t.union(t.boolean, t.string), false],
-      [t.obj({ p0: t.string }), t.obj({ p0: t.optProp(t.string) }), false],
+      [t.obj({ p0: t.string }), t.obj({ p0: t.opt(t.string) }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.string }), true],
       [t.obj({ p0: t.string }), t.obj({ p1: t.string }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.boolean }), false],

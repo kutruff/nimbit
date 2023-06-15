@@ -1,4 +1,11 @@
-import { ArrayType, LiteralType, UnionType, type ObjType, type ShapeDefinition, type Type } from './types';
+import {
+  type ArrayType,
+  type LiteralType,
+  type ObjType,
+  type ShapeDefinition,
+  type Type,
+  type UnionType
+} from './types';
 
 export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type, boolean>>): boolean => {
   if (a === b) return true;
@@ -49,7 +56,7 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
       for (const memberA of aTyped.memberTypes) {
         didFindMatchingMember = false;
         for (const memberB of bTyped.memberTypes) {
-          if (areEqual(memberA as Type, memberB as Type, comparisonCache)) {
+          if (areEqual(memberA, memberB, comparisonCache)) {
             didFindMatchingMember = true;
             break;
           }

@@ -21,7 +21,7 @@ const config = {
     ],
     '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports' }]
   },
-  ignorePatterns: ['**/*.config.js', '**/*.config.cjs', 'packages/config/**'],
+  ignorePatterns: ['**/*.config.js', '**/*.config.cjs', 'packages/config/**', '**/dist/**', 'packages/jest-presets/**'],
   reportUnusedDisableDirectives: true
 };
 
