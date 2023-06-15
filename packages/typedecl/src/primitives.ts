@@ -1,4 +1,4 @@
-import { createType, type Type } from './types';
+import { createType } from './types';
 
 export const string = createType<'string', string>('string', 'string');
 export const number = createType<'number', number>('number', 'number');
