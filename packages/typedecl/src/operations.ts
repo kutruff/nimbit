@@ -73,7 +73,7 @@ export function intersection<TShapeDefinitionA extends ShapeDefinition, TShapeDe
 }
 
 export type PartialType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R, infer TKey extends P> ? Prop<T, true, R, TKey> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R> ? Prop<T, true, R> : never;
 };
 
 export function partial<T extends ShapeDefinition>(objType: ObjType<T>): ObjType<PartialType<T>> {
@@ -87,7 +87,7 @@ export function partial<T extends ShapeDefinition>(objType: ObjType<T>): ObjType
 }
 
 export type RequiredType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R, infer TKey extends P> ? Prop<T, false, R, TKey> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R> ? Prop<T, false, R> : never;
 };
 
 export function required<T extends ShapeDefinition>(objType: ObjType<T>): ObjType<RequiredType<T>> {
@@ -101,7 +101,7 @@ export function required<T extends ShapeDefinition>(objType: ObjType<T>): ObjTyp
 }
 
 export type ReadonlyType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown, infer TKey extends P> ? Prop<T, O, true, TKey> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, true> : never;
 };
 
 export function readonly<T extends ShapeDefinition>(objType: ObjType<T>): ObjType<ReadonlyType<T>> {
@@ -115,7 +115,7 @@ export function readonly<T extends ShapeDefinition>(objType: ObjType<T>): ObjTyp
 }
 
 export type WritableType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown, infer TKey extends P> ? Prop<T, O, false, TKey> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, false> : never;
 };
 
 export function writable<T extends ShapeDefinition>(objType: ObjType<T>): ObjType<WritableType<T>> {

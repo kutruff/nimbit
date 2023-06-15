@@ -1,20 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { nul, undef } from './primitives';
-import { type ObjType, type Prop, type ToDefinitionType, type Type } from './types';
-import { union } from './union';
+import { keyMap, nul, undef, union, type ObjType, type Prop, type ToDefinitionType, type Type } from '.';
 
 // Object definition parameters allow either a property defintion or a type directly
 export interface ShapeDefinitionParameters {
-  [key: string]: Prop<unknown, unknown, unknown, unknown> | Type;
+  [key: string]: Prop<unknown, unknown, unknown> | Type;
 }
 
 // Wrap a set of t.Types in Props<> - Allows people to use either "t.str" or "prop(t.str)" when defining objects
 export type MapShapeDefParamsToPropDefinitions<T> = {
-  [P in keyof T]: T[P] extends Prop<infer TP, infer O, infer R, unknown>
-    ? Prop<TP, O, R, P>
-    : Prop<T[P], false, false, P>;
+  [P in keyof T]: T[P] extends Prop<infer TP, infer O, infer R> ? Prop<TP, O, R> : Prop<T[P], false, false>;
 };
 
 export function obj<TShapeDefinitionParams extends ShapeDefinitionParameters>(
@@ -25,7 +21,8 @@ export function obj<TShapeDefinitionParams extends ShapeDefinitionParameters>(
   return {
     kind: 'object',
     name,
-    shape: shapeDefinition
+    shape: shapeDefinition,
+    k: keyMap(shapeDefinition)
   };
 }
 
@@ -36,8 +33,8 @@ export function getShapeDefinition<TShapeDefinitionParams extends ShapeDefinitio
   for (const key of Object.keys(shapeDefinition)) {
     const prop = (
       isProp(shapeDefinition[key])
-        ? { ...shapeDefinition[key], name: key }
-        : createPropDefinition(shapeDefinition[key] as Type, false, false, key)
+        ? { ...shapeDefinition[key] }
+        : createPropDefinition(shapeDefinition[key] as Type, false, false)
     ) as Prop<unknown, unknown, unknown>;
 
     result[key] = prop;
@@ -107,12 +104,10 @@ export function nullish<T extends Type>(type: T) {
 export function createPropDefinition<T extends Type, TOptional = true, TReadonly = false>(
   type: T,
   isOptional: TOptional,
-  isReadonly: TReadonly,
-  name?: string
+  isReadonly: TReadonly
 ): Prop<T, TOptional, TReadonly> {
   return {
     type,
-    name,
     attributes: {
       isOptional: isOptional,
       isReadonly: isReadonly

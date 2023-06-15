@@ -2,12 +2,13 @@
 import {
   type Literal,
   type NotAUnion,
+  type ObjectKeyMap,
   type OptionalPropertyNames,
   type PickPartially,
   type PickReadonly,
   type PropsOfType,
   type ReadonlyPropertyNames
-} from './generics';
+} from '.';
 
 export interface Type<TKind = unknown, T = unknown> {
   kind: TKind;
@@ -60,11 +61,11 @@ export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type
 export interface ObjType<TShapeDefinition> extends Type<'object', unknown> {
   kind: 'object';
   shape: TShapeDefinition;
+  k: ObjectKeyMap<TShapeDefinition>;
 }
 
-export type Prop<T, TOptional, TReadonly, TNameType = string> = {
+export type Prop<T, TOptional, TReadonly> = {
   type: T;
-  name?: TNameType;
   attributes: {
     isOptional: TOptional;
     isReadonly: TReadonly;
@@ -80,20 +81,14 @@ export interface ShapeDefinition {
 // That means functions and types have to cast until it's fixed
 // https://github.com/microsoft/TypeScript/issues/34933
 
-type MapPropDefinitionsToTsOptionals<T> = PickPartially<
-  T,
-  PropsOfType<T, Prop<Type<unknown, unknown>, true, unknown, unknown>>
->;
-type MapPropDefinitionsToTsReadonly<T> = PickReadonly<
-  T,
-  PropsOfType<T, Prop<Type<unknown, unknown>, unknown, true, unknown>>
->;
+type MapPropDefinitionsToTsOptionals<T> = PickPartially<T, PropsOfType<T, Prop<Type<unknown, unknown>, true, unknown>>>;
+type MapPropDefinitionsToTsReadonly<T> = PickReadonly<T, PropsOfType<T, Prop<Type<unknown, unknown>, unknown, true>>>;
 
 // This converts an ObjectDefintion's properties from { prop0: Prop<T, true, true> } to {readonly prop0? : Prop<T, true, true>}
 // It does this in preparation of converting the Props<> to their TypesScript types.
 type MapPropDefinitionsToTsPropertyModifiers<T> = MapPropDefinitionsToTsOptionals<MapPropDefinitionsToTsReadonly<T>>;
 
-type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown, unknown> ? U : never;
+type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown> ? U : never;
 
 // Introducing additional helpers typers that increase clarity causes inference to go crazy.
 //  basically, only recurse inside of yourself.
@@ -154,8 +149,7 @@ type ToDefinitionTypeDistribute<TsType> = TsType extends Literal<string, TsType>
       -readonly [P in keyof TsType]-?: Prop<
         ToDefinitionType<Exclude<TsType[P], undefined>>,
         P extends OptionalPropertyNames<TsType> ? true : false,
-        P extends ReadonlyPropertyNames<TsType> ? true : false,
-        P
+        P extends ReadonlyPropertyNames<TsType> ? true : false
       >;
     }>
   : never;
