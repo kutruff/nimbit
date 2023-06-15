@@ -8,7 +8,7 @@
   "scripts": {
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
-    "clean:workspaces": "turbo clean",
+    "clean:workspace": "turbo clean",
     "db:generate": "turbo db:generate",
     "db:push": "turbo db:push db:generate",
     "db:push-reset": "turbo db:push-reset",
@@ -19,15 +19,14 @@
     "data": "pnpm --filter themeparks-data",
     "dev": "turbo dev --parallel",
     "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,md,json}\" --ignore-path .gitignore",
-    "lint": "turbo lint && manypkg check",
-    "lint:fix": "turbo lint:fix && manypkg fix",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
     "test": "turbo test",
     "type-check": "turbo type-check"
   },
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.0.2",
     "@kutruff-planner/eslint-config": "^0.1.0",
-    "@manypkg/cli": "^0.21.0",
     "@types/jest": "^29.5.2",
     "@types/prettier": "^2.7.3",
     "eslint": "^8.42.0",
