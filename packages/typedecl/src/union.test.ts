@@ -1,4 +1,3 @@
-
 import * as t from './index';
 import { expectTypesSupportAssignment } from './test/utilities';
 
@@ -118,7 +117,29 @@ describe('Unions of types', () => {
 
           expect(Target).toEqual(t.string);
         });
+
+        it('collapses entire union when there is a nested AnyType', () => {
+          const Target = t.union(t.string, t.union(t.boolean, t.any));
+          type Target = t.ToTsType<typeof Target>;
+
+          type ExpectedDefinitionType = typeof t.any;
+          expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
+          expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
+
+          expect(Target).toEqual(t.any);
+        });
       });
+    });
+
+    it('union with any is always collapsed', () => {
+      const Target = t.union(t.boolean, t.any);
+      type Target = t.ToTsType<typeof Target>;
+
+      type ExpectedDefinitionType = typeof t.any;
+      expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
+      expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
+
+      expect(Target).toEqual(t.any);
     });
   });
 

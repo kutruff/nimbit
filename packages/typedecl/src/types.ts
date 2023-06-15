@@ -19,6 +19,10 @@ export const createType = <TKind, T>(kind: TKind, name?: string): Type<TKind, T>
 //TODO: verify that this copy and set will be sufficiently typed.
 export const name = <T extends { name: unknown }>(name: unknown, objType: T): typeof objType => ({ ...objType, name });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const any = createType<'any', any>('any', 'any');
+export type AnyType = typeof any;
+
 export interface LiteralType<TLiteralValue> extends Type<'literal', TLiteralValue> {
   kind: 'literal';
   literal: TLiteralValue;
@@ -112,6 +116,7 @@ export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer Litera
   ? T
   : never;
 
+//TODO: this paradigm should be removed unless it can be made extensible is some way.
 //Main entry to convert a TypeScript type to a ShapeDefinition.  First need to detect a typescript union and then
 export type ToDefinitionType<TsType> = NotAUnion<TsType> extends never
   ? UnionType<ToDefinitionTypeDistribute<TsType>>
@@ -155,13 +160,28 @@ type ToDefinitionTypeDistribute<TsType> = TsType extends Literal<string, TsType>
 export type AsTypes<T> = T extends Type<unknown, unknown> ? T : never;
 
 //TODO: try to see if wrapping AsTypes is still necessary, or if that can happen higher up
+//This takes UnionType<UnionType<t.string | t.number>> and flattens it to UnionType<t.string | t.number>
 export type FlattenedUnion<T extends Type<unknown, unknown>> = AsTypes<
   T extends UnionType<infer K> ? FlattenedUnion<K> : T
 >;
 
+//First, if T is a TYPESCRIPT union of something t.string | t.number, then we want the TypeScript Type to be UniontType<t.string | t.number>.
+// export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
+//   ? UnionWithAnyBecomesAny<UnionType<T>>
+//   : T;
 export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
-  ? UnionType<T>
+  ? UnionWithAnyBecomesAny<UnionType<T>>
+  : T;
+  
+//Will take a UnionType<typeof t.any | typeof t.string> and collapses it to AnyType, and it uses [] to prevent distribution over conditional types.
+export type UnionWithAnyBecomesAny<T extends Type<unknown, unknown>> = T extends UnionType<infer K>
+  ? [K | AnyType] extends [K]
+    ? AnyType
+    : T
   : T;
 
+export type UnionOrSingleType<T extends Type<unknown, unknown>> = CollapseSingleMemberUnionType<FlattenedUnion<T>>;
+
 // How to prevent conditional from being distributed
+//https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
 // type NoDistribute<T> = [T] extends [T] ? T : never;

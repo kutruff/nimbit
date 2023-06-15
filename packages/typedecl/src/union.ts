@@ -1,40 +1,32 @@
 import { areEqual } from './areEqual';
-import {
-  type CollapseSingleMemberUnionType,
-  type ElementType,
-  type FlattenedUnion,
-  type Type,
-  type UnionType
-} from './index';
+import { any, type ElementType, type FlattenedUnion, type Type, type UnionOrSingleType, type UnionType } from './index';
 
-export const flattenUnionMembers = <T extends Type<unknown, unknown> | UnionType<Type<unknown, unknown>>>(
+const flattenUnionMembers = <T extends Type<unknown, unknown> | UnionType<Type<unknown, unknown>>>(
   members: Array<T>
-): Array<FlattenedUnion<T>> => {
+):
+  | [hasTheAnyTypeBeenFound: false, flattened: Array<FlattenedUnion<T>>]
+  | [hasTheAnyTypeBeenFound: true, flattened: undefined] => {
   const flattened: Array<Type<unknown, unknown>> = [];
   const visited = new Set<Type>();
 
+  let hasTheAnyTypeBeenFound = false;
   function visit(currentType: Type<unknown, unknown>) {
-    if (visited.has(currentType)) {
+    hasTheAnyTypeBeenFound ||= currentType.kind === 'any';
+    if (visited.has(currentType) || hasTheAnyTypeBeenFound) {
       return;
     }
     visited.add(currentType);
+
     if (currentType.kind === 'union') {
       const union = currentType as UnionType<Type<unknown, unknown>>;
-      union.memberTypes.forEach(x => visit(x));
+      union.memberTypes.forEach(visit);
     } else {
       flattened.push(currentType);
     }
   }
+  members.forEach(visit);
 
-  for (const element of members) {
-    if (element.kind === 'union') {
-      visit(element as UnionType<Type<unknown, unknown>>);
-    } else {
-      flattened.push(element);
-    }
-  }
-
-  return flattened as Array<FlattenedUnion<T>>;
+  return hasTheAnyTypeBeenFound ? [true, undefined] : [false, flattened as Array<FlattenedUnion<T>>];
 };
 
 export const compressUnionMembers = <T extends Type<unknown, unknown>[]>(unionMembers: T) => {
@@ -56,10 +48,12 @@ export const compressUnionMembers = <T extends Type<unknown, unknown>[]>(unionMe
   return result;
 };
 
-export type UnionOrSingleType<T extends Type<unknown, unknown>> = CollapseSingleMemberUnionType<FlattenedUnion<T>>;
-
 export const union = <T extends Type<unknown, unknown>[]>(...args: T): UnionOrSingleType<ElementType<T>> => {
-  const flattenedMembers = flattenUnionMembers(args);
+  const [hasTheAnyTypeBeenFound, flattenedMembers] = flattenUnionMembers(args);
+  if (hasTheAnyTypeBeenFound) {
+    return any as UnionOrSingleType<ElementType<T>>;
+  }
+
   const compressed = compressUnionMembers(flattenedMembers);
 
   if (compressed.length === 0) throw new Error();
