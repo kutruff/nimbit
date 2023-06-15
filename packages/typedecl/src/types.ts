@@ -11,9 +11,13 @@ import {
 
 export interface Type<TKind = unknown, T = unknown> {
   kind: TKind;
+  name?: string;
 }
 
-export const createType = <TKind, T>(kind: TKind): Type<TKind, T> => ({ kind });
+export const createType = <TKind, T>(kind: TKind, name?: string): Type<TKind, T> => ({ kind, name });
+
+//TODO: verify that this copy and set will be sufficiently typed.
+export const name = <T extends { name: unknown }>(name: unknown, objType: T): typeof objType => ({ ...objType, name });
 
 export interface LiteralType<TLiteralValue> extends Type<'literal', TLiteralValue> {
   kind: 'literal';
@@ -37,7 +41,6 @@ export const array = <TElement extends Type<unknown, unknown>>(element: TElement
 
 export interface EnumType<TEnumValues, TMapOfTupleKeys> extends Type<'enum', TEnumValues> {
   kind: 'enum';
-  name: string;
   values: TEnumValues;
   enum: TMapOfTupleKeys;
 }
@@ -49,7 +52,6 @@ export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type
 
 export interface ObjType<TShapeDefinition> extends Type<'object', unknown> {
   kind: 'object';
-  name?: string;
   shape: TShapeDefinition;
 }
 
@@ -110,7 +112,7 @@ export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer Litera
   ? T
   : never;
 
-//Main entry to convert a TypeScript type to an ShapeDefinition.  First need to detect a typescript union and then
+//Main entry to convert a TypeScript type to a ShapeDefinition.  First need to detect a typescript union and then
 export type ToDefinitionType<TsType> = NotAUnion<TsType> extends never
   ? UnionType<ToDefinitionTypeDistribute<TsType>>
   : ToDefinitionTypeDistribute<TsType>;

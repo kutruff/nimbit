@@ -17,10 +17,6 @@ export type MapShapeDefParamsToPropDefinitions<T> = {
     : Prop<T[P], false, false, P>;
 };
 
-//TODO: verify that this copy and set will be sufficiently typed.
-// export const name = <T extends ObjType<unknown>>(objType: T, name: string): T => ({ ...objType, name });
-export const name = <T extends { name: unknown }>(objType: T, name: unknown): typeof objType => ({ ...objType, name });
-
 export function obj<TShapeDefinitionParams extends ShapeDefinitionParameters>(
   shapeDefinitionParms: TShapeDefinitionParams,
   name?: string
