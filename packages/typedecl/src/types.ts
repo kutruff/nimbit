@@ -17,7 +17,10 @@ export interface Type<TKind = unknown, T = unknown> {
 export const createType = <TKind, T>(kind: TKind, name?: string): Type<TKind, T> => ({ kind, name });
 
 //TODO: verify that this copy and set will be sufficiently typed.
-export const name = <T extends { name: unknown }>(name: unknown, objType: T): typeof objType => ({ ...objType, name });
+export const name = <T extends Type<unknown, unknown>>(name: string, objType: T): typeof objType => ({
+  ...objType,
+  name
+});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const any = createType<'any', any>('any', 'any');
@@ -172,7 +175,7 @@ export type FlattenedUnion<T extends Type<unknown, unknown>> = AsTypes<
 export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
   ? UnionWithAnyBecomesAny<UnionType<T>>
   : T;
-  
+
 //Will take a UnionType<typeof t.any | typeof t.string> and collapses it to AnyType, and it uses [] to prevent distribution over conditional types.
 export type UnionWithAnyBecomesAny<T extends Type<unknown, unknown>> = T extends UnionType<infer K>
   ? [K | AnyType] extends [K]
