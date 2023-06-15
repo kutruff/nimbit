@@ -24,6 +24,31 @@ describe('Type operations', () => {
 
       expect(result).toEqual(ExpectedDefinitionType);
     });
+    describe('object properties with same name and AnyType', () => {
+      it('does not result in the correct TypeScript types on purpose do to perf concerns and its a rare things to do.', () => {
+        interface A {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          prop: any;
+        }
+        interface B {
+          prop: number;
+        }
+        type Merged = A & B;
+
+        //Shows what TS normally does - it narrows
+        const foo: Merged = { prop: 1 };
+        expect(foo.prop).toEqual(1);
+
+        type res = Merged['prop'];
+        const objA = t.obj({ prop: t.any });
+        const objB = t.obj({ prop: t.number });
+        const resultAB = t.intersection(objA, objB);
+        expect(resultAB.shape.prop).toEqual(objB.shape.prop);
+
+        const resultBA = t.intersection(objA, objB);
+        expect(resultBA.shape.prop).toEqual(objB.shape.prop);
+      });
+    });
 
     describe('object properties with same name', () => {
       it('merges properties with three objects used', () => {
@@ -230,7 +255,7 @@ describe('Type operations', () => {
 
         expect(abc.x.y.e).toEqual('what');
       });
-      
+
       it('sets conflicting types to never', () => {
         interface D {
           conflictingProp: boolean;
@@ -476,7 +501,7 @@ describe('Type operations', () => {
   });
 });
 
-describe('stress tests', () => {  
+describe('stress tests', () => {
   it('can handle a very complex object hierarchy with optionals', () => {
     interface IC {
       prop0: boolean;

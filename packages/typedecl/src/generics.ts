@@ -89,7 +89,7 @@ export type MapOfTupleKeysReadonly<T extends readonly unknown[]> = {
 };
 
 //Supposedly simplifies a type.
-//export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
+export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
 
 // type GetChars<S> = GetCharsHelper<S, never>;
 // type GetCharsHelper<S, Acc> = S extends `${infer Char}${infer Rest}` ? GetCharsHelper<Rest, Char | Acc> : Acc;

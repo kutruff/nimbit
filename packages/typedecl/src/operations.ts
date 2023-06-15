@@ -2,19 +2,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { areEqual } from './areEqual';
 import {
-  type ElementType,
-  type ObjType,
-  type Prop,
-  type ShapeDefinition,
-  type Type,
-  type UnionType,
   makeOptional,
   makeReadonly,
   makeRequired,
   makeWritable,
   never,
   obj,
-  prop
+  prop,
+  type ElementType,
+  type ObjType,
+  type Prop,
+  type ShapeDefinition,
+  type Type,
+  type UnionType
 } from './index';
 import { union } from './union';
 
@@ -40,23 +40,29 @@ export function intersection<TShapeDefinitionA extends ShapeDefinition, TShapeDe
     } else if (propertyA != null && propertyB == null) {
       merged[key] = propertyA;
     } else if (propertyA != null && propertyB != null) {
-      switch (propertyA.type.kind) {
-        case 'object': {
-          if (propertyB.type.kind !== 'object') {
-            return never as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
-          }
+      if (propertyA.type.kind === 'any') {
+        merged[key] = propertyB;
+      } else if (propertyA.type.kind === 'any') {
+        merged[key] = propertyA;
+      } else {
+        switch (propertyA.type.kind) {
+          case 'object': {
+            if (propertyB.type.kind !== 'object') {
+              return never as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
+            }
 
-          merged[key] = prop(intersection(propertyA.type as any, propertyB.type as any) as any);
-          break;
-        }
-        default: {
-          //TODO: what happens with optional and readonly props?
-          if (areEqual(propertyA.type, propertyB.type)) {
-            merged[key] = prop(propertyA.type);
-          } else {
-            return never as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
+            merged[key] = prop(intersection(propertyA.type as any, propertyB.type as any) as any);
+            break;
           }
-          break;
+          default: {
+            //TODO: what happens with optional and readonly props?
+            if (areEqual(propertyA.type, propertyB.type)) {
+              merged[key] = prop(propertyA.type);
+            } else {
+              return never as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
+            }
+            break;
+          }
         }
       }
     }
