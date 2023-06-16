@@ -29,9 +29,9 @@ describe('Type declaration', () => {
 
     type PersonTwo = t.ToTsType<typeof PersonTwo>;
 
-    type PersonTwoShapeDefinitionRoundTripped = t.ToDefinitionType<PersonTwo>;
+    type PersonTwoShapeRoundTripped = t.ToShapeType<PersonTwo>;
 
-    const roundTrippedInstance: PersonTwoShapeDefinitionRoundTripped = {
+    const roundTrippedInstance: PersonTwoShapeRoundTripped = {
       kind: 'object',
       shape: {
         name: { ...t.prop(t.string) },
@@ -58,7 +58,7 @@ describe('Type declaration', () => {
     });
 
     type ObjB = t.ToTsType<typeof ObjB>;
-    type ObjBRoundTripped = t.ToDefinitionType<ObjB>;
+    type ObjBRoundTripped = t.ToShapeType<ObjB>;
 
     const objBInstance: ObjB = { refToA: { name: 'hello' } };
     const testFoo: ObjBRoundTripped = ObjB;
@@ -87,7 +87,7 @@ describe('Type declaration', () => {
       radius: t.number
     });
     type Circle = t.ToTsType<typeof Circle>;
-    type CircleDefintion = t.ToDefinitionType<Circle>;
+    type CircleDefintion = t.ToShapeType<Circle>;
 
     const Square = t.obj({
       discriminator: t.literal('square' as const),
@@ -100,16 +100,16 @@ describe('Type declaration', () => {
 
   it('allows mapping of TypeScript types to primitive defintions', () => {
     type strType = typeof t.string;
-    type MapPrimitiveStringTest = t.ToDefinitionType<string>;
-    type MapPrimitiveNumTest = t.ToDefinitionType<number>;
-    type MapPrimitiveObjTest = t.ToDefinitionType<AnyObject>;
+    type MapPrimitiveStringTest = t.ToShapeType<string>;
+    type MapPrimitiveNumTest = t.ToShapeType<number>;
+    type MapPrimitiveObjTest = t.ToShapeType<AnyObject>;
 
-    type MappedString = t.ToDefinitionType<string>;
-    type MappedNumber = t.ToDefinitionType<number>;
+    type MappedString = t.ToShapeType<string>;
+    type MappedNumber = t.ToShapeType<number>;
 
-    type MappedLiteral = t.ToDefinitionType<'fooLiteral'>;
+    type MappedLiteral = t.ToShapeType<'fooLiteral'>;
 
-    type MappedObj = t.ToDefinitionType<{
+    type MappedObj = t.ToShapeType<{
       name: string;
       age: number;
       aLiteral: 'someLiteral';
@@ -189,8 +189,8 @@ describe('Type declaration', () => {
       strProp = t.string;
     }
 
-    type FooShapeDefParams = t.ShapeClassToShapeDefParams<typeof Foo>;
-    const fooObject = {} as any as t.ShapeDefParamsToObjType<FooShapeDefParams>;
+    type FooShapeDefinition = t.ShapeClassToShapeDefinition<typeof Foo>;
+    const fooObject = {} as any as t.ShapeDefinitionToObjType<FooShapeDefinition>;
 
     type FooObjectType = typeof fooObject;
     type FooTsType = t.ToTsType<FooObjectType>;
@@ -209,7 +209,6 @@ describe('Type declaration', () => {
     type RecType = t.ToTsType<typeof fooObj>;
   });
 
-
   describe('Arrays', () => {
     it('allows simple arrays', () => {
       const arrayOfNumbers = t.array(t.number);
@@ -218,7 +217,7 @@ describe('Type declaration', () => {
         anArrayProp: t.array(t.string)
       });
       type ObjectWithArray = t.ToTsType<typeof ObjectWithArray>;
-      type ObjectWithArrayDefinitionFromShape = t.ToDefinitionType<ObjectWithArray>;
+      type ObjectWithArrayDefinitionFromShape = t.ToShapeType<ObjectWithArray>;
       const instance: ObjectWithArray = {
         anArrayProp: ['foo', 'bar']
       };
@@ -235,7 +234,7 @@ describe('Type declaration', () => {
         )
       });
       type ObjectWithArray = t.ToTsType<typeof ObjectWithArray>;
-      type ObjectWithArrayDefinitionFromShape = t.ToDefinitionType<ObjectWithArray>;
+      type ObjectWithArrayDefinitionFromShape = t.ToShapeType<ObjectWithArray>;
       const instance: ObjectWithArray = {
         anArrayProp: [{ someProp: 'foo' }, { someProp: 'bar' }]
       };

@@ -544,7 +544,7 @@ describe('stress tests', () => {
 
     type A = typeof A;
     type ATsType = t.ToTsType<A>;
-    type ARoundTrip = t.ToDefinitionType<ATsType>;
+    type ARoundTrip = t.ToShapeType<ATsType>;
     expectTypesSupportAssignment<A, ARoundTrip>();
     expectTypesSupportAssignment<ARoundTrip, A>();
     expectTypesSupportAssignment<ATsType, IA>();

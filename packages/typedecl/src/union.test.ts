@@ -173,7 +173,7 @@ describe('Unions of types', () => {
       });
 
       type Target = t.ToTsType<typeof Target>;
-      type TargetRoundTripped = t.ToDefinitionType<Target>;
+      type TargetRoundTripped = t.ToShapeType<Target>;
 
       expectTypesSupportAssignment<TargetRoundTripped, typeof Target>();
       expectTypesSupportAssignment<typeof Target, TargetRoundTripped>();

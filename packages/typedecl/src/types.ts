@@ -59,10 +59,10 @@ export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type
   memberTypes: Array<TMembers>;
 }
 
-export interface ObjType<TShapeDefinition> extends Type<'object', unknown> {
+export interface ObjType<TShape> extends Type<'object', unknown> {
   kind: 'object';
-  shape: TShapeDefinition;
-  k: ObjectKeyMap<TShapeDefinition>;
+  shape: TShape;
+  k: ObjectKeyMap<TShape>;
 }
 
 export type Prop<T, TOptional, TReadonly> = {
@@ -100,11 +100,11 @@ export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer Litera
   ? ToTsType<MemberDefinitions>
   : TDefinition extends EnumType<unknown, infer TEnumValues>
   ? TEnumValues
-  : TDefinition extends ObjType<infer TShapeDefinition>
+  : TDefinition extends ObjType<infer TShape>
   ? {
       //First add optional/readonly property modifiers to the DEFINITION, and then those modifiers will just get copied over to the TsType!
-      [P in keyof MapPropDefinitionsToTsPropertyModifiers<TShapeDefinition>]: ToTsType<
-        TypeOfPropDefinition<MapPropDefinitionsToTsPropertyModifiers<TShapeDefinition>[P]>
+      [P in keyof MapPropDefinitionsToTsPropertyModifiers<TShape>]: ToTsType<
+        TypeOfPropDefinition<MapPropDefinitionsToTsPropertyModifiers<TShape>[P]>
       >;
     }
   : TDefinition extends Type<unknown, infer T>
@@ -112,13 +112,13 @@ export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer Litera
   : never;
 
 //TODO: this paradigm should be removed unless it can be made extensible is some way.
-//Main entry to convert a TypeScript type to a ShapeDefinition.  First need to detect a typescript union and then
-export type ToDefinitionType<TsType> = NotAUnion<TsType> extends never
-  ? UnionType<ToDefinitionTypeDistribute<TsType>>
-  : ToDefinitionTypeDistribute<TsType>;
+//Main entry to convert a TypeScript type to a Shape.  First need to detect a typescript union and then
+export type ToShapeType<TsType> = NotAUnion<TsType> extends never
+  ? UnionType<ToShapeTypeDistribute<TsType>>
+  : ToShapeTypeDistribute<TsType>;
 
 //TODO: should 'never' be part if this?
-type ToDefinitionTypeDistribute<TsType> = TsType extends Literal<string, TsType>
+type ToShapeTypeDistribute<TsType> = TsType extends Literal<string, TsType>
   ? LiteralType<TsType>
   : TsType extends Literal<number, TsType>
   ? LiteralType<TsType>
@@ -137,14 +137,14 @@ type ToDefinitionTypeDistribute<TsType> = TsType extends Literal<string, TsType>
   : TsType extends undefined
   ? Type<'undefined', undefined>
   : TsType extends Array<infer TElementType>
-  ? ArrayType<ToDefinitionType<TElementType>>
+  ? ArrayType<ToShapeType<TElementType>>
   : TsType extends object
   ? ObjType<{
       //Make a property definition from the TypeScript type.
       //Remove any '| undefined' parts of the union because that's for optional properties.
       //The second argument to prop is wheather it's readonly
       -readonly [P in keyof TsType]-?: Prop<
-        ToDefinitionType<Exclude<TsType[P], undefined>>,
+        ToShapeType<Exclude<TsType[P], undefined>>,
         P extends OptionalPropertyNames<TsType> ? true : false,
         P extends ReadonlyPropertyNames<TsType> ? true : false
       >;
@@ -160,9 +160,6 @@ export type FlattenedUnion<T extends Type<unknown, unknown>> = AsTypes<
 >;
 
 //First, if T is a TYPESCRIPT union of something t.string | t.number, then we want the TypeScript Type to be UniontType<t.string | t.number>.
-// export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
-//   ? UnionWithAnyBecomesAny<UnionType<T>>
-//   : T;
 export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
   ? UnionWithAnyBecomesAny<UnionType<T>>
   : T;
