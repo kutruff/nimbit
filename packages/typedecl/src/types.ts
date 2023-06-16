@@ -151,15 +151,11 @@ type ToShapeTypeDistribute<TsType> = TsType extends Literal<string, TsType>
     }>
   : never;
 
-export type AsTypes<T> = T extends Type<unknown, unknown> ? T : never;
 
-//TODO: try to see if wrapping AsTypes is still necessary, or if that can happen higher up
 //This takes UnionType<UnionType<t.string | t.number>> and flattens it to UnionType<t.string | t.number>
-export type FlattenedUnion<T extends Type<unknown, unknown>> = AsTypes<
-  T extends UnionType<infer K> ? FlattenedUnion<K> : T
->;
+export type FlattenedUnion<T extends Type<unknown, unknown>> = T extends UnionType<infer K> ? FlattenedUnion<K> : T;
 
-//First, if T is a TYPESCRIPT union of something t.string | t.number, then we want the TypeScript Type to be UniontType<t.string | t.number>.
+//First, if T is a TYPESCRIPT union of typedecl types like t.string | t.number, then we want the TypeScript Type to be UniontType<t.string | t.number>.
 export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
   ? UnionWithAnyBecomesAny<UnionType<T>>
   : T;
