@@ -1,26 +1,41 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { keyMap, nul, undef, union, type ObjType, type Prop, type ToDefinitionType, type Type } from '.';
+import { keyMap, nul, undef, union, type ObjType, type Prop, type Type } from '.';
 
-// Object definition parameters allow either a property defintion or a type directly
-export interface ShapeDefinitionParameters {
-  [key: string]: Prop<unknown, unknown, unknown> | Type;
+export interface ShapeDefinition {
+  [key: string]: Prop<Type<unknown, unknown>, unknown, unknown>;
 }
 
-// Wrap a set of t.Types in Props<> - Allows people to use either "t.str" or "prop(t.str)" when defining objects
-export type MapShapeDefParamsToPropDefinitions<T> = {
-  [P in keyof T]: T[P] extends Prop<infer TP, infer O, infer R> ? Prop<TP, O, R> : Prop<T[P], false, false>;
+const singletons = new WeakMap<object, object>();
+export const createOnce = <T extends object>(ctor: new () => T): T => {
+  let current = singletons.get(ctor) as T | undefined;
+  if (!current) {
+    current = new ctor();
+    singletons.set(ctor, current);
+  }
+  return current;
 };
 
+//TODO: Could be a record? Record<PropertyKey, Prop<unknown, unknown, unknown> | Type<unknown, unknown>>
+// Object definition parameters allow either a property defintion or a type directly
+export interface ShapeDefinitionParameters {
+  [key: string]: Prop<unknown, unknown, unknown> | Type<unknown, unknown>;
+}
+// Wrap a set of t.Types in Props<> - Allows people to use either "t.str" or "prop(t.str)" when defining objects
+export type MapShapeDefParamsToPropDefinitions<T> = {
+  [P in keyof T]: T[P] extends Prop<unknown, unknown, unknown> ? T[P] : Prop<T[P], false, false>;
+};
+
+export type ShapeDefParamsToObjType<T> = ObjType<MapShapeDefParamsToPropDefinitions<T>>;
+
 export function obj<TShapeDefinitionParams extends ShapeDefinitionParameters>(
-  shapeDefinitionParms: TShapeDefinitionParams,
-  name?: string
-): ObjType<MapShapeDefParamsToPropDefinitions<TShapeDefinitionParams>> {
+  shapeDefinitionParms: TShapeDefinitionParams
+): ShapeDefParamsToObjType<TShapeDefinitionParams> {
   const shapeDefinition = getShapeDefinition(shapeDefinitionParms);
   return {
     kind: 'object',
-    name,
     shape: shapeDefinition,
     k: keyMap(shapeDefinition)
   };
@@ -40,21 +55,6 @@ export function getShapeDefinition<TShapeDefinitionParams extends ShapeDefinitio
     result[key] = prop;
   }
   return result as MapShapeDefParamsToPropDefinitions<TShapeDefinitionParams>;
-}
-
-export function declareObj<TShape>(name?: string): ToDefinitionType<TShape> {
-  return {
-    kind: 'object',
-    name,
-    objectDefintion: {}
-  } as unknown as ToDefinitionType<TShape>;
-}
-
-export function defineDeclaration<TShapeDefintionParameters extends ShapeDefinitionParameters>(
-  declaredObjType: ObjType<MapShapeDefParamsToPropDefinitions<TShapeDefintionParameters>>,
-  shapeDefinitionParams: TShapeDefintionParameters
-) {
-  declaredObjType.shape = getShapeDefinition(shapeDefinitionParams);
 }
 
 export function prop<T extends Type>(type: T) {

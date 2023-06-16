@@ -2,6 +2,7 @@
 export type AnyFunc = (...args: unknown[]) => unknown;
 export type AnyObject = Record<string, unknown>;
 export type AnyArray = readonly unknown[];
+export type Constructor = new (...args: unknown[]) => {};
 
 export type PropsOfType<T, TPropTypes> = {
   [K in keyof T]: T[K] extends TPropTypes ? K : never;

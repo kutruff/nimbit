@@ -7,3 +7,4 @@ export * from './generics';
 export * from './primitives';
 export * from './reflection';
 export * from './enum';
+export * from './classShapes';

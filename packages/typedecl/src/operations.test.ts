@@ -519,39 +519,80 @@ describe('stress tests', () => {
       propRecursive: Array<IA>;
       propStringLiteral: 'hello';
       propNumberLiteral: 1;
-
       propUnion: number | bigint | IC | IB;
       propB: IB;
       propC?: IC;
     }
 
-    const A = t.declareObj<IA>();
+    class ADef {
+      propBool = t.boolean;
+      propNum = t.number;
+      propBigInt = t.bigint;
+      propString = t.string;
+      propArray = t.array(t.string);
+      propRecursive = t.array(t.objFromClass(ADef));
+      propStringLiteral = t.literal('hello');
+      propNumberLiteral = t.literal(1);
+      propUnion = t.union(t.number, t.bigint, C, B);
+      propB = B;
+      propC = t.opt(C);
+    }
+    const A = t.objFromClass(ADef);
+
     const C = t.obj({ prop0: t.boolean, distinctProp: t.number });
     const B = t.obj({ prop0: t.boolean });
-
-    t.defineDeclaration(A, {
-      propBool: t.boolean,
-      propNum: t.number,
-      propBigInt: t.bigint,
-      propString: t.string,
-      propArray: t.array(t.string),
-      propRecursive: t.array(A),
-      propStringLiteral: t.literal('hello'),
-      propNumberLiteral: t.literal(1),
-
-      propUnion: t.union(t.number, t.bigint, C, B),
-      propB: B,
-      propC: t.opt(C)
-    });
 
     type A = typeof A;
     type ATsType = t.ToTsType<A>;
     type ARoundTrip = t.ToDefinitionType<ATsType>;
-
     expectTypesSupportAssignment<A, ARoundTrip>();
     expectTypesSupportAssignment<ARoundTrip, A>();
-
     expectTypesSupportAssignment<ATsType, IA>();
     expectTypesSupportAssignment<IA, ATsType>();
   });
+  // it('can handle a very complex object hierarchy with optionals', () => {
+  //   interface IC {
+  //     prop0: boolean;
+  //     distinctProp: number;
+  //   }
+  //   interface IB {
+  //     prop0: boolean;
+  //   }
+  //   interface IA {
+  //     propBool: boolean;
+  //     propNum: number;
+  //     propBigInt: bigint;
+  //     propString: string;
+  //     propArray: Array<string>;
+  //     propRecursive: Array<IA>;
+  //     propStringLiteral: 'hello';
+  //     propNumberLiteral: 1;
+  //     propUnion: number | bigint | IC | IB;
+  //     propB: IB;
+  //     propC?: IC;
+  //   }
+  //   const A = t.declareObj<IA>();
+  //   const C = t.obj({ prop0: t.boolean, distinctProp: t.number });
+  //   const B = t.obj({ prop0: t.boolean });
+  //   t.defineDeclaration(A, {
+  //     propBool: t.boolean,
+  //     propNum: t.number,
+  //     propBigInt: t.bigint,
+  //     propString: t.string,
+  //     propArray: t.array(t.string),
+  //     propRecursive: t.array(A),
+  //     propStringLiteral: t.literal('hello'),
+  //     propNumberLiteral: t.literal(1),
+  //     propUnion: t.union(t.number, t.bigint, C, B),
+  //     propB: B,
+  //     propC: t.opt(C)
+  //   });
+  //   type A = typeof A;
+  //   type ATsType = t.ToTsType<A>;
+  //   type ARoundTrip = t.ToDefinitionType<ATsType>;
+  //   expectTypesSupportAssignment<A, ARoundTrip>();
+  //   expectTypesSupportAssignment<ARoundTrip, A>();
+  //   expectTypesSupportAssignment<ATsType, IA>();
+  //   expectTypesSupportAssignment<IA, ATsType>();
+  // });
 });

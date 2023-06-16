@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { type AnyObject } from './generics';
 import * as t from './index';
@@ -17,14 +19,11 @@ describe('Type declaration', () => {
   type Address = t.ToTsType<typeof Address>;
 
   it('compiles with round trips between definition and TypeScript types', () => {
-    const PersonTwo = t.obj(
-      {
-        name: t.string,
-        age: t.opt(t.number),
-        isActive: t.boolean
-      },
-      'PersonTwo'
-    );
+    const PersonTwo = t.obj({
+      name: t.string,
+      age: t.opt(t.number),
+      isActive: t.boolean
+    });
     const result = PersonTwo.shape.age;
     const name = PersonTwo.shape.age;
 
@@ -34,7 +33,6 @@ describe('Type declaration', () => {
 
     const roundTrippedInstance: PersonTwoShapeDefinitionRoundTripped = {
       kind: 'object',
-      name: 'PersonTwo',
       shape: {
         name: { ...t.prop(t.string) },
         age: { ...t.opt(t.number) },
@@ -180,126 +178,37 @@ describe('Type declaration', () => {
     });
   });
 
-  const recursiveRef = Symbol('recursiveRef');
-
   it.skip('TODO: has smarter recursiveReferences', () => {
-    //TODO: come up with better recursive types
-    const recRefType = t.createType<'recursiveRef', 'A'>('recursiveRef');
+    //We define recursive relationship with classes that reference themselves or other classes by setting a property to the referenced class' constructor
+    // Starting with the constructor, the following types recursivesly convert all constructors to ObjTypes of their instance type.
+    // Note that the topmost constructor is not being returned as an ObjType, so the calling code must use ShapeDefParamsToObjType to finish the process
+    // of converting the topmost constructor to an ObjType.
 
-    const table0Unlinked = t.obj(
-      {
-        name: t.string,
-        self: recRefType
-      },
-      'table0'
-    );
-
-    type RemapRecs<T, TRef, TTarget> = {
-      [P in keyof T]: T[P] extends t.Prop<infer T, unknown, infer R> ? t.Prop<T, true, R> : never;
-    };
-
-    type fadfad = (typeof table0Unlinked)['shape']['self']['type'];
-    type res = (typeof table0Unlinked)['shape']['self'] extends typeof recRefType ? true : false;
-    function linkRecRefs<TShapeDefinitionA extends t.ShapeDefinition, TShapeDefinitionB extends t.ShapeDefinition>(
-      objectTypeA: t.ObjType<TShapeDefinitionA>,
-      objectTypeB: t.ObjType<TShapeDefinitionB>
-    ): {
-      [K in keyof TShapeDefinitionA]: TShapeDefinitionA[K]['type'] extends typeof recRefType
-        ? typeof objectTypeB
-        : TShapeDefinitionA[K];
-    } {
-      type LinkedType = {
-        [K in keyof TShapeDefinitionA]: TShapeDefinitionA[K]['type'] extends typeof recRefType
-          ? typeof objectTypeB
-          : TShapeDefinitionA[K];
-      };
-
-      return {} as unknown as {
-        [K in keyof TShapeDefinitionA]: TShapeDefinitionA[K]['type'] extends typeof recRefType
-          ? typeof objectTypeB
-          : TShapeDefinitionA[K];
-      };
+    class Foo {
+      self = Foo;
+      strProp = t.string;
     }
 
-    const table0 = linkRecRefs(table0Unlinked, table0Unlinked);
+    type FooShapeDefParams = t.ShapeClassToShapeDefParams<typeof Foo>;
+    const fooObject = {} as any as t.ShapeDefParamsToObjType<FooShapeDefParams>;
 
-    interface SelfReferencing {
-      child: SelfReferencing;
-    }
+    type FooObjectType = typeof fooObject;
+    type FooTsType = t.ToTsType<FooObjectType>;
 
-    const SelfReferencing = t.declareObj<SelfReferencing>();
-    t.defineDeclaration(SelfReferencing, {
-      child: SelfReferencing
-    });
+    type lkjhjk = FooObjectType['shape'];
+    type lself = FooObjectType['shape']['self'];
+    type ltype = FooObjectType['shape']['self']['type'];
+    type ltypetype = FooObjectType['shape']['self']['type']['shape']['self']['type'];
+
+    type adsfadfladglk = FooTsType['self']['self'];
+
+    const fooObj = t.objFromClass(Foo);
+
+    type afdadsf = typeof fooObj;
+    type afdadsasdf = (typeof fooObj)['shape']['self']['type']['shape']['self']['type'];
+    type RecType = t.ToTsType<typeof fooObj>;
   });
 
-  it('infers recursively', () => {
-    interface SelfReferencing {
-      child: SelfReferencing;
-    }
-
-    const SelfReferencing = t.declareObj<SelfReferencing>();
-    t.defineDeclaration(SelfReferencing, {
-      child: SelfReferencing
-    });
-  });
-
-  it('recursive comparison is okay', () => {
-    interface SelfReferencingA {
-      child: SelfReferencingB;
-    }
-
-    interface SelfReferencingB {
-      child: SelfReferencingA;
-    }
-
-    const SelfReferencingA = t.declareObj<SelfReferencingA>();
-    const SelfReferencingB = t.declareObj<SelfReferencingB>();
-
-    t.defineDeclaration(SelfReferencingA, {
-      child: SelfReferencingB
-    });
-
-    t.defineDeclaration(SelfReferencingB, {
-      child: SelfReferencingA
-    });
-
-    type InferredSelfReferencingAType = t.ToTsType<typeof SelfReferencingA>;
-    const aInstance = {} as InferredSelfReferencingAType;
-
-    type InferredSelfReferencingBType = t.ToTsType<typeof SelfReferencingB>;
-  });
-
-  it('mutally recursive', () => {
-    interface Bar {
-      barProp: string;
-      foo: Foo;
-    }
-
-    interface Foo {
-      bar: Bar;
-    }
-
-    const Bar = t.declareObj<Bar>();
-
-    const Foo = t.obj({
-      bar: Bar
-    });
-
-    t.defineDeclaration(Bar, {
-      barProp: t.string,
-      foo: Foo
-    });
-
-    const fooInstance = {} as t.ToTsType<typeof Foo>;
-
-    const barInstance: t.ToTsType<typeof Bar> = {
-      barProp: 'something',
-      foo: fooInstance
-    };
-
-    fooInstance.bar = barInstance;
-  });
 
   describe('Arrays', () => {
     it('allows simple arrays', () => {

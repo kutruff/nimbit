@@ -34,100 +34,75 @@ describe('Type equality', () => {
 
     describe('recursive types', () => {
       it('self recursive are equal', () => {
-        interface SelfReferencingA {
-          child: SelfReferencingA;
+        class ADef {
+          child = ADef;
         }
 
-        const SelfReferencingA = t.declareObj<SelfReferencingA>();
-        t.defineDeclaration(SelfReferencingA, {
-          child: SelfReferencingA
-        });
-
-        interface SelfReferencingB {
-          child: SelfReferencingB;
+        class BDef {
+          child = BDef;
         }
 
-        const SelfReferencingB = t.declareObj<SelfReferencingB>();
-        t.defineDeclaration(SelfReferencingB, {
-          child: SelfReferencingB
-        });
+        const A = t.objFromClass(ADef);
+        type A = t.ToTsType<typeof A>;
 
-        expect(t.areEqual(SelfReferencingA, SelfReferencingA)).toEqual(true);
-        expect(t.areEqual(SelfReferencingA, SelfReferencingB)).toEqual(true);
+        const B = t.objFromClass(BDef);
+        type B = t.ToTsType<typeof B>;
+
+        expect(t.areEqual(A, A)).toEqual(true);
+        expect(t.areEqual(A, B)).toEqual(true);
       });
 
       it('self recursive with matching shape are equal', () => {
-        interface SelfReferencingA {
-          child: SelfReferencingA;
-          prop: bigint;
+        class ADef {
+          child = ADef;
+          prop = t.bigint;
         }
 
-        const SelfReferencingA = t.declareObj<SelfReferencingA>();
-        t.defineDeclaration(SelfReferencingA, {
-          child: SelfReferencingA,
-          prop: t.bigint
-        });
-
-        interface SelfReferencingB {
-          child: SelfReferencingB;
-          prop: bigint;
+        class BDef {
+          child = BDef;
+          prop = t.bigint;
         }
 
-        const SelfReferencingB = t.declareObj<SelfReferencingB>();
-        t.defineDeclaration(SelfReferencingB, {
-          child: SelfReferencingB,
-          prop: t.bigint
-        });
+        const A = t.objFromClass(ADef);
+        const B = t.objFromClass(BDef);
 
-        expect(t.areEqual(SelfReferencingA, SelfReferencingA)).toEqual(true);
-        expect(t.areEqual(SelfReferencingA, SelfReferencingB)).toEqual(true);
+        expect(t.areEqual(A, A)).toEqual(true);
+        expect(t.areEqual(A, B)).toEqual(true);
       });
 
       it('diverging self recursive are not equal', () => {
-        interface SelfReferencingA {
-          child: SelfReferencingA;
-          prop: string;
+        class ADef {
+          b = BDef;
+          prop = t.string;
         }
 
-        const SelfReferencingA = t.declareObj<SelfReferencingA>();
-        t.defineDeclaration(SelfReferencingA, {
-          child: SelfReferencingA,
-          prop: t.string
-        });
-
-        interface SelfReferencingB {
-          child: SelfReferencingB;
+        class BDef {
+          a = ADef;
         }
 
-        const SelfReferencingB = t.declareObj<SelfReferencingB>();
-        t.defineDeclaration(SelfReferencingB, {
-          child: SelfReferencingB
-        });
+        const A = t.objFromClass(ADef);
+        type A = t.ToTsType<typeof A>;
 
-        expect(t.areEqual(SelfReferencingA, SelfReferencingA)).toEqual(true);
-        expect(t.areEqual(SelfReferencingA, SelfReferencingB)).toEqual(false);
+        const B = t.objFromClass(BDef);
+        type B = t.ToTsType<typeof B>;
+
+        expect(t.areEqual(A, A)).toEqual(true);
+        expect(t.areEqual(A, B)).toEqual(false);
       });
 
       it('mutally recursive are not equal', () => {
-        interface Bar {
-          foo: Foo;
+        class ADef {
+          b = BDef;
         }
 
-        interface Foo {
-          bar: Bar;
+        class BDef {
+          a = ADef;
         }
 
-        const Bar = t.declareObj<Bar>();
+        const A = t.objFromClass(ADef);
+        const B = t.objFromClass(BDef);
 
-        const Foo = t.obj({
-          bar: Bar
-        });
-
-        t.defineDeclaration(Bar, {
-          foo: Foo
-        });
-
-        expect(t.areEqual(Foo, Bar)).toEqual(false);
+        expect(t.areEqual(A, B)).toEqual(false);
       });
     });
   });

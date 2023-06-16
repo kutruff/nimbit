@@ -1,11 +1,4 @@
-import {
-  type ArrayType,
-  type LiteralType,
-  type ObjType,
-  type ShapeDefinition,
-  type Type,
-  type UnionType
-} from './types';
+import { type ArrayType, type LiteralType, type ObjType, type ShapeDefinition, type Type, type UnionType } from '.';
 
 export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type, boolean>>): boolean => {
   if (a === b) return true;

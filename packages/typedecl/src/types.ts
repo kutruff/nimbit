@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  type Constructor,
   type Literal,
   type NotAUnion,
   type ObjectKeyMap,
@@ -72,10 +73,6 @@ export type Prop<T, TOptional, TReadonly> = {
   };
 };
 
-export interface ShapeDefinition {
-  [key: string]: Prop<Type<unknown, unknown>, unknown, unknown>;
-}
-
 //TODO: This may be old, but leaving this very important link
 // UnionType should be able to be UnionType<Types> but there is a depth hueristic that blows up.
 // That means functions and types have to cast until it's fixed
@@ -101,7 +98,7 @@ export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer Litera
   ? Array<ToTsType<ElementDefinition>>
   : TDefinition extends UnionType<infer MemberDefinitions>
   ? ToTsType<MemberDefinitions>
-  : TDefinition extends EnumType<infer U, infer TEnumValues>
+  : TDefinition extends EnumType<unknown, infer TEnumValues>
   ? TEnumValues
   : TDefinition extends ObjType<infer TShapeDefinition>
   ? {
