@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  type Constructor,
   type Literal,
   type NotAUnion,
   type ObjectKeyMap,
@@ -151,11 +150,12 @@ type ToShapeTypeDistribute<TsType> = TsType extends Literal<string, TsType>
     }>
   : never;
 
-
-//This takes UnionType<UnionType<t.string | t.number>> and flattens it to UnionType<t.string | t.number>
+//This takes UnionType<UnionType<t.string | t.number>> and flattens it to t.string | t.number
 export type FlattenedUnion<T extends Type<unknown, unknown>> = T extends UnionType<infer K> ? FlattenedUnion<K> : T;
 
-//First, if T is a TYPESCRIPT union of typedecl types like t.string | t.number, then we want the TypeScript Type to be UniontType<t.string | t.number>.
+//First, if T is a TYPESCRIPT union of typedecl types like t.string | t.number, then we want the TypeScript Type
+//to be UniontType<t.string | t.number>.  You use FlattenUnion<> to remove all surrounding UnionTypes before calling
+//this.
 export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
   ? UnionWithAnyBecomesAny<UnionType<T>>
   : T;
