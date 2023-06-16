@@ -9,7 +9,7 @@ describe('Type declaration', () => {
       const ObjectWithArray = t.obj({
         anArrayProp: t.array(t.string)
       });
-      type ObjectWithArray = t.ToTsType<typeof ObjectWithArray>;
+      type ObjectWithArray = t.Infer<typeof ObjectWithArray>;
       type ObjectWithArrayDefinitionFromShape = t.ToShapeType<ObjectWithArray>;
       const instance: ObjectWithArray = {
         anArrayProp: ['foo', 'bar']
@@ -26,7 +26,7 @@ describe('Type declaration', () => {
           })
         )
       });
-      type ObjectWithArray = t.ToTsType<typeof ObjectWithArray>;
+      type ObjectWithArray = t.Infer<typeof ObjectWithArray>;
       type ObjectWithArrayDefinitionFromShape = t.ToShapeType<ObjectWithArray>;
       const instance: ObjectWithArray = {
         anArrayProp: [{ someProp: 'foo' }, { someProp: 'bar' }]

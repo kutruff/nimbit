@@ -92,18 +92,18 @@ type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown> ? U : n
 //https://github.com/microsoft/TypeScript/issues/34933#issuecomment-776098985
 //https://github.com/microsoft/TypeScript/issues/22575#issuecomment-776003717
 
-export type ToTsType<TDefinition> = TDefinition extends LiteralType<infer LiteralKind>
+export type Infer<TDefinition> = TDefinition extends LiteralType<infer LiteralKind>
   ? LiteralKind
   : TDefinition extends ArrayType<infer ElementDefinition>
-  ? Array<ToTsType<ElementDefinition>>
+  ? Array<Infer<ElementDefinition>>
   : TDefinition extends UnionType<infer MemberDefinitions>
-  ? ToTsType<MemberDefinitions>
+  ? Infer<MemberDefinitions>
   : TDefinition extends EnumType<unknown, infer TEnumValues>
   ? TEnumValues
   : TDefinition extends ObjType<infer TShape>
   ? {
       //First add optional/readonly property modifiers to the DEFINITION, and then those modifiers will just get copied over to the TsType!
-      [P in keyof MapPropDefinitionsToTsPropertyModifiers<TShape>]: ToTsType<
+      [P in keyof MapPropDefinitionsToTsPropertyModifiers<TShape>]: Infer<
         TypeOfPropDefinition<MapPropDefinitionsToTsPropertyModifiers<TShape>[P]>
       >;
     }

@@ -7,19 +7,7 @@ export interface Shape {
   [key: string]: Prop<Type<unknown, unknown>, unknown, unknown>;
 }
 
-//TODO: decide if this should go?
-// const singletons = new WeakMap<object, object>();
-// export const createOnce = <T extends object>(ctor: new () => T): T => {
-//   let current = singletons.get(ctor) as T | undefined;
-//   if (!current) {
-//     current = new ctor();
-//     singletons.set(ctor, current);
-//   }
-//   return current;
-// };
-
-//TODO: Could be a record? Record<PropertyKey, Prop<unknown, unknown, unknown> | Type<unknown, unknown>>
-// Object definition parameters allow either a property defintion or a type directly
+// Object definition allow either a property defintion or a type directly
 export type ShapeDefinition =
   | {
       [key: string]: Prop<unknown, unknown, unknown> | Type<unknown, unknown> | Constructor;
@@ -39,17 +27,11 @@ export type ShapeDefinitionToShape<T> = T extends Constructor
 
 export type ShapeDefinitionToObjType<T> = ObjType<ShapeDefinitionToShape<T>>;
 
-export type ShapeClassToShapeDefinition<T extends Constructor> = ShapeInstanceToShapeDefinition<InstanceType<T>>;
-
-export type ShapeInstanceToShapeDefinition<T> = {
-  [P in keyof T]: T[P] extends Constructor ? ShapeDefinitionToObjType<ShapeClassToShapeDefinition<T[P]>> : T[P];
-};
-
 export function obj<TShapeDefinition extends ShapeDefinition>(
   shapeDefinition: TShapeDefinition
 ): ShapeDefinitionToObjType<TShapeDefinition> {
   const shape = {} as any;
-  const resultObj = { shape } as any;
+  const resultObj = { kind: 'object', shape } as any;
 
   if (typeof shapeDefinition === 'function') {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -58,9 +40,7 @@ export function obj<TShapeDefinition extends ShapeDefinition>(
     if (existingObj) {
       return existingObj;
     }
-    resultObj.shape = shape;
     constructorsToObj.set(constructor, resultObj);
-
     shapeDefinition = new constructor() as any;
   }
 
@@ -74,8 +54,6 @@ export function obj<TShapeDefinition extends ShapeDefinition>(
     }
   }
 
-  resultObj.kind = 'object';
-  resultObj.shape = shape;
   resultObj.k = keyMap(shape);
   return resultObj as ShapeDefinitionToObjType<TShapeDefinition>;
 }

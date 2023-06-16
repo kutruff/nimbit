@@ -5,7 +5,7 @@ describe('Unions of types', () => {
   describe('union()', () => {
     it('combines simple primitives', () => {
       const Target = t.union(t.string, t.boolean);
-      type Target = t.ToTsType<typeof Target>;
+      type Target = t.Infer<typeof Target>;
 
       type ExpectedDefinitionType = t.UnionType<t.Type<'string', string> | t.Type<'boolean', boolean>>;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
@@ -19,7 +19,7 @@ describe('Unions of types', () => {
 
     it('union of single type is collapsed', () => {
       const Target = t.union(t.boolean);
-      type Target = t.ToTsType<typeof Target>;
+      type Target = t.Infer<typeof Target>;
 
       type ExpectedDefinitionType = t.Type<'boolean', boolean>;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
@@ -33,16 +33,16 @@ describe('Unions of types', () => {
         prop1: t.string,
         prop2: t.boolean
       });
-      type ObjA = t.ToTsType<typeof ObjA>;
+      type ObjA = t.Infer<typeof ObjA>;
 
       const ObjB = t.obj({
         prop1: t.string,
         prop2: t.boolean
       });
-      type ObjB = t.ToTsType<typeof ObjB>;
+      type ObjB = t.Infer<typeof ObjB>;
 
       const Target = t.union(ObjA, ObjB);
-      type Target = t.ToTsType<typeof Target>;
+      type Target = t.Infer<typeof Target>;
 
       type ExpectedDefinitionType = typeof ObjA;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
@@ -54,7 +54,7 @@ describe('Unions of types', () => {
     describe('union of unions', () => {
       it('combines peer unions', () => {
         const Target = t.union(t.union(t.string, t.number), t.union(t.boolean, t.bigint));
-        type Target = t.ToTsType<typeof Target>;
+        type Target = t.Infer<typeof Target>;
 
         type ExpectedDefinitionType = t.UnionType<
           t.Type<'string', string> | t.Type<'number', number> | t.Type<'boolean', boolean> | t.Type<'bigint', bigint>
@@ -73,7 +73,7 @@ describe('Unions of types', () => {
       describe('nested unions', () => {
         it('combines depth 1 unions', () => {
           const Target = t.union(t.string, t.union(t.boolean, t.bigint));
-          type Target = t.ToTsType<typeof Target>;
+          type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
             t.Type<'string', string> | t.Type<'boolean', boolean> | t.Type<'bigint', bigint>
@@ -91,7 +91,7 @@ describe('Unions of types', () => {
 
         it('combines depth 3 unions', () => {
           const Target = t.union(t.string, t.union(t.boolean, t.union(t.number, t.bigint)));
-          type Target = t.ToTsType<typeof Target>;
+          type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
             t.Type<'string', string> | t.Type<'boolean', boolean> | t.Type<'number', number> | t.Type<'bigint', bigint>
@@ -109,7 +109,7 @@ describe('Unions of types', () => {
 
         it('collapses duplicates to single type', () => {
           const Target = t.union(t.string, t.union(t.string, t.union(t.string)));
-          type Target = t.ToTsType<typeof Target>;
+          type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.Type<'string', string>;
           expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
@@ -120,7 +120,7 @@ describe('Unions of types', () => {
 
         it('collapses entire union when there is a nested AnyType', () => {
           const Target = t.union(t.string, t.union(t.boolean, t.any));
-          type Target = t.ToTsType<typeof Target>;
+          type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = typeof t.any;
           expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
@@ -133,7 +133,7 @@ describe('Unions of types', () => {
 
     it('union with any is always collapsed', () => {
       const Target = t.union(t.boolean, t.any);
-      type Target = t.ToTsType<typeof Target>;
+      type Target = t.Infer<typeof Target>;
 
       type ExpectedDefinitionType = typeof t.any;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
@@ -172,7 +172,7 @@ describe('Unions of types', () => {
         )
       });
 
-      type Target = t.ToTsType<typeof Target>;
+      type Target = t.Infer<typeof Target>;
       type TargetRoundTripped = t.ToShapeType<Target>;
 
       expectTypesSupportAssignment<TargetRoundTripped, typeof Target>();

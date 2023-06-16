@@ -17,7 +17,7 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultShape = t.ToTsType<typeof result>;
+      type ResultShape = t.Infer<typeof result>;
       type ExpectedResultShape = { propA: string; propB: number };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
@@ -91,7 +91,7 @@ describe('Type operations', () => {
         const ObjC = t.obj({ x: ObjF });
 
         const ObjABC = t.intersection(t.intersection(ObjA, ObjB), ObjC);
-        type ObjABC = t.ToTsType<typeof ObjABC>;
+        type ObjABC = t.Infer<typeof ObjABC>;
         const resultInstance: ObjABC = { x: { prop0: true, distinctProp: 1 } };
 
         expect(ObjABC).toEqual(
@@ -136,12 +136,12 @@ describe('Type operations', () => {
         const ObjB = t.obj({ x: ObjD });
 
         const ObjAB = t.intersection(ObjA, ObjB);
-        type ObjAB = t.ToTsType<typeof ObjAB>;
+        type ObjAB = t.Infer<typeof ObjAB>;
 
         const resultInstanceAB: ObjAB = { x: { prop0: true, distinctProp: 'what' } };
 
         const ObjCD = t.intersection(ObjC, ObjD);
-        type ObjCD = t.ToTsType<typeof ObjCD>;
+        type ObjCD = t.Infer<typeof ObjCD>;
         const resultInstanceCD: ObjCD = { prop0: true, distinctProp: 'what' };
 
         type ObjCDIntersect = typeof ObjC & typeof ObjD;
@@ -151,7 +151,7 @@ describe('Type operations', () => {
           distinctProp: t.string
         });
 
-        type ObjCDTsIntersect = t.ToTsType<typeof ObjC> & t.ToTsType<typeof ObjD>;
+        type ObjCDTsIntersect = t.Infer<typeof ObjC> & t.Infer<typeof ObjD>;
 
         const instanceTestObjCD: ObjCDTsIntersect = {
           prop0: true,
@@ -201,7 +201,7 @@ describe('Type operations', () => {
         const ObjB = t.obj({ x: ObjD });
 
         const ObjAB = t.intersection(ObjA, ObjB);
-        type ObjAB = t.ToTsType<typeof ObjAB>;
+        type ObjAB = t.Infer<typeof ObjAB>;
 
         //Should not compile:
         //const resultInstanceAB: ObjAB = { x: { prop0: true, distinctProp: 'what' } };
@@ -303,7 +303,7 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultShape = t.ToTsType<typeof result>;
+      type ResultShape = t.Infer<typeof result>;
       type ExpectedResultShape = { prop?: string };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
@@ -329,7 +329,7 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultShape = t.ToTsType<typeof result>;
+      type ResultShape = t.Infer<typeof result>;
       type ExpectedResultShape = { prop?: string; nested?: { prop: bigint } };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
@@ -348,7 +348,7 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultTsType = t.ToTsType<typeof result>;
+      type ResultTsType = t.Infer<typeof result>;
       type ExpectedResultTsType = { prop: string };
       expectTypesSupportAssignment<ExpectedResultTsType, ResultTsType>();
       expectTypesSupportAssignment<ResultTsType, ExpectedResultTsType>();
@@ -372,7 +372,7 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultTsType = t.ToTsType<typeof result>;
+      type ResultTsType = t.Infer<typeof result>;
       type ExpectedResultTsType = { prop: string; nested: { prop?: bigint } };
       expectTypesSupportAssignment<ExpectedResultTsType, ResultTsType>();
       expectTypesSupportAssignment<ResultTsType, ExpectedResultTsType>();
@@ -391,7 +391,7 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultShape = t.ToTsType<typeof result>;
+      type ResultShape = t.Infer<typeof result>;
       type ExpectedResultShape = { readonly prop: string };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
@@ -417,7 +417,7 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultShape = t.ToTsType<typeof result>;
+      type ResultShape = t.Infer<typeof result>;
       type ExpectedResultShape = { readonly prop: string; readonly nested: { prop: bigint } };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
@@ -430,7 +430,7 @@ describe('Type operations', () => {
     it('selects correct properties', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.pick(target, 'prop0');
-      type ResultTsType = t.ToTsType<typeof result>;
+      type ResultTsType = t.Infer<typeof result>;
       expect(t.areEqual(result.shape.prop0.type, t.string)).toEqual(true);
       expect(result.shape).not.toHaveProperty('prop1');
     });
@@ -440,7 +440,7 @@ describe('Type operations', () => {
     it('removes correct properties', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.omit(target, 'prop0');
-      type ResultTsType = t.ToTsType<typeof result>;
+      type ResultTsType = t.Infer<typeof result>;
       expect(t.areEqual(result.shape.prop1.type, t.bigint)).toEqual(true);
       expect(result.shape).not.toHaveProperty('prop0');
     });
@@ -450,7 +450,7 @@ describe('Type operations', () => {
     it('removes correct types from union', () => {
       const target = t.union(t.string, t.number, t.bigint);
       const result = t.exclude(target, t.bigint);
-      type ResultTsType = t.ToTsType<typeof result>;
+      type ResultTsType = t.Infer<typeof result>;
       if (result.kind === 'never') {
         throw Error();
       }
@@ -472,7 +472,7 @@ describe('Type operations', () => {
       const target = t.union(t.string, t.number, t.bigint);
 
       const result = t.extract(target, t.bigint, t.number);
-      type ResultTsType = t.ToTsType<typeof result>;
+      type ResultTsType = t.Infer<typeof result>;
       if (result.kind === 'never') {
         throw Error();
       }
@@ -541,13 +541,18 @@ describe('Type operations', () => {
       const D = t.obj(DDef);
       const A = t.obj(ADef);
       type ACons = typeof A;
-      type A = t.ToTsType<ACons>;
-      const result = t.pick(t.omit(t.intersection(A, t.omit(C, C.k.distinctProp)), A.k.propNumberLiteral), 'propRecursive', 'propNum', 'self');
-      type ResultTsType = t.ToTsType<typeof result>;
+      type A = t.Infer<ACons>;
+      const result = t.pick(
+        t.omit(t.intersection(A, t.omit(C, C.k.distinctProp)), A.k.propNumberLiteral),
+        'propRecursive',
+        'propNum',
+        'self'
+      );
+      type ResultTsType = t.Infer<typeof result>;
       const another = t.pick(result, 'self');
-      type AnotherTsType = t.ToTsType<typeof another>;
+      type AnotherTsType = t.Infer<typeof another>;
       const unionedWithAny = t.union(result, t.obj({ adfaf: t.string }), t.any);
-      type UnionedTsType = t.ToTsType<typeof unionedWithAny>;
+      type UnionedTsType = t.Infer<typeof unionedWithAny>;
     });
   });
 });

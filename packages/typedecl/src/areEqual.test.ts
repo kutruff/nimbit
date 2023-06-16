@@ -43,10 +43,10 @@ describe('Type equality', () => {
         }
 
         const A = t.obj(ADef);
-        type A = t.ToTsType<typeof A>;
+        type A = t.Infer<typeof A>;
 
         const B = t.obj(BDef);
-        type B = t.ToTsType<typeof B>;
+        type B = t.Infer<typeof B>;
 
         expect(t.areEqual(A, A)).toEqual(true);
         expect(t.areEqual(A, B)).toEqual(true);
@@ -81,10 +81,10 @@ describe('Type equality', () => {
         }
 
         const A = t.obj(ADef);
-        type A = t.ToTsType<typeof A>;
+        type A = t.Infer<typeof A>;
 
         const B = t.obj(BDef);
-        type B = t.ToTsType<typeof B>;
+        type B = t.Infer<typeof B>;
 
         expect(t.areEqual(A, A)).toEqual(true);
         expect(t.areEqual(A, B)).toEqual(false);

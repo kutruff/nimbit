@@ -13,7 +13,7 @@ describe('obj()', () => {
     const result = PersonTwo.shape.age;
     const name = PersonTwo.shape.age;
 
-    type PersonTwo = t.ToTsType<typeof PersonTwo>;
+    type PersonTwo = t.Infer<typeof PersonTwo>;
 
     type PersonTwoShapeRoundTripped = t.ToShapeType<PersonTwo>;
 
@@ -43,7 +43,7 @@ describe('obj()', () => {
       refToA: ObjA
     });
 
-    type ObjB = t.ToTsType<typeof ObjB>;
+    type ObjB = t.Infer<typeof ObjB>;
     type ObjBRoundTripped = t.ToShapeType<ObjB>;
 
     const objBInstance: ObjB = { refToA: { name: 'hello' } };
@@ -53,14 +53,14 @@ describe('obj()', () => {
 
   it('allows mapping of primitive defintions to TypeScript types', () => {
     type strType = typeof t.string;
-    type MapPrimitiveStringTest = t.ToTsType<typeof t.string>;
-    type MapPrimitiveNumTest = t.ToTsType<typeof t.number>;
-    type MapPrimitiveBoolTest = t.ToTsType<typeof t.boolean>;
+    type MapPrimitiveStringTest = t.Infer<typeof t.string>;
+    type MapPrimitiveNumTest = t.Infer<typeof t.number>;
+    type MapPrimitiveBoolTest = t.Infer<typeof t.boolean>;
 
-    type MappedString = t.ToTsType<t.Type<'string'>>;
-    type MappedStringTypeOf = t.ToTsType<typeof t.string>;
-    type MappedNumber = t.ToTsType<typeof t.number>;
-    type MappedBoolean = t.ToTsType<typeof t.boolean>;
+    type MappedString = t.Infer<t.Type<'string'>>;
+    type MappedStringTypeOf = t.Infer<typeof t.string>;
+    type MappedNumber = t.Infer<typeof t.number>;
+    type MappedBoolean = t.Infer<typeof t.boolean>;
 
     //type MapPrimitiveObjTestShouldBeNever = t.Shape<typeof t.obj>;
   });
@@ -72,7 +72,7 @@ describe('obj()', () => {
       discriminator: t.literal('circle' as const),
       radius: t.number
     });
-    type Circle = t.ToTsType<typeof Circle>;
+    type Circle = t.Infer<typeof Circle>;
     type CircleDefintion = t.ToShapeType<Circle>;
 
     const Square = t.obj({
@@ -81,7 +81,7 @@ describe('obj()', () => {
       length: t.number
     });
 
-    type Square = t.ToTsType<typeof Square>;
+    type Square = t.Infer<typeof Square>;
   });
 
   it('allows mapping of TypeScript types to primitive defintions', () => {
@@ -103,7 +103,7 @@ describe('obj()', () => {
         street: string;
       };
     }>;
-    type MappedObjShape = t.ToTsType<MappedObj>;
+    type MappedObjShape = t.Infer<MappedObj>;
   });
 
   it('allows interfaces', () => {
@@ -117,7 +117,7 @@ describe('obj()', () => {
       owner: Person
     });
 
-    type Address = t.ToTsType<typeof Address>;
+    type Address = t.Infer<typeof Address>;
 
     expect(Person.shape.name.type).toEqual(t.string);
     expect(Address.shape.owner.type).toEqual(Person);
@@ -136,7 +136,7 @@ describe('obj()', () => {
       isActive: boolean;
     };
 
-    type InferredPersonType = t.ToTsType<typeof Person>;
+    type InferredPersonType = t.Infer<typeof Person>;
 
     const personDeclaredFromInferredType: ExpectedPersonType = {
       name: 'bob',
@@ -161,7 +161,7 @@ describe('obj()', () => {
       owner: Person
     });
 
-    type Address = t.ToTsType<typeof Address>;
+    type Address = t.Infer<typeof Address>;
 
     type ExpectedPersonType = {
       name: string;
@@ -173,7 +173,7 @@ describe('obj()', () => {
       owner: ExpectedPersonType;
     };
 
-    type InferredShapeType = t.ToTsType<typeof Address>;
+    type InferredShapeType = t.Infer<typeof Address>;
 
     const person = {
       name: 'bob',
@@ -200,7 +200,7 @@ describe('obj()', () => {
     }
 
     const A = t.obj(ADef);
-    type A = t.ToTsType<typeof A>;
+    type A = t.Infer<typeof A>;
 
     expect(A.shape.self.type).toEqual(A);
 
@@ -215,7 +215,7 @@ describe('obj()', () => {
     }
 
     const A = t.obj(ADef);
-    type A = t.ToTsType<typeof A>;
+    type A = t.Infer<typeof A>;
 
     expect(A.shape.prop.type).toEqual(t.string);
 
@@ -234,10 +234,10 @@ describe('obj()', () => {
     }
 
     const A = t.obj(ADef);
-    type A = t.ToTsType<typeof A>;
+    type A = t.Infer<typeof A>;
 
     const B = t.obj(BDef);
-    type B = t.ToTsType<typeof B>;
+    type B = t.Infer<typeof B>;
 
     expect(A.shape.b.type).toEqual(B);
     expect(B.shape.a.type).toEqual(A);
@@ -257,7 +257,7 @@ describe('obj()', () => {
     }
 
     const A = t.obj(ADef);
-    type A = t.ToTsType<typeof A>;
+    type A = t.Infer<typeof A>;
 
     expect(A.shape.children.type.elementType).toEqual(A);
 
@@ -277,7 +277,7 @@ describe('obj()', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
       expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
 
-      type ResultShape = t.ToTsType<typeof ExpectedResult>;
+      type ResultShape = t.Infer<typeof ExpectedResult>;
       type ExpectedResultShape = { readonly prop?: string };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
@@ -293,7 +293,7 @@ describe('obj()', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
       expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
 
-      type ResultShape = t.ToTsType<typeof ExpectedResult>;
+      type ResultShape = t.Infer<typeof ExpectedResult>;
       type ExpectedResultShape = { readonly prop: string };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
@@ -309,7 +309,7 @@ describe('obj()', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
       expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
 
-      type ResultShape = t.ToTsType<typeof ExpectedResult>;
+      type ResultShape = t.Infer<typeof ExpectedResult>;
       type ExpectedResultShape = { readonly prop?: string };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
@@ -337,7 +337,7 @@ describe('obj()', () => {
       const A = t.obj(ADef);
 
       type ACons = typeof A;
-      type A = t.ToTsType<ACons>;
+      type A = t.Infer<ACons>;
       type ARoundTrip = t.ToShapeType<A>;
 
       interface IC {
