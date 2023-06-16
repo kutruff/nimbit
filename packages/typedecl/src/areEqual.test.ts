@@ -42,10 +42,10 @@ describe('Type equality', () => {
           child = BDef;
         }
 
-        const A = t.objFromClass(ADef);
+        const A = t.obj(ADef);
         type A = t.ToTsType<typeof A>;
 
-        const B = t.objFromClass(BDef);
+        const B = t.obj(BDef);
         type B = t.ToTsType<typeof B>;
 
         expect(t.areEqual(A, A)).toEqual(true);
@@ -63,8 +63,8 @@ describe('Type equality', () => {
           prop = t.bigint;
         }
 
-        const A = t.objFromClass(ADef);
-        const B = t.objFromClass(BDef);
+        const A = t.obj(ADef);
+        const B = t.obj(BDef);
 
         expect(t.areEqual(A, A)).toEqual(true);
         expect(t.areEqual(A, B)).toEqual(true);
@@ -80,10 +80,10 @@ describe('Type equality', () => {
           a = ADef;
         }
 
-        const A = t.objFromClass(ADef);
+        const A = t.obj(ADef);
         type A = t.ToTsType<typeof A>;
 
-        const B = t.objFromClass(BDef);
+        const B = t.obj(BDef);
         type B = t.ToTsType<typeof B>;
 
         expect(t.areEqual(A, A)).toEqual(true);
@@ -99,8 +99,8 @@ describe('Type equality', () => {
           a = ADef;
         }
 
-        const A = t.objFromClass(ADef);
-        const B = t.objFromClass(BDef);
+        const A = t.obj(ADef);
+        const B = t.obj(BDef);
 
         expect(t.areEqual(A, B)).toEqual(false);
       });

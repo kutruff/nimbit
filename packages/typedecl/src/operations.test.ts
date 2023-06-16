@@ -24,6 +24,7 @@ describe('Type operations', () => {
 
       expect(result).toEqual(ExpectedDefinitionType);
     });
+
     describe('object properties with same name and AnyType', () => {
       it('does not result in the correct TypeScript types on purpose do to perf concerns and its a rare things to do.', () => {
         interface A {
@@ -499,100 +500,54 @@ describe('Type operations', () => {
       expect(result.kind).toEqual('never');
     });
   });
-});
 
-describe('stress tests', () => {
-  it('can handle a very complex object hierarchy with optionals', () => {
-    interface IC {
-      prop0: boolean;
-      distinctProp: number;
-    }
-    interface IB {
-      prop0: boolean;
-    }
-    interface IA {
-      propBool: boolean;
-      propNum: number;
-      propBigInt: bigint;
-      propString: string;
-      propArray: Array<string>;
-      propRecursive: Array<IA>;
-      propStringLiteral: 'hello';
-      propNumberLiteral: 1;
-      propUnion: number | bigint | IC | IB;
-      propB: IB;
-      propC?: IC;
-    }
+  describe('stress tests', () => {
+    it('can handle lots of chained operations of overlapping', () => {
+      const B = t.obj({ prop0: t.boolean });
+      const C = t.obj({ prop0: t.boolean, distinctProp: t.number });
 
-    class ADef {
-      propBool = t.boolean;
-      propNum = t.number;
-      propBigInt = t.bigint;
-      propString = t.string;
-      propArray = t.array(t.string);
-      propRecursive = t.array(t.objFromClass(ADef));
-      propStringLiteral = t.literal('hello');
-      propNumberLiteral = t.literal(1);
-      propUnion = t.union(t.number, t.bigint, C, B);
-      propB = B;
-      propC = t.opt(C);
-    }
-    const A = t.objFromClass(ADef);
+      class ADef {
+        propBool = t.boolean;
+        propNum = t.number;
+        propBigInt = t.bigint;
+        propString = t.string;
+        propArray = t.array(t.string);
+        propRecursive = t.array(t.obj(ADef));
+        propStringLiteral = t.literal('hello');
+        propNumberLiteral = t.literal(1);
+        propUnion = t.union(t.number, t.bigint, C, B);
+        propB = B;
+        propC = t.opt(C);
+        self = ADef;
+        dRef = DDef;
+      }
 
-    const C = t.obj({ prop0: t.boolean, distinctProp: t.number });
-    const B = t.obj({ prop0: t.boolean });
+      class DDef {
+        propBool = t.boolean;
+        propNum = t.number;
+        propBigInt = t.bigint;
+        propString = t.string;
+        propArray = t.array(t.string);
+        propRecursive = t.array(t.union(t.obj(ADef), t.obj(DDef)));
+        propStringLiteral = t.literal('hello');
+        propNumberLiteral = t.literal(1);
+        propUnion = t.union(t.number, t.bigint, C, B);
+        propB = B;
+        propC = t.opt(C);
+        self = DDef;
+        aRef = ADef;
+      }
 
-    type A = typeof A;
-    type ATsType = t.ToTsType<A>;
-    type ARoundTrip = t.ToShapeType<ATsType>;
-    expectTypesSupportAssignment<A, ARoundTrip>();
-    expectTypesSupportAssignment<ARoundTrip, A>();
-    expectTypesSupportAssignment<ATsType, IA>();
-    expectTypesSupportAssignment<IA, ATsType>();
+      const D = t.obj(DDef);
+      const A = t.obj(ADef);
+      type ACons = typeof A;
+      type A = t.ToTsType<ACons>;
+      const result = t.pick(t.omit(t.intersection(A, t.omit(C, C.k.distinctProp)), A.k.propNumberLiteral), 'propRecursive', 'propNum', 'self');
+      type ResultTsType = t.ToTsType<typeof result>;
+      const another = t.pick(result, 'self');
+      type AnotherTsType = t.ToTsType<typeof another>;
+      const unionedWithAny = t.union(result, t.obj({ adfaf: t.string }), t.any);
+      type UnionedTsType = t.ToTsType<typeof unionedWithAny>;
+    });
   });
-  // it('can handle a very complex object hierarchy with optionals', () => {
-  //   interface IC {
-  //     prop0: boolean;
-  //     distinctProp: number;
-  //   }
-  //   interface IB {
-  //     prop0: boolean;
-  //   }
-  //   interface IA {
-  //     propBool: boolean;
-  //     propNum: number;
-  //     propBigInt: bigint;
-  //     propString: string;
-  //     propArray: Array<string>;
-  //     propRecursive: Array<IA>;
-  //     propStringLiteral: 'hello';
-  //     propNumberLiteral: 1;
-  //     propUnion: number | bigint | IC | IB;
-  //     propB: IB;
-  //     propC?: IC;
-  //   }
-  //   const A = t.declareObj<IA>();
-  //   const C = t.obj({ prop0: t.boolean, distinctProp: t.number });
-  //   const B = t.obj({ prop0: t.boolean });
-  //   t.defineDeclaration(A, {
-  //     propBool: t.boolean,
-  //     propNum: t.number,
-  //     propBigInt: t.bigint,
-  //     propString: t.string,
-  //     propArray: t.array(t.string),
-  //     propRecursive: t.array(A),
-  //     propStringLiteral: t.literal('hello'),
-  //     propNumberLiteral: t.literal(1),
-  //     propUnion: t.union(t.number, t.bigint, C, B),
-  //     propB: B,
-  //     propC: t.opt(C)
-  //   });
-  //   type A = typeof A;
-  //   type ATsType = t.ToTsType<A>;
-  //   type ARoundTrip = t.ToDefinitionType<ATsType>;
-  //   expectTypesSupportAssignment<A, ARoundTrip>();
-  //   expectTypesSupportAssignment<ARoundTrip, A>();
-  //   expectTypesSupportAssignment<ATsType, IA>();
-  //   expectTypesSupportAssignment<IA, ATsType>();
-  // });
 });

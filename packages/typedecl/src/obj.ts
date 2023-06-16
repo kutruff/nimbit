@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { keyMap, nul, undef, union, type ObjType, type Prop, type Type } from '.';
+import { getKeys, keyMap, nul, undef, union, type Constructor, type ObjType, type Prop, type Type } from '.';
 
 export interface Shape {
   [key: string]: Prop<Type<unknown, unknown>, unknown, unknown>;
@@ -20,42 +20,67 @@ export interface Shape {
 
 //TODO: Could be a record? Record<PropertyKey, Prop<unknown, unknown, unknown> | Type<unknown, unknown>>
 // Object definition parameters allow either a property defintion or a type directly
-export interface ShapeDefinition {
-  [key: string]: Prop<unknown, unknown, unknown> | Type<unknown, unknown>;
-}
+export type ShapeDefinition =
+  | {
+      [key: string]: Prop<unknown, unknown, unknown> | Type<unknown, unknown> | Constructor;
+    }
+  | Constructor;
+
 // Wrap a set of t.Types in Props<> - Allows people to use either "t.str" or "prop(t.str)" when defining objects
-export type ShapeDefinitionToShape<T> = {
-  [P in keyof T]: T[P] extends Prop<unknown, unknown, unknown> ? T[P] : Prop<T[P], false, false>;
-};
+export type ShapeDefinitionToShape<T> = T extends Constructor
+  ? ShapeDefinitionToShape<InstanceType<T>>
+  : {
+      [P in keyof T]: T[P] extends Constructor
+        ? Prop<ObjType<ShapeDefinitionToShape<InstanceType<T[P]>>>, false, false>
+        : T[P] extends Prop<unknown, unknown, unknown>
+        ? T[P]
+        : Prop<T[P], false, false>;
+    };
 
 export type ShapeDefinitionToObjType<T> = ObjType<ShapeDefinitionToShape<T>>;
 
+export type ShapeClassToShapeDefinition<T extends Constructor> = ShapeInstanceToShapeDefinition<InstanceType<T>>;
+
+export type ShapeInstanceToShapeDefinition<T> = {
+  [P in keyof T]: T[P] extends Constructor ? ShapeDefinitionToObjType<ShapeClassToShapeDefinition<T[P]>> : T[P];
+};
+
 export function obj<TShapeDefinition extends ShapeDefinition>(
-  shapeDefinitionParms: TShapeDefinition
-): ShapeDefinitionToObjType<TShapeDefinition> {
-  const shapeDefinition = getShape(shapeDefinitionParms);
-  return {
-    kind: 'object',
-    shape: shapeDefinition,
-    k: keyMap(shapeDefinition)
-  };
-}
-
-export function getShape<TShapeDefinition extends ShapeDefinition>(
   shapeDefinition: TShapeDefinition
-): ShapeDefinitionToShape<TShapeDefinition> {
-  const result = {} as any;
-  for (const key of Object.keys(shapeDefinition)) {
-    const prop = (
-      isProp(shapeDefinition[key])
-        ? { ...shapeDefinition[key] }
-        : createProp(shapeDefinition[key] as Type, false, false)
-    ) as Prop<unknown, unknown, unknown>;
+): ShapeDefinitionToObjType<TShapeDefinition> {
+  const shape = {} as any;
+  const resultObj = { shape } as any;
 
-    result[key] = prop;
+  if (typeof shapeDefinition === 'function') {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const constructor = shapeDefinition as Constructor;
+    const existingObj = constructorsToObj.get(constructor) as ShapeDefinitionToObjType<TShapeDefinition> | undefined;
+    if (existingObj) {
+      return existingObj;
+    }
+    resultObj.shape = shape;
+    constructorsToObj.set(constructor, resultObj);
+
+    shapeDefinition = new constructor() as any;
   }
-  return result as ShapeDefinitionToShape<TShapeDefinition>;
+
+  for (const key of getKeys(shapeDefinition)) {
+    if (isProp(shapeDefinition[key])) {
+      shape[key] = { ...shapeDefinition[key] };
+    } else if (typeof shapeDefinition[key] === 'function') {
+      shape[key] = createProp(obj(shapeDefinition[key] as Constructor), false, false);
+    } else {
+      shape[key] = createProp(shapeDefinition[key] as Type, false, false);
+    }
+  }
+
+  resultObj.kind = 'object';
+  resultObj.shape = shape;
+  resultObj.k = keyMap(shape);
+  return resultObj as ShapeDefinitionToObjType<TShapeDefinition>;
 }
+
+const constructorsToObj = new WeakMap();
 
 export function prop<T extends Type>(type: T) {
   return createProp(type, false as const, false as const);
