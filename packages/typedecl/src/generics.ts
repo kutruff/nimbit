@@ -85,10 +85,12 @@ type TupleKeysToUnionRec<T extends readonly unknown[], Acc> = T extends readonly
   ? TupleKeysToUnionRec<TRest, Acc | U>
   : Acc;
 
+
+
 export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K };
-export type MapOfTupleKeysReadonly<T extends readonly unknown[]> = {
-  [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K;
-};
+// export type MapOfTupleKeysReadonly<T extends readonly unknown[]> = {
+//   [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K;
+// };
 //Supposedly simplifies a type.
 // export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
 

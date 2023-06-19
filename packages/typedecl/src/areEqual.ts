@@ -4,6 +4,7 @@ import {
   type LiteralType,
   type ObjType,
   type Shape,
+  type TupleType,
   type Type,
   type UnionType
 } from '.';
@@ -15,7 +16,7 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
 
   comparisonCache ??= new Map();
 
-  //For recursive types, not having both sides cached will result in areEqual(a, b) and areEqual(b, a) not 
+  //For recursive types, not having both sides cached will result in areEqual(a, b) and areEqual(b, a) not
   // matching, but that is the most it could miss.
   let alreadyComparedTo = comparisonCache.get(a);
 
@@ -82,20 +83,39 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
         result = false;
       } else {
         //TODO: is O(n^2) the best we can do here since the set of values *should* be small?
-        let areEqual = false;
+        result = false;
         for (const aValue of aValues) {
-          areEqual = false;
+          result = false;
           for (const bValue of bValues) {
             if (aValue === bValue) {
-              areEqual = true;
+              result = true;
               break;
             }
           }
-          if (!areEqual) {
+          if (!result) {
             break;
           }
         }
-        result = areEqual;
+      }
+      break;
+    }
+    case 'tuple': {
+      const aTyped = a as TupleType<Type<unknown, unknown>[]>;
+      const bTyped = b as typeof aTyped;
+      const aElements = aTyped.elementTypes;
+      const bElements = bTyped.elementTypes;
+
+      if (aElements.length !== bElements.length) {
+        result = false;
+      } else {
+        result = true;
+        for (let i = 0; i < aElements.length; i++) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          if (!areEqual(aElements[i]!, bElements[i]!, comparisonCache)) {
+            result = false;
+            break;
+          }
+        }
       }
       break;
     }

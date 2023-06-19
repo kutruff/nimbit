@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  type AnyArray,
   type Literal,
   type NotAUnion,
   type ObjectKeyMap,
@@ -58,6 +59,11 @@ export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type
   memberTypes: Array<TMembers>;
 }
 
+export interface TupleType<TElements extends unknown[]> extends Type<'tuple', unknown> {
+  kind: 'tuple';
+  elementTypes: TElements;
+}
+
 export interface ObjType<TShape> extends Type<'object', unknown> {
   kind: 'object';
   shape: TShape;
@@ -91,6 +97,14 @@ type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown> ? U : n
 //https://github.com/microsoft/TypeScript/issues/34933#issuecomment-776098985
 //https://github.com/microsoft/TypeScript/issues/22575#issuecomment-776003717
 
+export type InferTupleKeys<T extends readonly unknown[]> = InferTupleKeysRec<T, []>;
+type InferTupleKeysRec<T extends readonly unknown[], Acc extends readonly unknown[]> = T extends readonly [
+  infer U,
+  ...infer TRest
+]
+  ? InferTupleKeysRec<TRest, [...Acc, U]>
+  : Acc;
+
 export type Infer<TDefinition> = TDefinition extends LiteralType<infer LiteralKind>
   ? LiteralKind
   : TDefinition extends ArrayType<infer ElementDefinition>
@@ -99,6 +113,8 @@ export type Infer<TDefinition> = TDefinition extends LiteralType<infer LiteralKi
   ? Infer<MemberDefinitions>
   : TDefinition extends EnumType<unknown, infer TEnumValues>
   ? TEnumValues
+  : TDefinition extends TupleType<infer TElements>
+  ? InferTupleKeys<TElements>
   : TDefinition extends ObjType<infer TShape>
   ? {
       //First add optional/readonly property modifiers to the DEFINITION, and then those modifiers will just get copied over to the TsType!
