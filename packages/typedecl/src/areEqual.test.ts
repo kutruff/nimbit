@@ -8,11 +8,17 @@ describe('Type equality', () => {
       [t.string, { kind: 'string' } as t.Type<'string'>, true],
       [t.string, { kind: 'boolean' } as t.Type<'boolean'>, false],
       [t.array(t.bigint), { kind: 'array', elementType: { kind: 'bigint' } } as t.ArrayType<typeof t.bigint>, true],
+      [t.array(t.number), t.array(t.string), false],
       [
         t.array(t.literal('fooLiteral')),
         { kind: 'array', elementType: { kind: 'literal', literal: 'fooLiteral' } } as t.ArrayType<
           t.LiteralType<'fooLiteral'>
         >,
+        true
+      ],
+      [
+        t.array(t.union(t.literal('fooLiteral'), t.literal('barLiteral'))),
+        t.array(t.union(t.literal('barLiteral'), t.literal('fooLiteral'))),
         true
       ],
       [t.union(t.string, t.boolean), t.union(t.boolean, t.string), true],
@@ -22,6 +28,11 @@ describe('Type equality', () => {
         true
       ],
       [t.union(t.string, t.boolean, t.bigint), t.union(t.boolean, t.string), false],
+      [t.union(t.string, t.boolean), t.union(t.union(t.boolean, t.string), t.union(t.boolean, t.string)), true],
+      [t.enumm('test', ['a', 'b', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
+      [t.enumm('test', ['b', 'a', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
+      [t.enumm('test', ['a', 'b', 'c']), t.enumm('differentName', ['a', 'b', 'c']), false],
+      [t.enumm('test', ['a', 'b']), t.enumm('test', ['a', 'b', 'c']), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.opt(t.string) }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.string }), true],
       [t.obj({ p0: t.string }), t.obj({ p1: t.string }), false],
@@ -68,6 +79,17 @@ describe('Type equality', () => {
 
         expect(t.areEqual(A, A)).toEqual(true);
         expect(t.areEqual(A, B)).toEqual(true);
+
+        const a = new ADef();
+        const b = new BDef();
+
+        type AExtendsB = typeof a extends typeof b ? true : false;
+        const aExtendsB: AExtendsB = true;
+        expect(aExtendsB).toEqual(true);
+
+        type BExtendsA = typeof a extends typeof b ? true : false;
+        const bExtendsA: BExtendsA = true;
+        expect(bExtendsA).toEqual(true);
       });
 
       it('diverging self recursive are not equal', () => {
@@ -88,6 +110,17 @@ describe('Type equality', () => {
 
         expect(t.areEqual(A, A)).toEqual(true);
         expect(t.areEqual(A, B)).toEqual(false);
+
+        const a = new ADef();
+        const b = new BDef();
+
+        type AExtendsB = typeof a extends typeof b ? true : false;
+        const aExtendsB: AExtendsB = false;
+        expect(aExtendsB).toEqual(false);
+
+        type BExtendsA = typeof a extends typeof b ? true : false;
+        const bExtendsA: BExtendsA = false;
+        expect(bExtendsA).toEqual(false);
       });
 
       it('mutally recursive are not equal', () => {
@@ -103,6 +136,17 @@ describe('Type equality', () => {
         const B = t.obj(BDef);
 
         expect(t.areEqual(A, B)).toEqual(false);
+
+        const a = new ADef();
+        const b = new BDef();
+
+        type AExtendsB = typeof a extends typeof b ? true : false;
+        const aExtendsB: AExtendsB = false;
+        expect(aExtendsB).toEqual(false);
+
+        type BExtendsA = typeof a extends typeof b ? true : false;
+        const bExtendsA: BExtendsA = false;
+        expect(bExtendsA).toEqual(false);
       });
     });
   });

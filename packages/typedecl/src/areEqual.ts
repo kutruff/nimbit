@@ -1,4 +1,12 @@
-import { type ArrayType, type LiteralType, type ObjType, type Shape, type Type, type UnionType } from '.';
+import {
+  type ArrayType,
+  type EnumType,
+  type LiteralType,
+  type ObjType,
+  type Shape,
+  type Type,
+  type UnionType
+} from '.';
 
 export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type, boolean>>): boolean => {
   if (a === b) return true;
@@ -7,6 +15,8 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
 
   comparisonCache ??= new Map();
 
+  //For recursive types, not having both sides cached will result in areEqual(a, b) and areEqual(b, a) not 
+  // matching, but that is the most it could miss.
   let alreadyComparedTo = comparisonCache.get(a);
 
   if (alreadyComparedTo === undefined) {
@@ -21,6 +31,7 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
 
   let result: boolean | undefined = undefined;
 
+  //For recursive types, we need to set the result to true before we recurse to avoid infinite recursion
   alreadyComparedTo.set(b, true);
 
   switch (a.kind) {
@@ -31,13 +42,13 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
       break;
     }
     case 'array': {
-      const aTyped = a as ArrayType<Type>;
+      const aTyped = a as ArrayType<Type<unknown, unknown>>;
       const bTyped = b as typeof aTyped;
       result = areEqual(aTyped.elementType, bTyped.elementType, comparisonCache);
       break;
     }
     case 'union': {
-      const aTyped = a as UnionType<Type>;
+      const aTyped = a as UnionType<Type<unknown, unknown>>;
       const bTyped = b as typeof aTyped;
 
       if (aTyped.memberTypes.length !== bTyped.memberTypes.length) {
@@ -59,6 +70,33 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
         }
       }
       result = didFindMatchingMember;
+      break;
+    }
+    case 'enum': {
+      const aTyped = a as EnumType<unknown, unknown>;
+      const bTyped = b as typeof aTyped;
+      const aValues = aTyped.values as string[];
+      const bValues = bTyped.values as string[];
+
+      if (a.name !== b.name || aValues.length !== bValues.length) {
+        result = false;
+      } else {
+        //TODO: is O(n^2) the best we can do here since the set of values *should* be small?
+        let areEqual = false;
+        for (const aValue of aValues) {
+          areEqual = false;
+          for (const bValue of bValues) {
+            if (aValue === bValue) {
+              areEqual = true;
+              break;
+            }
+          }
+          if (!areEqual) {
+            break;
+          }
+        }
+        result = areEqual;
+      }
       break;
     }
     case 'object': {
