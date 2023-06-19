@@ -59,7 +59,7 @@ export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type
   memberTypes: Array<TMembers>;
 }
 
-export interface TupleType<TElements extends unknown[]> extends Type<'tuple', unknown> {
+export interface TupleType<TElements extends Type<unknown, unknown>[]> extends Type<'tuple', unknown> {
   kind: 'tuple';
   elementTypes: TElements;
 }
