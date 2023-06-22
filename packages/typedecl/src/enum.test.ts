@@ -6,6 +6,7 @@ describe('Enums', () => {
     it('supports instantiated const arrays', () => {
       const values = ['a', 'b', 'c'] as const;
       const Target = t.enumm('Target', values);
+      type Target = t.Infer<typeof Target>;
 
       type TargetTupleType = ['a', 'b', 'c'];
       type ExpectedDefinitionType = t.EnumType<TargetTupleType, t.MapOfTupleKeys<TargetTupleType>>;
@@ -21,7 +22,8 @@ describe('Enums', () => {
 
   it('supports values as function arguments', () => {
     const Target = t.enumm('Target', ['a', 'b', 'c']);
-
+    type Target = t.Infer<typeof Target>;
+    
     type TargetTupleType = ['a', 'b', 'c'];
     type ExpectedDefinitionType = t.EnumType<TargetTupleType, t.MapOfTupleKeys<TargetTupleType>>;
     expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();

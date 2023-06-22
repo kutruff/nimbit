@@ -74,7 +74,7 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
       break;
     }
     case 'enum': {
-      const aTyped = a as EnumType<unknown, unknown>;
+      const aTyped = a as EnumType<unknown[], unknown>;
       const bTyped = b as typeof aTyped;
       const aValues = aTyped.values as string[];
       const bValues = bTyped.values as string[];

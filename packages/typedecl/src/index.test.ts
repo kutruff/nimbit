@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import * as t from './index';
+import * as t from '.';
 
 describe('Type declaration', () => {
   describe('Arrays', () => {

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  type AnyArray,
+  TupleKeysToUnion,
   type Literal,
   type NotAUnion,
   type ObjectKeyMap,
@@ -11,18 +11,24 @@ import {
   type ReadonlyPropertyNames
 } from '.';
 
+//Need this symbol / property definition so that type inference will actual use the T parameter during type inference
+//https://github.com/Microsoft/TypeScript/issues/29657#issuecomment-460728148
+const type = Symbol('type');
+
 export interface Type<TKind = unknown, T = unknown> {
+  [type]?: T;
   kind: TKind;
+  //TODO: Should the name be an array and support namespaces?
   name?: string;
 }
 
 export const createType = <TKind, T>(kind: TKind, name?: string): Type<TKind, T> => ({ kind, name });
 
-//TODO: verify that this copy and set will be sufficiently typed.
-export const name = <T extends Type<unknown, unknown>>(name: string, objType: T): typeof objType => ({
-  ...objType,
-  name
-});
+// //TODO: verify that this copy and set will be sufficiently typed.
+// export const name = <T extends Type<unknown, unknown>>(name: string, objType: T): typeof objType => ({
+//   ...objType,
+//   name
+// });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const any = createType<'any', any>('any', 'any');
@@ -32,7 +38,6 @@ export interface LiteralType<TLiteralValue> extends Type<'literal', TLiteralValu
   kind: 'literal';
   literal: TLiteralValue;
 }
-
 export const literal = <T, TLiteralValue>(literalValue: Literal<T, TLiteralValue>): LiteralType<TLiteralValue> => ({
   kind: 'literal',
   literal: literalValue
@@ -48,10 +53,11 @@ export const array = <TElement extends Type<unknown, unknown>>(element: TElement
   elementType: element
 });
 
-export interface EnumType<TEnumValues, TMapOfTupleKeys> extends Type<'enum', TEnumValues> {
+export interface EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue>
+  extends Type<'enum', TupleKeysToUnion<TEnumValues>> {
   kind: 'enum';
   values: TEnumValues;
-  enum: TMapOfTupleKeys;
+  enum: TMapOfEnumKeyToValue;
 }
 
 export interface UnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', unknown> {
@@ -64,6 +70,9 @@ export interface TupleType<TElements extends Type<unknown, unknown>[]> extends T
   elementTypes: TElements;
 }
 
+//TODO: rename shape to s for brevity?
+//TODO: add a t property that is just the type of the properties, just like the shape.
+//      makes it so you can do Foo.t.prop0 instead of Foo.shape.prop0.type
 export interface ObjType<TShape> extends Type<'object', unknown> {
   kind: 'object';
   shape: TShape;
@@ -97,24 +106,19 @@ type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown> ? U : n
 //https://github.com/microsoft/TypeScript/issues/34933#issuecomment-776098985
 //https://github.com/microsoft/TypeScript/issues/22575#issuecomment-776003717
 
-export type InferTupleKeys<T extends readonly unknown[]> = InferTupleKeysRec<T, []>;
-type InferTupleKeysRec<T extends readonly unknown[], Acc extends readonly unknown[]> = T extends readonly [
+type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
   infer U,
   ...infer TRest
 ]
-  ? InferTupleKeysRec<TRest, [...Acc, U]>
+  ? InferTupleKeys<TRest, [...Acc, Infer<U>]>
   : Acc;
 
-export type Infer<TDefinition> = TDefinition extends LiteralType<infer LiteralKind>
-  ? LiteralKind
-  : TDefinition extends ArrayType<infer ElementDefinition>
+export type Infer<TDefinition> = TDefinition extends ArrayType<infer ElementDefinition>
   ? Array<Infer<ElementDefinition>>
   : TDefinition extends UnionType<infer MemberDefinitions>
   ? Infer<MemberDefinitions>
-  : TDefinition extends EnumType<unknown, infer TEnumValues>
-  ? TEnumValues
   : TDefinition extends TupleType<infer TElements>
-  ? InferTupleKeys<TElements>
+  ? InferTupleKeys<TElements, []>
   : TDefinition extends ObjType<infer TShape>
   ? {
       //First add optional/readonly property modifiers to the DEFINITION, and then those modifiers will just get copied over to the TsType!

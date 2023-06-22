@@ -27,11 +27,13 @@ export type ShapeDefinitionToShape<T> = T extends Constructor
 
 export type ShapeDefinitionToObjType<T> = ObjType<ShapeDefinitionToShape<T>>;
 
+//Note: the name is important here for recursive objects.
 export function obj<TShapeDefinition extends ShapeDefinition>(
-  shapeDefinition: TShapeDefinition
+  shapeDefinition: TShapeDefinition,
+  name?: string
 ): ShapeDefinitionToObjType<TShapeDefinition> {
   const shape = {} as any;
-  const resultObj = { kind: 'object', shape } as any;
+  const resultObj = { kind: 'object', shape, name } as any;
 
   if (typeof shapeDefinition === 'function') {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion

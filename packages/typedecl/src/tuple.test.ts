@@ -1,4 +1,4 @@
-import * as t from './index';
+import * as t from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('Tuples', () => {

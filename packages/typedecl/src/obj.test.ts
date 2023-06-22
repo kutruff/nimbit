@@ -209,7 +209,7 @@ describe('obj()', () => {
     expectTypesSupportAssignment<A, ExpectedAShape>();
   });
 
-  it('allows obj()', () => {
+  it('allows classes for obj()', () => {
     class ADef {
       prop = t.string;
     }
