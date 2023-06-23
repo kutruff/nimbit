@@ -15,9 +15,7 @@ describe('obj()', () => {
 
     type PersonTwo = t.Infer<typeof PersonTwo>;
 
-    type PersonTwoShapeRoundTripped = t.ToShapeType<PersonTwo>;
-
-    const roundTrippedInstance: PersonTwoShapeRoundTripped = {
+    const roundTrippedInstance = {
       kind: 'object',
       shape: {
         name: { ...t.prop(t.string) },
@@ -313,6 +311,45 @@ describe('obj()', () => {
       type ExpectedResultShape = { readonly prop?: string };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
+    });
+  });
+
+  describe('fluent interface', () => {
+    it('optN()', () => {
+      const target = t.obj({
+        propOpt: t.string.opt(),
+        propOptN: t.string.optN(),
+        propNullish: t.string.nullish(),
+        propNullishOpt: t.string.nullish().opt(),
+        propComplicatedOpt: t.union(t.string).nullish().opt()
+      });
+      type Target = t.Infer<typeof target>;
+      const ExpectedResult = t.obj({
+        propOpt: {
+          type: t.string,
+          attributes: { isOptional: true as const, isReadonly: false as const }
+        },
+        propOptN: {
+          type: t.union(t.string, t.nul),
+          attributes: { isOptional: true as const, isReadonly: false as const }
+        },
+        propNullish: {
+          type: t.union(t.string, t.nul, t.undef),
+          attributes: { isOptional: false as const, isReadonly: false as const }
+        },
+        propNullishOpt: {
+          type: t.union(t.string, t.nul, t.undef),
+          attributes: { isOptional: true as const, isReadonly: false as const }
+        },
+        propComplicatedOpt: {
+          type: t.union(t.string, t.nul, t.undef),
+          attributes: { isOptional: true as const, isReadonly: false as const }
+        }
+      });
+      type ExpectedDefinitionType = typeof ExpectedResult;
+      expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
+      expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
+      expect(target).toEqual(ExpectedResult);
     });
   });
 

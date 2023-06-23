@@ -18,12 +18,10 @@ import {
 } from './index';
 import { union } from './union';
 
-export type Intersection<ObjTypeA, ObjTypeB> = ObjTypeA & ObjTypeB;
-
 export function intersection<TShapeA extends Shape, TShapeB extends Shape>(
   objectTypeA: ObjType<TShapeA>,
   objectTypeB: ObjType<TShapeB>
-): Intersection<typeof objectTypeA, typeof objectTypeB> {
+): ObjType<(typeof objectTypeA)['shape'] & (typeof objectTypeB)['shape']> {
   const merged = {} as Shape;
 
   const shapeA = objectTypeA.shape;
@@ -48,7 +46,7 @@ export function intersection<TShapeA extends Shape, TShapeB extends Shape>(
         switch (propertyA.type.kind) {
           case 'object': {
             if (propertyB.type.kind !== 'object') {
-              return never as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
+              return never as unknown as ObjType<(typeof objectTypeA)['shape'] & (typeof objectTypeB)['shape']>;
             }
 
             merged[key] = prop(intersection(propertyA.type as any, propertyB.type as any) as any);
@@ -59,7 +57,7 @@ export function intersection<TShapeA extends Shape, TShapeB extends Shape>(
             if (areEqual(propertyA.type, propertyB.type)) {
               merged[key] = prop(propertyA.type);
             } else {
-              return never as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
+              return never as unknown as ObjType<(typeof objectTypeA)['shape'] & (typeof objectTypeB)['shape']>;
             }
             break;
           }
@@ -69,7 +67,7 @@ export function intersection<TShapeA extends Shape, TShapeB extends Shape>(
   }
 
   const result = obj(merged);
-  return result as unknown as Intersection<typeof objectTypeA, typeof objectTypeB>;
+  return result as unknown as ObjType<(typeof objectTypeA)['shape'] & (typeof objectTypeB)['shape']>;
 }
 
 export type PartialType<T> = {
@@ -83,7 +81,7 @@ export function partial<T extends Shape>(objType: ObjType<T>): ObjType<PartialTy
     result[key] = makeOptional(objType.shape[key] as any);
   }
 
-  return obj(result) as ObjType<PartialType<T>>;
+  return obj(result) as unknown as ObjType<PartialType<T>>;
 }
 
 export type RequiredType<T> = {
@@ -97,7 +95,7 @@ export function required<T extends Shape>(objType: ObjType<T>): ObjType<Required
     result[key] = makeRequired(objType.shape[key] as any);
   }
 
-  return obj(result) as ObjType<RequiredType<T>>;
+  return obj(result) as unknown as ObjType<RequiredType<T>>;
 }
 
 export type ReadonlyType<T> = {
@@ -111,7 +109,7 @@ export function readonly<T extends Shape>(objType: ObjType<T>): ObjType<Readonly
     result[key] = makeReadonly(objType.shape[key] as any);
   }
 
-  return obj(result) as ObjType<ReadonlyType<T>>;
+  return obj(result) as unknown as ObjType<ReadonlyType<T>>;
 }
 
 export type WritableType<T> = {
@@ -125,13 +123,10 @@ export function writable<T extends Shape>(objType: ObjType<T>): ObjType<Writable
     result[key] = makeWritable(objType.shape[key] as any);
   }
 
-  return obj(result) as ObjType<WritableType<T>>;
+  return obj(result) as unknown as ObjType<WritableType<T>>;
 }
 
-export function pick<T extends Shape, K extends keyof T>(
-  objType: ObjType<T>,
-  ...keys: Array<K>
-): ObjType<Pick<T, K>> {
+export function pick<T extends Shape, K extends keyof T>(objType: ObjType<T>, ...keys: Array<K>): ObjType<Pick<T, K>> {
   const result = {} as Pick<T, K>;
 
   for (const key of keys) {
@@ -141,10 +136,7 @@ export function pick<T extends Shape, K extends keyof T>(
   return obj(result) as unknown as ObjType<Pick<T, K>>;
 }
 
-export function omit<T extends Shape, K extends keyof T>(
-  objType: ObjType<T>,
-  ...keys: Array<K>
-): ObjType<Omit<T, K>> {
+export function omit<T extends Shape, K extends keyof T>(objType: ObjType<T>, ...keys: Array<K>): ObjType<Omit<T, K>> {
   const result = { ...objType.shape };
 
   for (const key of keys) {

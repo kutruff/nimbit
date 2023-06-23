@@ -8,11 +8,12 @@ describe('Type operations', () => {
       const objA = t.obj({ propA: t.string });
       const objB = t.obj({ propB: t.number });
       const result = t.intersection(objA, objB);
-
+      type result = t.Resolve<typeof result>;
       const ExpectedDefinitionType = t.obj({
         propA: t.string,
         propB: t.number
       });
+
       type ExpectedDefinitionType = typeof ExpectedDefinitionType;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
@@ -144,7 +145,7 @@ describe('Type operations', () => {
         type ObjCD = t.Infer<typeof ObjCD>;
         const resultInstanceCD: ObjCD = { prop0: true, distinctProp: 'what' };
 
-        type ObjCDIntersect = typeof ObjC & typeof ObjD;
+        type ObjCDIntersect = t.ObjType<(typeof ObjC)['shape'] & (typeof ObjD)['shape']>;
 
         const instanceTestObjCDIntersect: ObjCDIntersect = t.obj({
           prop0: t.boolean,

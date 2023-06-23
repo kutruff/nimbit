@@ -1,5 +1,12 @@
 import { areEqual } from './areEqual';
-import { any, type ElementType, type FlattenedUnion, type Type, type UnionOrSingleType, type UnionType } from './index';
+import {
+  any,
+  UnionType,
+  type ElementType,
+  type FlattenedUnion,
+  type Type,
+  type UnionOrSingleType
+} from './index';
 
 const flattenUnionMembers = <T extends Type<unknown, unknown> | UnionType<Type<unknown, unknown>>>(
   members: Array<T>
@@ -61,9 +68,6 @@ export const union = <T extends Type<unknown, unknown>[]>(...args: T): UnionOrSi
   if (compressed.length === 1) {
     return compressed[0] as UnionOrSingleType<ElementType<T>>;
   } else {
-    return {
-      kind: 'union',
-      memberTypes: compressed
-    } as UnionOrSingleType<ElementType<T>>;
+    return new UnionType(compressed) as UnionOrSingleType<ElementType<T>>;
   }
 };

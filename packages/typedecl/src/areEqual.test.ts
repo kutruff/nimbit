@@ -29,19 +29,19 @@ describe('Type equality', () => {
       ],
       [t.union(t.string, t.boolean, t.bigint), t.union(t.boolean, t.string), false],
       [t.union(t.string, t.boolean), t.union(t.union(t.boolean, t.string), t.union(t.boolean, t.string)), true],
-      [t.enumm('test', ['a', 'b', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
-      [t.enumm('test', ['b', 'a', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
-      [t.enumm('test', ['a', 'b', 'c']), t.enumm('differentName', ['a', 'b', 'c']), false],
-      [t.enumm('test', ['a', 'b']), t.enumm('test', ['a', 'b', 'c']), false],
-      [t.tuple([t.number, t.string]), t.tuple([t.number, t.string]), true],
-      [t.tuple([t.string, t.number]), t.tuple([t.number, t.string]), false],
-      [t.tuple([t.obj({ a: t.number }), t.number]), t.tuple([t.obj({ a: t.number }), t.number]), true],
-      [t.obj({ p0: t.string }), t.obj({ p0: t.opt(t.string) }), false],
-      [t.obj({ p0: t.string }), t.obj({ p0: t.string }), true],
-      [t.obj({ p0: t.string }), t.obj({ p1: t.string }), false],
-      [t.obj({ p0: t.string }), t.obj({ p0: t.boolean }), false],
-      [t.obj({ p0: t.string }), t.obj({ p0: t.string, p1: t.undef }), false], // Interesting case.  An object with an undefined property is wider than the other type
-      [t.obj({ p0: t.string, p1: t.obj({ n: t.number }) }), t.obj({ p0: t.string, p1: t.obj({ n: t.number }) }), true]
+        [t.enumm('test', ['a', 'b', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
+        [t.enumm('test', ['b', 'a', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
+        [t.enumm('test', ['a', 'b', 'c']), t.enumm('differentName', ['a', 'b', 'c']), false],
+        [t.enumm('test', ['a', 'b']), t.enumm('test', ['a', 'b', 'c']), false],
+        [t.tuple([t.number, t.string]), t.tuple([t.number, t.string]), true],
+        [t.tuple([t.string, t.number]), t.tuple([t.number, t.string]), false],
+        [t.tuple([t.obj({ a: t.number }), t.number]), t.tuple([t.obj({ a: t.number }), t.number]), true],
+        [t.obj({ p0: t.string }), t.obj({ p0: t.opt(t.string) }), false],
+        [t.obj({ p0: t.string }), t.obj({ p0: t.string }), true],
+        [t.obj({ p0: t.string }), t.obj({ p1: t.string }), false],
+        [t.obj({ p0: t.string }), t.obj({ p0: t.boolean }), false],
+        [t.obj({ p0: t.string }), t.obj({ p0: t.string, p1: t.undef }), false], // Interesting case.  An object with an undefined property is wider than the other type
+        [t.obj({ p0: t.string, p1: t.obj({ n: t.number }) }), t.obj({ p0: t.string, p1: t.obj({ n: t.number }) }), true]
     ])('areEqual(%s, %s)', (a: t.Type, b: t.Type, expected: boolean) => {
       expect(t.areEqual(a, b)).toEqual(expected);
     });

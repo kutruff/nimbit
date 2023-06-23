@@ -6,5 +6,4 @@ export * from './union';
 export * from './generics';
 export * from './primitives';
 export * from './reflection';
-export * from './enum';
-export * from './tuple';
+export * from './typeClasses';
