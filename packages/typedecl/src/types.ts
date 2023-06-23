@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  TupleKeysToUnion,
   type Literal,
   type NotAUnion,
   type ObjectKeyMap,
@@ -8,7 +7,8 @@ import {
   type PickPartially,
   type PickReadonly,
   type PropsOfType,
-  type ReadonlyPropertyNames
+  type ReadonlyPropertyNames,
+  type TupleKeysToUnion
 } from '.';
 
 //Need this symbol / property definition so that type inference will actual use the T parameter during type inference
@@ -16,11 +16,13 @@ import {
 const type = Symbol('type');
 
 export interface Type<TKind = unknown, T = unknown> {
+  //This property is never used. By having a hidden/optional and practically usettable property, TS will use the T parameter during type inference.
   [type]?: T;
   kind: TKind;
   //TODO: Should the name be an array and support namespaces?
   name?: string;
 }
+
 
 export const createType = <TKind, T>(kind: TKind, name?: string): Type<TKind, T> => ({ kind, name });
 
@@ -130,6 +132,27 @@ export type Infer<TDefinition> = TDefinition extends ArrayType<infer ElementDefi
   ? T
   : never;
 
+//This takes UnionType<UnionType<t.string | t.number>> and flattens it to t.string | t.number
+export type FlattenedUnion<T extends Type<unknown, unknown>> = T extends UnionType<infer K> ? FlattenedUnion<K> : T;
+
+//First, if T is a TYPESCRIPT union of typedecl types like t.string | t.number, then we want the TypeScript Type
+//to be UniontType<t.string | t.number>.  You use FlattenUnion<> to remove all surrounding UnionTypes before calling
+//this.
+export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
+  ? UnionWithAnyBecomesAny<UnionType<T>>
+  : T;
+
+//Will take a UnionType<typeof t.any | typeof t.string> and collapses it to AnyType, and it uses [] to prevent distribution over conditional types.
+// Note: this presently will turn UnionType<Type<unknown, unknown> | anything > into AnyType which may not be what we want.
+export type UnionWithAnyBecomesAny<T extends Type<unknown, unknown>> = T extends UnionType<infer K>
+  ? [K | AnyType] extends [K]
+    ? AnyType
+    : T
+  : T;
+
+export type UnionOrSingleType<T extends Type<unknown, unknown>> = CollapseSingleMemberUnionType<FlattenedUnion<T>>;
+
+
 //TODO: this paradigm should be removed unless it can be made extensible is some way.
 //Main entry to convert a TypeScript type to a Shape.  First need to detect a typescript union and then
 export type ToShapeType<TsType> = NotAUnion<TsType> extends never
@@ -169,26 +192,3 @@ type ToShapeTypeDistribute<TsType> = TsType extends Literal<string, TsType>
       >;
     }>
   : never;
-
-//This takes UnionType<UnionType<t.string | t.number>> and flattens it to t.string | t.number
-export type FlattenedUnion<T extends Type<unknown, unknown>> = T extends UnionType<infer K> ? FlattenedUnion<K> : T;
-
-//First, if T is a TYPESCRIPT union of typedecl types like t.string | t.number, then we want the TypeScript Type
-//to be UniontType<t.string | t.number>.  You use FlattenUnion<> to remove all surrounding UnionTypes before calling
-//this.
-export type CollapseSingleMemberUnionType<T extends Type<unknown, unknown>> = NotAUnion<T> extends never
-  ? UnionWithAnyBecomesAny<UnionType<T>>
-  : T;
-
-//Will take a UnionType<typeof t.any | typeof t.string> and collapses it to AnyType, and it uses [] to prevent distribution over conditional types.
-export type UnionWithAnyBecomesAny<T extends Type<unknown, unknown>> = T extends UnionType<infer K>
-  ? [K | AnyType] extends [K]
-    ? AnyType
-    : T
-  : T;
-
-export type UnionOrSingleType<T extends Type<unknown, unknown>> = CollapseSingleMemberUnionType<FlattenedUnion<T>>;
-
-// How to prevent conditional from being distributed
-//https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
-// type NoDistribute<T> = [T] extends [T] ? T : never;

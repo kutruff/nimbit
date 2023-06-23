@@ -76,8 +76,8 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
     case 'enum': {
       const aTyped = a as EnumType<unknown[], unknown>;
       const bTyped = b as typeof aTyped;
-      const aValues = aTyped.values as string[];
-      const bValues = bTyped.values as string[];
+      const aValues = aTyped.values;
+      const bValues = bTyped.values;
 
       if (a.name !== b.name || aValues.length !== bValues.length) {
         result = false;
@@ -123,18 +123,18 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
       const aTyped = a as ObjType<Shape>;
       const bTyped = b as typeof aTyped;
 
-      const aDefinition = aTyped.shape;
-      const bDefinition = bTyped.shape;
+      const aShape = aTyped.shape;
+      const bShape = bTyped.shape;
 
-      const aKeys = Object.keys(aDefinition);
-      const bKeys = Object.keys(bDefinition);
+      const aKeys = Object.keys(aShape);
+      const bKeys = Object.keys(bShape);
 
       if (aKeys.length === bKeys.length) {
         result = true;
 
         for (const aKey of aKeys) {
-          const aProp = aDefinition[aKey];
-          const bProp = bDefinition[aKey];
+          const aProp = aShape[aKey];
+          const bProp = bShape[aKey];
           const arePropsEqual =
             aProp != null &&
             bProp != null &&

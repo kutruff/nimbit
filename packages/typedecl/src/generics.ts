@@ -67,7 +67,12 @@ export type ReadonlyProperties<T> = Pick<T, ReadonlyPropertyNames<T>>;
 export type WritableProperties<T> = Pick<T, WritablePropertyNames<T>>;
 
 //mad science: https://stackoverflow.com/questions/50639496/is-there-a-way-to-prevent-union-types-in-typescript
-export type NotAUnion<T, U = T> = U extends any ? ([T] extends [boolean] ? T : [T] extends [U] ? T : never) : never;
+//  export type NotAUnion<T, U = T> = U extends any ? ([T] extends [boolean] ? T : [T] extends [U] ? T : never) : never;
+
+// https://stackoverflow.com/a/50375286
+export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+
+export type NotAUnion<T> = [T] extends [boolean] ? boolean : [T] extends [UnionToIntersection<T>] ? T : never;
 
 //ahejlsberg FTW: https://github.com/microsoft/TypeScript/issues/42644#issuecomment-774315112
 export type Literal<T, LiteralValue> = LiteralValue extends T ? (T extends LiteralValue ? never : LiteralValue) : never;
@@ -80,19 +85,18 @@ export type Writeable<T> = {
   -readonly [P in keyof T]: Writeable<T[P]>;
 };
 
-export type TupleKeysToUnion<T extends readonly unknown[]> = TupleKeysToUnionRec<T, never>;
-type TupleKeysToUnionRec<T extends readonly unknown[], Acc> = T extends readonly [infer U, ...infer TRest]
-  ? TupleKeysToUnionRec<TRest, Acc | U>
+export type TupleKeysToUnion<T extends readonly unknown[], Acc = never> = T extends readonly [infer U, ...infer TRest]
+  ? TupleKeysToUnion<TRest, Acc | U>
   : Acc;
 
-
-
 export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K };
-// export type MapOfTupleKeysReadonly<T extends readonly unknown[]> = {
-//   [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K;
-// };
+
 //Supposedly simplifies a type.
-// export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
+export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
+
+// How to prevent conditional from being distributed
+//https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+//type NoDistribute<T> = [T] extends [T] ? T : never;
 
 // type GetChars<S> = GetCharsHelper<S, never>;
 // type GetCharsHelper<S, Acc> = S extends `${infer Char}${infer Rest}` ? GetCharsHelper<Rest, Char | Acc> : Acc;
