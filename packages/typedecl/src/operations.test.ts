@@ -298,6 +298,7 @@ describe('Type operations', () => {
     it('makes required properites into optionals', () => {
       const target = t.obj({ prop: t.string });
       const result = t.partial(target);
+      type result = t.Infer<typeof result>;
 
       const ExpectedResult = t.obj({ prop: t.opt(t.string) });
       type ExpectedDefinitionType = typeof ExpectedResult;
@@ -343,6 +344,7 @@ describe('Type operations', () => {
     it('makes optional properites into required properties', () => {
       const target = t.obj({ prop: t.opt(t.string) });
       const result = t.required(target);
+      type result = t.Resolve<typeof result>;
 
       const ExpectedResult = t.obj({ prop: t.string });
       type ExpectedDefinitionType = typeof ExpectedResult;

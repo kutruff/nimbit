@@ -34,11 +34,11 @@ export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
   constructor(public kind: TKind, public name?: string) {}
   opt() {
     //TODO: switch optional to be a union of undefined and the type
-    return createProp(this, true as const, false as const);
+    return createProp(union(this, undef), true as const, false as const);
   }
 
   optN() {
-    return createProp(union(this, nul), true as const, false as const);
+    return createProp(union(this, undef, nul), true as const, false as const);
   }
 
   ro() {
@@ -46,15 +46,15 @@ export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
   }
 
   optRo() {
-    return createProp(this, true as const, true as const);
+    return createProp(union(this, undef), true as const, true as const);
   }
 
   nullable() {
-    return union(this, nul, undef);
+    return union(this, nul);
   }
 
   nullish() {
-    return union(this, nul, undef);
+    return union(this, undef, nul);
   }
 }
 
@@ -173,7 +173,7 @@ type ToShapeTypeDistribute<TsType> = TsType extends Literal<string, TsType>
       //Remove any '| undefined' parts of the union because that's for optional properties.
       //The second argument to prop is whether it's readonly
       -readonly [P in keyof TsType]-?: Prop<
-        ToShapeType<Exclude<TsType[P], undefined>>,
+        P extends OptionalPropertyNames<TsType> ? ToShapeType<TsType[P]> : ToShapeType<Exclude<TsType[P], undefined>>,
         P extends OptionalPropertyNames<TsType> ? true : false,
         P extends ReadonlyPropertyNames<TsType> ? true : false
       >;

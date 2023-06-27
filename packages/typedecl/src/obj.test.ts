@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from '.';
-import { type AnyObject } from '.';
+import { type AnyObject, type Resolve } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('obj()', () => {
@@ -225,6 +225,7 @@ describe('obj()', () => {
   it('allows mutual recursion', () => {
     class ADef {
       b = BDef;
+      strProp = t.string;
     }
 
     class BDef {
@@ -240,7 +241,7 @@ describe('obj()', () => {
     expect(A.shape.b.type).toEqual(B);
     expect(B.shape.a.type).toEqual(A);
 
-    type ExpectedAShape = { b: B };
+    type ExpectedAShape = { b: B; strProp: string };
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
 
@@ -267,12 +268,18 @@ describe('obj()', () => {
   describe('property modifiers', () => {
     it('makes optional property defintions into optional TS properties', () => {
       const target = t.obj({ prop: t.opt(t.string) });
+      type Target = t.Infer<typeof target>;
 
       const ExpectedResult = t.obj({
-        prop: { type: t.string, attributes: { isOptional: true as const, isReadonly: false as const } }
+        prop: {
+          type: t.union(t.string, t.undef),
+          attributes: { isOptional: true as const, isReadonly: false as const }
+        }
       });
       type ExpectedDefinitionType = typeof ExpectedResult;
-      expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
+      type TargetType = typeof target;
+
+      expectTypesSupportAssignment<ExpectedDefinitionType, TargetType>();
       expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
 
       type ResultShape = t.Infer<typeof ExpectedResult>;
@@ -301,7 +308,7 @@ describe('obj()', () => {
       const target = t.obj({ prop: t.optRo(t.string) });
 
       const ExpectedResult = t.obj({
-        prop: { type: t.string, attributes: { isOptional: true as const, isReadonly: true as const } }
+        prop: { type: t.union(t.string, t.undef), attributes: { isOptional: true as const, isReadonly: true as const } }
       });
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
@@ -326,23 +333,23 @@ describe('obj()', () => {
       type Target = t.Infer<typeof target>;
       const ExpectedResult = t.obj({
         propOpt: {
-          type: t.string,
+          type: t.union(t.string, t.undef),
           attributes: { isOptional: true as const, isReadonly: false as const }
         },
         propOptN: {
-          type: t.union(t.string, t.nul),
+          type: t.union(t.string, t.undef, t.nul),
           attributes: { isOptional: true as const, isReadonly: false as const }
         },
         propNullish: {
-          type: t.union(t.string, t.nul, t.undef),
+          type: t.union(t.string, t.undef, t.nul),
           attributes: { isOptional: false as const, isReadonly: false as const }
         },
         propNullishOpt: {
-          type: t.union(t.string, t.nul, t.undef),
+          type: t.union(t.string, t.undef, t.nul),
           attributes: { isOptional: true as const, isReadonly: false as const }
         },
         propComplicatedOpt: {
-          type: t.union(t.string, t.nul, t.undef),
+          type: t.union(t.string, t.undef, t.nul),
           attributes: { isOptional: true as const, isReadonly: false as const }
         }
       });

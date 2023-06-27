@@ -14,6 +14,8 @@ import {
   type Prop,
   type Shape,
   type Type,
+  type undef,
+  type UnionOrSingleType,
   type UnionType
 } from './index';
 import { union } from './union';
@@ -71,7 +73,9 @@ export function intersection<TShapeA extends Shape, TShapeB extends Shape>(
 }
 
 export type PartialType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R> ? Prop<T, true, R> : never;
+  [P in keyof T]: T[P] extends Prop<infer T extends Type<unknown, unknown>, unknown, infer R>
+    ? Prop<UnionOrSingleType<UnionType<T | typeof undef>>, true, R>
+    : T[P];
 };
 
 export function partial<T extends Shape>(objType: ObjType<T>): ObjType<PartialType<T>> {
@@ -84,8 +88,10 @@ export function partial<T extends Shape>(objType: ObjType<T>): ObjType<PartialTy
   return obj(result) as unknown as ObjType<PartialType<T>>;
 }
 
+type RemoveUnionUndef<T> = T extends UnionType<infer U> ? UnionOrSingleType<UnionType<Exclude<U, typeof undef>>> : T;
+
 export type RequiredType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, unknown, infer R> ? Prop<T, false, R> : never;
+  [P in keyof T]: T[P] extends Prop<infer T, true, infer R> ? Prop<RemoveUnionUndef<T>, false, R> : T[P];
 };
 
 export function required<T extends Shape>(objType: ObjType<T>): ObjType<RequiredType<T>> {

@@ -1,6 +1,7 @@
 import { areEqual } from './areEqual';
 import {
   any,
+  never,
   UnionType,
   type ElementType,
   type FlattenedUnion,
@@ -57,17 +58,12 @@ export const compressUnionMembers = <T extends Type<unknown, unknown>[]>(unionMe
 
 export const union = <T extends Type<unknown, unknown>[]>(...args: T): UnionOrSingleType<ElementType<T>> => {
   const [hasTheAnyTypeBeenFound, flattenedMembers] = flattenUnionMembers(args);
-  if (hasTheAnyTypeBeenFound) {
-    return any as UnionOrSingleType<ElementType<T>>;
-  }
+
+  if (hasTheAnyTypeBeenFound) return any as UnionOrSingleType<ElementType<T>>;
 
   const compressed = compressUnionMembers(flattenedMembers);
 
-  if (compressed.length === 0) throw new Error();
-
-  if (compressed.length === 1) {
-    return compressed[0] as UnionOrSingleType<ElementType<T>>;
-  } else {
-    return new UnionType(compressed) as UnionOrSingleType<ElementType<T>>;
-  }
+  if (compressed.length === 0) return never as UnionOrSingleType<ElementType<T>>;
+  if (compressed.length === 1) return compressed[0] as UnionOrSingleType<ElementType<T>>;
+  return new UnionType(compressed) as UnionOrSingleType<ElementType<T>>;
 };

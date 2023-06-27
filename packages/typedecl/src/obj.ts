@@ -1,14 +1,26 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { getKeys, keyMap, nul, undef, union, type Constructor, type Prop, type Type, Typ, type ObjectKeyMap } from '.';
+import {
+  exclude,
+  getKeys,
+  keyMap,
+  nul,
+  Typ,
+  undef,
+  union,
+  type Constructor,
+  type ObjectKeyMap,
+  type Prop,
+  type Type,
+  type UnionType
+} from '.';
 
 export class ObjType<TShape> extends Typ<'object', unknown> {
   constructor(public shape: TShape, public k: ObjectKeyMap<TShape>, public name?: string) {
     super('object', name);
   }
 }
-
 
 export interface Shape {
   [key: string]: Prop<Type<unknown, unknown>, unknown, unknown>;
@@ -82,11 +94,11 @@ export function prop<T extends Type>(type: T) {
 }
 
 export function opt<T extends Type>(type: T) {
-  return createProp(type, true as const, false as const);
+  return createProp(union(type, undef), true as const, false as const);
 }
 
 export function optN<T extends Type>(type: T) {
-  return createProp(union(type, nul), true as const, false as const);
+  return createProp(union(type, undef, nul), true as const, false as const);
 }
 
 export function ro<T extends Type>(type: T) {
@@ -94,15 +106,19 @@ export function ro<T extends Type>(type: T) {
 }
 
 export function optRo<T extends Type>(type: T) {
-  return createProp(type, true as const, true as const);
+  return createProp(union(type, undef), true as const, true as const);
 }
 
 export function makeOptional<T extends Type, R extends boolean>(prop: Prop<T, unknown, R>) {
-  return createProp(prop.type, true, prop.attributes.isReadonly);
+  return createProp(union(prop.type, undef), true, prop.attributes.isReadonly);
 }
 
 export function makeRequired<T extends Type, R extends boolean>(prop: Prop<T, unknown, R>) {
-  return createProp(prop.type, false, prop.attributes.isReadonly);
+  if (!prop.attributes.isOptional || prop.type.kind !== 'union') {
+    return createProp(prop.type, false, prop.attributes.isReadonly);
+  }
+
+  return createProp(exclude(prop.type as unknown as UnionType<T>, undef), false, prop.attributes.isReadonly);
 }
 
 export function makeReadonly<T extends Type, O extends boolean>(prop: Prop<T, O, unknown>) {
@@ -118,7 +134,7 @@ export function nullable<T extends Type>(type: T) {
 }
 
 export function nullish<T extends Type>(type: T) {
-  return union(type, nul, undef);
+  return union(type, undef, nul);
 }
 
 export function createProp<T extends Type<unknown, unknown>, TOptional = true, TReadonly = false>(
