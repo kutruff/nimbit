@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
-    "build": "tsup ./index.ts --format esm,cjs --dts --clean --minify --sourcemap",
+    "build": "tsup ./index.ts --format esm,cjs --dts --clean --minify --sourcemap && tar -czf dist.tar.gz dist/index.js",
+    "build:tar": "tar -czf dist.tar.gz dist/index.js",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit",
@@ -22,7 +23,7 @@
     "dotenv-cli": "^7.2.1",
     "eslint": "^8.42.0",
     "jest-presets": "workspace:^",
-    "tsup": "^6.7.0",
+    "tsup": "^7.1.0",
     "tsx": "^3.12.7",
     "typescript": "^5.1.3"
   }
