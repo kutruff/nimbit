@@ -85,8 +85,6 @@ export type Writeable<T> = {
   -readonly [P in keyof T]: Writeable<T[P]>;
 };
 
-
-
 //Supposedly simplifies a type.
 export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
 

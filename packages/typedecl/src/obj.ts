@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -10,7 +11,9 @@ import {
   undef,
   union,
   type Constructor,
+  type Infer,
   type ObjectKeyMap,
+  type ParseResult,
   type Prop,
   type Type,
   type UnionType
@@ -20,6 +23,54 @@ export class ObjType<TShape> extends Typ<'object', unknown> {
   constructor(public shape: TShape, public k: ObjectKeyMap<TShape>, public name?: string) {
     super('object', name);
   }
+
+  parseString(value: unknown): ParseResult<Infer<ObjType<TShape>>> {
+    if (typeof value !== 'string') {
+      return { success: false };
+    }
+    try {
+      value = JSON.parse(value);
+    } catch (err) {
+      return { success: false };
+    }
+
+    const result: any = {};
+    const shape = this.shape as any;
+    for (const key of getKeys(shape)) {
+      const prop = shape[key];
+      const propResult = prop.type.parse((value as any)[key]);
+
+      if (!propResult.success) {
+        return { success: false };
+      }
+      result[key] = propResult.value;
+    }
+    return { success: true, value: result };
+  }
+
+  parse(value: unknown): ParseResult<Infer<ObjType<TShape>>> {
+    if (typeof value !== 'object' || value === null) {
+      return { success: false };
+    }
+    const result: any = {};
+    const shape = this.shape as any;
+    for (const key of getKeys(shape)) {
+      const propResult = shape[key].type.parse((value as any)[key]);
+
+      if (!propResult.success) {
+        console.log(key);
+        return { success: false };
+      }
+      result[key] = propResult.value;
+    }
+    return { success: true, value: result };
+  }
+}
+
+export function toResult(success: false): { success: false };
+export function toResult<T>(success: true, value: T): { success: true; value: T };
+export function toResult<T>(success: boolean, value?: T): ParseResult<T> {
+  return success ? { success: true, value: value as any } : { success: false };
 }
 
 export interface Shape {
@@ -36,16 +87,6 @@ export type ShapeDefinition =
 // Wrap a set of t.Types in Props<> - Allows people to use either "t.str" or "prop(t.str)" when defining objects
 export type ShapeDefinitionToShape<T> = T extends Constructor
   ? ShapeDefinitionToShape<InstanceType<T>>
-  : {
-      [P in keyof T]: T[P] extends Constructor
-        ? Prop<ObjType<ShapeDefinitionToShape<InstanceType<T[P]>>>, false, false>
-        : T[P] extends Prop<unknown, unknown, unknown>
-        ? T[P]
-        : Prop<T[P], false, false>;
-    };
-
-export type DefToShape<T> = T extends Constructor
-  ? DefToShape<InstanceType<T>>
   : {
       [P in keyof T]: T[P] extends Constructor
         ? Prop<ObjType<ShapeDefinitionToShape<InstanceType<T[P]>>>, false, false>

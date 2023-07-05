@@ -4,15 +4,18 @@ import {
   undef,
   union,
   type ArrayType,
+  type BooleanType,
   type Literal,
   type LiteralType,
   type NotAUnion,
+  type NumberType,
   type ObjType,
   type OptionalPropertyNames,
   type PickPartially,
   type PickReadonly,
   type PropsOfType,
   type ReadonlyPropertyNames,
+  type StringType,
   type TupleType,
   type UnionType
 } from '.';
@@ -56,9 +59,15 @@ export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
   nullish() {
     return union(this, undef, nul);
   }
+
+  parse(_value: unknown): ParseResult<unknown> {
+    return { success: false };
+  }
 }
 
-export const createType = <TKind, T>(kind: TKind, name?: string) => new Typ<TKind, T>(kind, name);
+export type ParseResult<T> = { success: true; value: T } | { success: false };
+
+export const createType = <TKind, T>(kind: TKind, name: string) => new Typ<TKind, T>(kind, name);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const any = createType<'any', any>('any', 'any');
@@ -96,7 +105,7 @@ type TypeOfPropDefinition<T> = T extends Prop<infer U, unknown, unknown> ? U : n
 //https://github.com/microsoft/TypeScript/issues/34933#issuecomment-776098985
 //https://github.com/microsoft/TypeScript/issues/22575#issuecomment-776003717
 
-type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
+export type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
   infer U,
   ...infer TRest
 ]
@@ -105,7 +114,7 @@ type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[]
 
 export type Infer<TDefinition> = TDefinition extends ArrayType<infer ElementDefinition>
   ? Array<Infer<ElementDefinition>>
-  : TDefinition extends UnionType<infer MemberDefinitions>
+  : TDefinition extends IUnionType<infer MemberDefinitions>
   ? Infer<MemberDefinitions>
   : TDefinition extends TupleType<infer TElements>
   ? InferTupleKeys<TElements, []>
@@ -140,6 +149,8 @@ export type UnionWithAnyBecomesAny<T extends Type<unknown, unknown>> = T extends
 
 export type UnionOrSingleType<T extends Type<unknown, unknown>> = CollapseSingleMemberUnionType<FlattenedUnion<T>>;
 
+// export type UnionOrSingleType<T extends Type<unknown, unknown>> = CollapseSingleMemberUnionType<FlattenedUnion<T>>;
+
 //TODO: this paradigm should be removed unless it can be made extensible is some way.
 //Main entry to convert a TypeScript type to a Shape.  First need to detect a typescript union and then
 export type ToShapeType<TsType> = NotAUnion<TsType> extends never
@@ -152,11 +163,11 @@ type ToShapeTypeDistribute<TsType> = TsType extends Literal<string, TsType>
   : TsType extends Literal<number, TsType>
   ? LiteralType<TsType>
   : TsType extends string
-  ? Typ<'string', string>
+  ? StringType
   : TsType extends number
-  ? Typ<'number', number>
+  ? NumberType
   : TsType extends boolean
-  ? Typ<'boolean', boolean>
+  ? BooleanType
   : TsType extends bigint
   ? Typ<'bigint', bigint>
   : TsType extends Date
