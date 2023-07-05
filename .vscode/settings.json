@@ -9,7 +9,5 @@
   "sqltools.connections": [],
   "[sql]": {
     "editor.defaultFormatter": "mtxr.sqltools"
-  },
-  "todo.because.of.bug.hack": "//TODO: the below hack is do to https://github.com/prettier/prettier-vscode/issues/3020.  Remove when fixed",
-  "prettier.prettierPath": "./node_modules/prettier"
+  }
 }
