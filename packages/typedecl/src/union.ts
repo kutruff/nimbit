@@ -1,4 +1,53 @@
-import { UnionType, type _type, type ElementType, type FlattenedUnion, type TsType, type Type } from '.';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  Typ,
+  type _type,
+  type ElementType,
+  type FlattenedUnion,
+  type IUnionType,
+  type ParseResult,
+  type TsType,
+  type Type
+} from '.';
+
+export class UnionType<TMembers extends Type<unknown, unknown>, T>
+  extends Typ<'union', T>
+  implements IUnionType<TMembers>
+{
+  constructor(public memberTypes: TMembers[], public name?: string) {
+    super('union', name);
+  }
+
+  parse(value: unknown): ParseResult<T> {
+    for (const member of this.memberTypes) {
+      const result = (member as any).parse(value);
+      if (result.success) {
+        return result;
+      }
+      // failedResults.push(result);
+    }
+    return { success: false };
+  }
+}
+
+export function parseUnion<TMembers extends Type<unknown, unknown>, T>(
+  unionType: UnionType<TMembers, T>,
+  value: unknown
+): ParseResult<T> {
+  // const failedResults = [];
+  for (const member of unionType.memberTypes) {
+    const result = (member as any).parse(value);
+    if (result.success) {
+      return result;
+    }
+    // failedResults.push(result);
+  }
+  return { success: false };
+}
 
 const flattenUnionMembers = <T extends Type<unknown, unknown>[]>(members: T) => {
   const flattened: Array<Type<unknown, unknown>> = [];
@@ -22,9 +71,9 @@ const flattenUnionMembers = <T extends Type<unknown, unknown>[]>(members: T) => 
   return flattened;
 };
 
-export const union = <T extends Type<unknown, unknown>[]>(
+export function union<T extends Type<unknown, unknown>[]>(
   ...args: T
-): UnionType<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>> => {
+): UnionType<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>> {
   const flattenedMembers = flattenUnionMembers(args);
   return new UnionType(flattenedMembers) as UnionType<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>>;
-};
+}
