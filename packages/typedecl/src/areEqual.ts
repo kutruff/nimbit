@@ -43,13 +43,13 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
       break;
     }
     case 'array': {
-      const aTyped = a as ArrayType<Type<unknown, unknown>>;
+      const aTyped = a as ArrayType<Type<unknown, unknown>, unknown>;
       const bTyped = b as typeof aTyped;
       result = areEqual(aTyped.elementType, bTyped.elementType, comparisonCache);
       break;
     }
     case 'union': {
-      const aTyped = a as UnionType<Type<unknown, unknown>>;
+      const aTyped = a as UnionType<Type<unknown, unknown>, unknown>;
       const bTyped = b as typeof aTyped;
 
       if (aTyped.memberTypes.length !== bTyped.memberTypes.length) {
@@ -120,7 +120,7 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
       break;
     }
     case 'object': {
-      const aTyped = a as ObjType<Shape>;
+      const aTyped = a as ObjType<Shape, unknown>;
       const bTyped = b as typeof aTyped;
 
       const aShape = aTyped.shape;

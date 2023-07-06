@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import {
   exclude,
   getKeys,
@@ -10,8 +11,8 @@ import {
   Typ,
   undef,
   union,
+  type _type,
   type Constructor,
-  type Infer,
   type ObjectKeyMap,
   type ParseResult,
   type Prop,
@@ -19,12 +20,12 @@ import {
   type UnionType
 } from '.';
 
-export class ObjType<TShape> extends Typ<'object', unknown> {
+export class ObjType<TShape, T> extends Typ<'object', T> {
   constructor(public shape: TShape, public k: ObjectKeyMap<TShape>, public name?: string) {
     super('object', name);
   }
 
-  parseString(value: unknown): ParseResult<Infer<ObjType<TShape>>> {
+  parseString(value: unknown): ParseResult<T> {
     if (typeof value !== 'string') {
       return { success: false };
     }
@@ -48,7 +49,7 @@ export class ObjType<TShape> extends Typ<'object', unknown> {
     return { success: true, value: result };
   }
 
-  parse(value: unknown): ParseResult<Infer<ObjType<TShape>>> {
+  parse(value: unknown): ParseResult<T> {
     if (typeof value !== 'object' || value === null) {
       return { success: false };
     }
@@ -84,18 +85,29 @@ export type ShapeDefinition =
     }
   | Constructor;
 
-// Wrap a set of t.Types in Props<> - Allows people to use either "t.str" or "prop(t.str)" when defining objects
 export type ShapeDefinitionToShape<T> = T extends Constructor
   ? ShapeDefinitionToShape<InstanceType<T>>
   : {
       [P in keyof T]: T[P] extends Constructor
-        ? Prop<ObjType<ShapeDefinitionToShape<InstanceType<T[P]>>>, false, false>
+        ? Prop<ObjType<ShapeDefinitionToShape<InstanceType<T[P]>>, ToTsTypes<InstanceType<T[P]>>>, false, false>
         : T[P] extends Prop<unknown, unknown, unknown>
         ? T[P]
         : Prop<T[P], false, false>;
     };
 
-export type ShapeDefinitionToObjType<T> = ObjType<ShapeDefinitionToShape<T>>;
+export type ToTsTypes<T> = T extends Type<unknown, unknown>
+  ? T[typeof _type]
+  : T extends Constructor
+  ? ToTsTypes<InstanceType<T>>
+  : T extends Prop<unknown, unknown, unknown>
+  ? ToTsTypes<T['type']>
+  : {
+      [P in keyof T]: ToTsTypes<T[P]>;
+    };
+
+export type TypeOfProp<T> = T extends Prop<infer U, unknown, unknown> ? U : T;
+
+export type ShapeDefinitionToObjType<T> = ObjType<ShapeDefinitionToShape<T>, ToTsTypes<T>>;
 
 const constructorsToObj = new WeakMap();
 
@@ -159,7 +171,7 @@ export function makeRequired<T extends Type, R extends boolean>(prop: Prop<T, un
     return createProp(prop.type, false, prop.attributes.isReadonly);
   }
 
-  return createProp(exclude(prop.type as unknown as UnionType<T>, undef), false, prop.attributes.isReadonly);
+  return createProp(exclude(prop.type as unknown as UnionType<T, unknown>, undef), false, prop.attributes.isReadonly);
 }
 
 export function makeReadonly<T extends Type, O extends boolean>(prop: Prop<T, O, unknown>) {

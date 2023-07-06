@@ -5,6 +5,7 @@ export type AnyObject = Record<string, unknown>;
 export type AnyArray = readonly unknown[];
 export type Constructor = new (...args: unknown[]) => {};
 
+  
 export type PropsOfType<T, TPropTypes> = {
   [K in keyof T]: T[K] extends TPropTypes ? K : never;
 }[keyof T];
@@ -38,8 +39,21 @@ export type PickAndMapPropertiesOfTypeToNewType<T, PropType, NewPropType> = MapP
 export type PickPartially<T, P extends keyof T> = Omit<T, P> & Partial<Pick<T, P>>;
 export type PickReadonly<T, P extends keyof T> = Omit<T, P> & Readonly<Pick<T, P>>;
 
-export type Primitives = number | string;
+export type UndefinedProps<T extends object> = {
+  [K in keyof T as undefined extends T[K] ? K : never]?: T[K];
+};
 
+// Combine with rest of the reuiqred properties
+// https://stackoverflow.com/a/75587790
+export type MakeUndefinedOptional<T> = T extends object ? UndefinedProps<T> & Omit<T, keyof UndefinedProps<T>> : T;
+
+export type RecursiveQuestions<T> = T extends ReadonlyArray<infer U>
+  ? Array<RecursiveQuestions<MakeUndefinedOptional<U>>>
+  : T extends object
+  ? { [P in keyof T]: RecursiveQuestions<MakeUndefinedOptional<T[P]>> }
+  : T;
+
+//TODO: deprecated  by UndefinedProps
 export type OptionalPropertyNames<T> = {
   [K in keyof T]-?: undefined extends T[K] ? K : never;
 }[keyof T];

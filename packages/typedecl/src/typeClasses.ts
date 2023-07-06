@@ -1,43 +1,51 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   _type,
   createMapOfTupleKeys,
   Typ,
   type Infer,
   type InferTupleKeys,
+  type InferTypeTsType,
   type IUnionType,
   type Literal,
   type MapOfTupleKeys,
   type ParseResult,
+  type ToTsTypes,
   type TupleKeysToUnion,
   type Type,
-  type Writeable
+  type Writeable,
+  TsType
 } from '.';
 
 // TODO try redoing everything using the TOutput style
-export class UnionType<TMembers extends Type<unknown, unknown>>
-  extends Typ<'union', unknown>
+export class UnionType<TMembers extends Type<unknown, unknown>, T>
+  extends Typ<'union', T>
   implements IUnionType<TMembers>
 {
   constructor(public memberTypes: TMembers[], public name?: string) {
     super('union', name);
   }
 
-  // parse(value: unknown): ParseResult<Infer<TMembers>> {
-  //   for (const member of this.memberTypes) {
-  //     const result = (member as any).parse(value);
-  //     if (result.success) {
-  //       return result;
-  //     }
-  //     // failedResults.push(result);
-  //   }
-  //   return { success: false };
-  // }
+  parse(value: unknown): ParseResult<T> {
+    for (const member of this.memberTypes) {
+      const result = (member as any).parse(value);
+      if (result.success) {
+        return result;
+      }
+      // failedResults.push(result);
+    }
+    return { success: false };
+  }
 }
 
-export function parseUnion<TMembers extends Type<unknown, unknown>>(
-  unionType: UnionType<TMembers>,
+export function parseUnion<TMembers extends Type<unknown, unknown>, T>(
+  unionType: UnionType<TMembers, T>,
   value: unknown
-): ParseResult<Infer<TMembers>> {
+): ParseResult<T> {
   // const failedResults = [];
   for (const member of unionType.memberTypes) {
     const result = (member as any).parse(value);
@@ -62,9 +70,13 @@ export class LiteralType<TLiteralValue> extends Typ<'literal', TLiteralValue> {
   }
 }
 
-export const array = <TElement extends Type<unknown, unknown>>(element: TElement) => new ArrayType(element);
+export function array<TElement extends Type<unknown, unknown>>(
+  element: TElement
+): ArrayType<TElement, Array<TsType<TElement>>> {
+  return new ArrayType<TElement, Array<TsType<TElement>>>(element);
+}
 
-export class ArrayType<TElement> extends Typ<'array', unknown> {
+export class ArrayType<TElement, T> extends Typ<'array', T> {
   constructor(public elementType: TElement, public name?: string) {
     super('array', name);
   }
@@ -107,7 +119,6 @@ export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> exten
   parse(value: unknown): ParseResult<TupleKeysToUnion<TEnumValues>> {
     for (const element of this.values) {
       if (value === element) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
         return { success: true, value: element as any };
       }
     }
@@ -131,7 +142,6 @@ export class TupleType<TElements extends Type<unknown, unknown>[]> extends Typ<'
     parsedTuple.length = this.elementTypes.length;
     if (valueAsArray.length === this.elementTypes.length) {
       for (let i = 0; i < this.elementTypes.length; i++) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
         const result = (this.elementTypes[i] as any).parse(valueAsArray[i]);
         if (!result.success) {
           return { success: false };
