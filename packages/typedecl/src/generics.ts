@@ -5,7 +5,6 @@ export type AnyObject = Record<string, unknown>;
 export type AnyArray = readonly unknown[];
 export type Constructor = new (...args: unknown[]) => {};
 
-  
 export type PropsOfType<T, TPropTypes> = {
   [K in keyof T]: T[K] extends TPropTypes ? K : never;
 }[keyof T];
@@ -43,14 +42,15 @@ export type UndefinedProps<T extends object> = {
   [K in keyof T as undefined extends T[K] ? K : never]?: T[K];
 };
 
-// Combine with rest of the reuiqred properties
+// Combine with rest of the required properties
 // https://stackoverflow.com/a/75587790
 export type MakeUndefinedOptional<T> = T extends object ? UndefinedProps<T> & Omit<T, keyof UndefinedProps<T>> : T;
 
-export type RecursiveQuestions<T> = T extends ReadonlyArray<infer U>
-  ? Array<RecursiveQuestions<MakeUndefinedOptional<U>>>
+// TODO: support other collections / tuples and not just arrays?  What about unions?
+export type RecursiveMakeUndefinedOptional<T> = T extends ReadonlyArray<infer U>
+  ? Array<RecursiveMakeUndefinedOptional<MakeUndefinedOptional<U>>>
   : T extends object
-  ? { [P in keyof T]: RecursiveQuestions<MakeUndefinedOptional<T[P]>> }
+  ? { [P in keyof T]: RecursiveMakeUndefinedOptional<MakeUndefinedOptional<T[P]>> }
   : T;
 
 //TODO: deprecated  by UndefinedProps
@@ -99,7 +99,7 @@ export type Writeable<T> = {
   -readonly [P in keyof T]: Writeable<T[P]>;
 };
 
-//Supposedly simplifies a type.
+//simplifies a type.
 export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
 
 // How to prevent conditional from being distributed

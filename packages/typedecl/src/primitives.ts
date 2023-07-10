@@ -1,39 +1,37 @@
 import { createType, Typ, type ParseResult } from '.';
 
 export class StringType extends Typ<'string', string> {
-  parseString(value: unknown): ParseResult<string> {
-    return typeof value === 'string' ? { success: true, value } : { success: false };
+  parseString(value: unknown) {
+    return toParseResult<string>(value, typeof value === 'string');
   }
 
   parse(value: unknown) {
-    return is<string>(value, x => typeof x === 'string');
+    return toParseResult<string>(value, typeof value === 'string');
   }
 }
 
 export const string = new StringType('string', 'string');
 
 export class NumberType extends Typ<'number', number> {
-  parseString(value: string): ParseResult<number> {
+  parseString(value: string) {
     const result = Number(value);
-    return isNaN(result) ? { success: false } : { success: true, value: result };
+    return toParseResult<number>(result, isNaN(result));
   }
 
-  //TODO: parse could be strongly typed
   parse(value: unknown) {
-    return is<number>(value, x => typeof x === 'number');
+    return toParseResult<number>(value, typeof value === 'number');
   }
 }
 
 export const number = new NumberType('number', 'number');
 
 export class BooleanType extends Typ<'boolean', boolean> {
-  parse(value: unknown): ParseResult<boolean> {
-    return typeof value === 'boolean' ? { success: true, value } : { success: false };
+  parse(value: unknown) {
+    return toParseResult<boolean>(value, typeof value === 'boolean');
   }
 }
 export const boolean = new BooleanType('boolean', 'boolean');
 
-// export const boolean = createType<'boolean', boolean>('boolean', 'boolean');
 export const bigint = createType<'bigint', bigint>('bigint', 'bigint');
 export const date = createType<'date', Date>('date', 'date');
 export const nul = createType<'null', null>('null', 'null');
@@ -52,6 +50,6 @@ export const bigUint64Array = createType<'bigUint64Array', BigUint64Array>('bigU
 export const float32Array = createType<'float32Array', Float32Array>('float32Array', 'float32Array');
 export const float64Array = createType<'float64Array', Float64Array>('float64Array', 'float64Array');
 
-function is<T>(value: unknown, predicate: (x: unknown) => boolean): ParseResult<T> {
-  return predicate(value) ? { success: true, value: value as T } : { success: false };
+export function toParseResult<T>(value: unknown, success: boolean): ParseResult<T> {
+  return success ? { success: true, value: value as T } : { success: false };
 }

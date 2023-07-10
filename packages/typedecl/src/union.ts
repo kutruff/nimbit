@@ -34,22 +34,21 @@ export class UnionType<TMembers extends Type<unknown, unknown>, T>
   }
 }
 
+//TODO: remove?
 export function parseUnion<TMembers extends Type<unknown, unknown>, T>(
   unionType: UnionType<TMembers, T>,
   value: unknown
-): ParseResult<T> {
-  // const failedResults = [];
+): ParseResult<T> {  
   for (const member of unionType.memberTypes) {
     const result = (member as any).parse(value);
     if (result.success) {
       return result;
-    }
-    // failedResults.push(result);
+    }  
   }
   return { success: false };
 }
 
-const flattenUnionMembers = <T extends Type<unknown, unknown>[]>(members: T) => {
+function flattenUnionMembers<T extends Type<unknown, unknown>[]>(members: T) {
   const flattened: Array<Type<unknown, unknown>> = [];
   const visited = new Set<Type>();
 
@@ -69,7 +68,7 @@ const flattenUnionMembers = <T extends Type<unknown, unknown>[]>(members: T) => 
   members.forEach(visit);
 
   return flattened;
-};
+}
 
 export function union<T extends Type<unknown, unknown>[]>(
   ...args: T

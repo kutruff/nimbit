@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import {
   exclude,
   getKeys,
@@ -104,8 +103,6 @@ export type ToTsTypes<T> = T extends Type<unknown, unknown>
   : {
       [P in keyof T]: ToTsTypes<T[P]>;
     };
-
-export type TypeOfProp<T> = T extends Prop<infer U, unknown, unknown> ? U : T;
 
 export type ShapeDefinitionToObjType<T> = ObjType<ShapeDefinitionToShape<T>, ToTsTypes<T>>;
 

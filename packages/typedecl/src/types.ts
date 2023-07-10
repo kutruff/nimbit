@@ -7,6 +7,7 @@ import {
   type BooleanType,
   type Literal,
   type LiteralType,
+  type MakeUndefinedOptional,
   type NotAUnion,
   type NumberType,
   type ObjType,
@@ -15,12 +16,11 @@ import {
   type PickReadonly,
   type PropsOfType,
   type ReadonlyPropertyNames,
+  type RecursiveMakeUndefinedOptional,
   type Resolve,
   type StringType,
   type TupleType,
-  type UnionType,
-  type MakeUndefinedOptional,
-  type RecursiveQuestions
+  type UnionType
 } from '.';
 
 //Need this symbol / property definition so that type inference will actual use the T parameter during type inference
@@ -38,7 +38,7 @@ export interface Type<TKind = unknown, T = unknown> {
 export type TsType<T extends Type<unknown, unknown>> = T[typeof _type];
 
 export type InferTypeTsType<T extends Type<unknown, unknown>> = Resolve<
-  RecursiveQuestions<MakeUndefinedOptional<T[typeof _type]>>
+  RecursiveMakeUndefinedOptional<MakeUndefinedOptional<T[typeof _type]>>
 >;
 
 export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
@@ -76,6 +76,7 @@ export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
 
 export type ParseResult<T> = { success: true; value: T } | { success: false };
 
+//TODO: remove
 export const createType = <TKind, T>(kind: TKind, name: string) => new Typ<TKind, T>(kind, name);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,6 +103,7 @@ export type Prop<T, TOptional, TReadonly> = {
 // That means functions and types have to cast until it's fixed
 // https://github.com/microsoft/TypeScript/issues/34933
 
+//TODO: remove
 type MapPropDefinitionsToTsOptionals<T> = PickPartially<T, PropsOfType<T, Prop<Type<unknown, unknown>, true, unknown>>>;
 type MapPropDefinitionsToTsReadonly<T> = PickReadonly<T, PropsOfType<T, Prop<Type<unknown, unknown>, unknown, true>>>;
 

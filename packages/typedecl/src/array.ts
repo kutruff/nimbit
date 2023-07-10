@@ -1,4 +1,8 @@
-import { Typ, type Infer, type ParseResult, type TsType, type Type } from '.';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Typ, type Infer, type InferTypeTsType, type ParseResult, type TsType, type Type } from '.';
 
 export function array<TElement extends Type<unknown, unknown>>(
   element: TElement
@@ -11,7 +15,7 @@ export class ArrayType<TElement, T> extends Typ<'array', T> {
     super('array', name);
   }
 
-  parse(value: unknown): ParseResult<Array<Infer<TElement>>> {
+  parse(value: unknown): ParseResult<Array<T>> {
     if (!Array.isArray(value)) {
       return { success: false };
     }
