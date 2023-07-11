@@ -1,28 +1,23 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
   areEqual,
-  makeOptional,
-  makeReadonly,
-  makeRequired,
-  makeWritable,
   never,
   obj,
-  prop,
+  undef,
   union,
   type _type,
   type ElementType,
   type FlattenedUnion,
   type ObjType,
-  type Prop,
   type Shape,
   type ToTsTypes,
   type TsType,
   type Type,
-  type undef,
-  type UnionType,
-  type Writeable
+  type UnionType
 } from '.';
 
 export type ObjIntersection<TObjA extends ObjType<unknown, unknown>, TObjB extends ObjType<unknown, unknown>> = ObjType<
@@ -30,7 +25,7 @@ export type ObjIntersection<TObjA extends ObjType<unknown, unknown>, TObjB exten
   TObjA[typeof _type] & TObjB[typeof _type]
 >;
 
-export function intersection<TShapeA extends Shape, TsTypeA, TShapeB extends Shape, TsTypeB>(
+export function intersection<TShapeA, TsTypeA, TShapeB, TsTypeB>(
   objectTypeA: ObjType<TShapeA, TsTypeA>,
   objectTypeB: ObjType<TShapeB, TsTypeB>
 ): ObjIntersection<typeof objectTypeA, typeof objectTypeB> {
@@ -40,8 +35,8 @@ export function intersection<TShapeA extends Shape, TsTypeA, TShapeB extends Sha
   // >
   const merged = {} as Shape;
 
-  const shapeA = objectTypeA.shape;
-  const shapeB = objectTypeB.shape;
+  const shapeA = objectTypeA.shape as Shape;
+  const shapeB = objectTypeB.shape as Shape;
 
   const allKeysInAB = [...new Set(Object.keys(shapeA).concat(Object.keys(shapeB)))];
 
@@ -54,24 +49,24 @@ export function intersection<TShapeA extends Shape, TsTypeA, TShapeB extends Sha
     } else if (propertyA != null && propertyB == null) {
       merged[key] = propertyA;
     } else if (propertyA != null && propertyB != null) {
-      if (propertyA.type.kind === 'any') {
+      if (propertyA.kind === 'any') {
         merged[key] = propertyB;
-      } else if (propertyA.type.kind === 'any') {
+      } else if (propertyA.kind === 'any') {
         merged[key] = propertyA;
       } else {
-        switch (propertyA.type.kind) {
+        switch (propertyA.kind) {
           case 'object': {
-            if (propertyB.type.kind !== 'object') {
+            if (propertyB.kind !== 'object') {
               return never as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
             }
 
-            merged[key] = prop(intersection(propertyA.type as any, propertyB.type as any) as any);
+            merged[key] = intersection(propertyA as any, propertyB as any) as any;
             break;
           }
           default: {
             //TODO: what happens with optional and readonly props?
-            if (areEqual(propertyA.type, propertyB.type)) {
-              merged[key] = prop(propertyA.type);
+            if (areEqual(propertyA, propertyB)) {
+              merged[key] = propertyA;
             } else {
               return never as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
             }
@@ -86,19 +81,25 @@ export function intersection<TShapeA extends Shape, TsTypeA, TShapeB extends Sha
   return result as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
 }
 
+// export type PartialType<T> = {
+//   [P in keyof T]: T[P] extends infer T extends Type<unknown, unknown>
+//     ? UnionType<FlattenedUnion<T | typeof undef>, TsType<T | typeof undef>>
+//     : T[P];
+// };
+
 export type PartialType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T extends Type<unknown, unknown>, unknown, infer R>
-    ? Prop<UnionType<FlattenedUnion<T | typeof undef>, TsType<T | typeof undef>>, true, R>
-    : T[P];
+  [P in keyof T]: T[P] extends Type<unknown, unknown>
+    ? UnionType<FlattenedUnion<T[P] | typeof undef>, TsType<T[P] | typeof undef>>
+    : never;
 };
 
-export function partial<TShape extends Shape, T>(
+export function partial<TShape, T>(
   objType: ObjType<TShape, T>
-): ObjType<PartialType<TShape>, ToTsTypes<PartialType<TShape>>> {
+): ObjType<PartialType<TShape>, Partial<ToTsTypes<PartialType<TShape>>>> {
   const result = {} as Shape;
-
-  for (const key of Object.keys(objType.shape)) {
-    result[key] = makeOptional(objType.shape[key] as any);
+  const shape = objType.shape as Shape;
+  for (const key of Object.keys(shape)) {
+    result[key] = union(shape[key] as any, undef);
   }
 
   return obj(result) as unknown as ObjType<PartialType<TShape>, ToTsTypes<PartialType<TShape>>>;
@@ -108,55 +109,62 @@ type RemoveUnionUndef<T> = T extends UnionType<infer U, unknown>
   ? UnionType<FlattenedUnion<Exclude<U, typeof undef>>, ToTsTypes<Exclude<U, typeof undef>>>
   : T;
 
+// export type RequiredType<T> = {
+//   [P in keyof T]: T[P] extends Prop<infer T, true, infer R> ? Prop<RemoveUnionUndef<T>, false, R> : T[P];
+// };
+
 export type RequiredType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, true, infer R> ? Prop<RemoveUnionUndef<T>, false, R> : T[P];
+  [P in keyof T]: RemoveUnionUndef<T[P]>;
 };
 
-export function required<TShape extends Shape, T>(
+export function required<TShape, T>(
   objType: ObjType<TShape, T>
 ): ObjType<RequiredType<TShape>, ToTsTypes<RequiredType<TShape>>> {
   const result = {} as Shape;
 
-  for (const key of Object.keys(objType.shape)) {
-    result[key] = makeRequired(objType.shape[key] as any);
+  const shape = objType.shape as Shape;
+  for (const key of Object.keys(shape)) {
+    const type = shape[key]!;
+    const madeRequired = type.kind !== 'union' ? type : exclude(type as any, undef);
+    result[key] = madeRequired;
   }
 
   return obj(result) as unknown as ObjType<RequiredType<TShape>, ToTsTypes<RequiredType<TShape>>>;
 }
 
-export type ReadonlyType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, true> : never;
-};
+// export type ReadonlyType<T> = {
+//   [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, true> : never;
+// };
 
-export function readonly<TShape extends Shape, T>(
-  objType: ObjType<TShape, T>
-): ObjType<ReadonlyType<TShape>, Readonly<T>> {
-  const result = {} as Shape;
+// export function readonly<TShape extends Shape, T>(
+//   objType: ObjType<TShape, T>
+// ): ObjType<ReadonlyType<TShape>, Readonly<T>> {
+//   const result = {} as Shape;
 
-  for (const key of Object.keys(objType.shape)) {
-    result[key] = makeReadonly(objType.shape[key] as any);
-  }
+//   for (const key of Object.keys(objType.shape)) {
+//     result[key] = makeReadonly(objType.shape[key] as any);
+//   }
 
-  return obj(result) as unknown as ObjType<ReadonlyType<TShape>, Readonly<T>>;
-}
+//   return obj(result) as unknown as ObjType<ReadonlyType<TShape>, Readonly<T>>;
+// }
 
-export type WritableType<T> = {
-  [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, false> : never;
-};
+// export type WritableType<T> = {
+//   [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, false> : never;
+// };
 
-export function writable<TShape extends Shape, T>(
-  objType: ObjType<TShape, T>
-): ObjType<WritableType<TShape>, Writeable<T>> {
-  const result = {} as Shape;
+// export function writable<TShape extends Shape, T>(
+//   objType: ObjType<TShape, T>
+// ): ObjType<WritableType<TShape>, Writeable<T>> {
+//   const result = {} as Shape;
 
-  for (const key of Object.keys(objType.shape)) {
-    result[key] = makeWritable(objType.shape[key] as any);
-  }
+//   for (const key of Object.keys(objType.shape)) {
+//     result[key] = makeWritable(objType.shape[key] as any);
+//   }
 
-  return obj(result) as unknown as ObjType<WritableType<TShape>, Writeable<T>>;
-}
+//   return obj(result) as unknown as ObjType<WritableType<TShape>, Writeable<T>>;
+// }
 
-export function pick<TShape extends Shape, K extends keyof TShape & keyof T, T>(
+export function pick<TShape, K extends keyof TShape & keyof T, T>(
   objType: ObjType<TShape, T>,
   ...keys: Array<K>
 ): ObjType<Pick<TShape, K>, Pick<T, K>> {
@@ -166,10 +174,10 @@ export function pick<TShape extends Shape, K extends keyof TShape & keyof T, T>(
     result[key] = objType.shape[key];
   }
 
-  return obj(result) as unknown as ObjType<Pick<TShape, K>, Pick<T, K>>;
+  return obj(result as any) as unknown as ObjType<Pick<TShape, K>, Pick<T, K>>;
 }
 
-export function omit<TShape extends Shape, K extends keyof TShape & keyof T, T>(
+export function omit<TShape, K extends keyof TShape & keyof T, T>(
   objType: ObjType<TShape, T>,
   ...keys: Array<K>
 ): ObjType<Omit<TShape, K>, Omit<T, K>> {
@@ -179,7 +187,7 @@ export function omit<TShape extends Shape, K extends keyof TShape & keyof T, T>(
     delete result[key];
   }
 
-  return obj(result) as unknown as ObjType<Omit<TShape, K>, Omit<T, K>>;
+  return obj(result as any) as unknown as ObjType<Omit<TShape, K>, Omit<T, K>>;
 }
 
 export function exclude<TMemberTypes extends Type, T, K extends Type[]>(
@@ -188,9 +196,9 @@ export function exclude<TMemberTypes extends Type, T, K extends Type[]>(
 ) {
   const result = { ...unionType, memberTypes: unionType.memberTypes.filter(x => !types.find(k => areEqual(x, k))) };
 
-  if (result.memberTypes.length === 0) {
-    return never;
-  }
+  // if (result.memberTypes.length === 0) {
+  //   return never;
+  // }
 
   return union(result as UnionType<Exclude<TMemberTypes, ElementType<K>>, Exclude<T, TsType<ElementType<K>>>>);
 }
@@ -201,9 +209,9 @@ export function extract<TMemberTypes extends Type, T, K extends Type[]>(
 ) {
   const result = { ...unionType, memberTypes: unionType.memberTypes.filter(x => keys.find(k => areEqual(x, k))) };
 
-  if (result.memberTypes.length === 0) {
-    return never;
-  }
+  // if (result.memberTypes.length === 0) {
+  //   return never;
+  // }
 
   return union(result as UnionType<Extract<TMemberTypes, ElementType<K>>, Extract<T, TsType<ElementType<K>>>>);
 }

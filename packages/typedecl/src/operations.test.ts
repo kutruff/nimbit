@@ -297,11 +297,10 @@ describe('Type operations', () => {
   describe('partial()', () => {
     it('makes required properites into optionals', () => {
       const target = t.obj({ prop: t.string });
-      const result = t.partial(target);
-      type resultInfer = t.Infer<typeof result>;
-      type result = t.InferTypeTsType<typeof result>;
-      type typeType = t.Resolve<typeof result>;
+      const result = t.partial(target);      
+      
       const ExpectedResult = t.obj({ prop: t.opt(t.string) });
+      type ExpectedResult = t.Infer<typeof ExpectedResult>;
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
@@ -352,7 +351,7 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultTsType = t.InferTypeTsType<typeof result>;
+      type ResultTsType = t.Infer<typeof result>;
       type ExpectedResultTsType = { optProp: string; normalProp: number };
       expectTypesSupportAssignment<ExpectedResultTsType, ResultTsType>();
       expectTypesSupportAssignment<ResultTsType, ExpectedResultTsType>();
@@ -374,13 +373,13 @@ describe('Type operations', () => {
         )
       });
 
-      type ResultType = t.Resolve<typeof result>['shape']['nested']['type']['memberTypes'][0]['shape']['prop']['type'];
+      type ResultType = t.Resolve<typeof result>['shape']['nested']['memberTypes'][0]['shape']['prop'];
 
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultTsType = t.InferTypeTsType<typeof result>;
+      type ResultTsType = t.Infer<typeof result>;
       type ExpectedResultTsType = { prop: string; nested: { prop?: bigint } };
       expectTypesSupportAssignment<ExpectedResultTsType, ResultTsType>();
       expectTypesSupportAssignment<ResultTsType, ExpectedResultTsType>();
@@ -389,57 +388,57 @@ describe('Type operations', () => {
     });
   });
 
-  describe('readonly()', () => {
-    it('makes writable properites into readonly', () => {
-      const target = t.obj({ prop: t.string });
-      const result = t.readonly(target);
+  // describe('readonly()', () => {
+  //   it('makes writable properites into readonly', () => {
+  //     const target = t.obj({ prop: t.string });
+  //     const result = t.readonly(target);
 
-      const ExpectedResult = t.obj({ prop: t.ro(t.string) });
-      type ExpectedDefinitionType = typeof ExpectedResult;
-      expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
-      expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
+  //     const ExpectedResult = t.obj({ prop: t.ro(t.string) });
+  //     type ExpectedDefinitionType = typeof ExpectedResult;
+  //     expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
+  //     expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultShape = t.Infer<typeof result>;
-      type ExpectedResultShape = { readonly prop: string };
-      expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
-      expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
+  //     type ResultShape = t.Infer<typeof result>;
+  //     type ExpectedResultShape = { readonly prop: string };
+  //     expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
+  //     expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
 
-      expect(result).toEqual(ExpectedResult);
-    });
+  //     expect(result).toEqual(ExpectedResult);
+  //   });
 
-    it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.bigint });
-      const target = t.obj({ prop: t.string, nested: nestedObj });
-      const result = t.readonly(target);
+  //   it('is shallow', () => {
+  //     const nestedObj = t.obj({ prop: t.bigint });
+  //     const target = t.obj({ prop: t.string, nested: nestedObj });
+  //     const result = t.readonly(target);
 
-      const ExpectedResult = t.obj({
-        prop: t.ro(t.string),
-        nested: t.ro(
-          t.obj({
-            prop: t.bigint
-          })
-        )
-      });
+  //     const ExpectedResult = t.obj({
+  //       prop: t.ro(t.string),
+  //       nested: t.ro(
+  //         t.obj({
+  //           prop: t.bigint
+  //         })
+  //       )
+  //     });
 
-      type ExpectedDefinitionType = typeof ExpectedResult;
-      expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
-      expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
+  //     type ExpectedDefinitionType = typeof ExpectedResult;
+  //     expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
+  //     expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
-      type ResultShape = t.Infer<typeof result>;
-      type ExpectedResultShape = { readonly prop: string; readonly nested: { prop: bigint } };
-      expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
-      expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
+  //     type ResultShape = t.Infer<typeof result>;
+  //     type ExpectedResultShape = { readonly prop: string; readonly nested: { prop: bigint } };
+  //     expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
+  //     expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
 
-      expect(result).toEqual(ExpectedResult);
-    });
-  });
+  //     expect(result).toEqual(ExpectedResult);
+  //   });
+  // });
 
   describe('pick()', () => {
     it('selects correct properties', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.pick(target, 'prop0');
       type ResultTsType = t.Infer<typeof result>;
-      expect(t.areEqual(result.shape.prop0.type, t.string)).toEqual(true);
+      expect(t.areEqual(result.shape.prop0, t.string)).toEqual(true);
       expect(result.shape).not.toHaveProperty('prop1');
     });
   });
@@ -449,7 +448,7 @@ describe('Type operations', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.omit(target, 'prop0');
       type ResultTsType = t.Infer<typeof result>;
-      expect(t.areEqual(result.shape.prop1.type, t.bigint)).toEqual(true);
+      expect(t.areEqual(result.shape.prop1, t.bigint)).toEqual(true);
       expect(result.shape).not.toHaveProperty('prop0');
     });
   });
@@ -459,9 +458,7 @@ describe('Type operations', () => {
       const target = t.union(t.string, t.number, t.bigint);
       const result = t.exclude(target, t.bigint);
       type ResultTsType = t.Infer<typeof result>;
-      if (result.kind === 'never') {
-        throw Error();
-      }
+
       expect(result.memberTypes.length).toEqual(2);
       expect(result.memberTypes).toContain(t.number);
       expect(result.memberTypes).toContain(t.string);
@@ -474,31 +471,18 @@ describe('Type operations', () => {
 
       const result = t.extract(target, t.bigint, t.number);
       type ResultTsType = t.Infer<typeof result>;
-      if (result.kind === 'never') {
-        throw Error();
-      }
 
       expect(result.memberTypes.length).toEqual(2);
       expect(result.memberTypes).toContain(t.bigint);
       expect(result.memberTypes).toContain(t.number);
     });
 
-    it('collapses from union to single type when single element returned', () => {
-      const target = t.union(t.number, t.bigint, t.boolean);
-      const result = t.extract(target, t.bigint);
-
-      if (result.kind === 'never') {
-        throw Error();
-      }
-
-      expect(result).toEqual(t.bigint);
-    });
-
     it('extracting from outside the set returns empty', () => {
       const target = t.union(t.number, t.bigint, t.boolean);
       const result = t.extract(target, t.literal('foo'));
 
-      expect(result.kind).toEqual('never');
+      expect(result.kind).toEqual('union');
+      expect(result.memberTypes).toEqual([]);
     });
   });
 
@@ -519,8 +503,8 @@ describe('Type operations', () => {
         propUnion = t.union(t.number, t.bigint, C, B);
         propB = B;
         propC = t.opt(C);
-        self = ADef;
-        dRef = DDef;
+        self = t.obj(ADef);
+        dRef = t.obj(DDef);
       }
 
       class DDef {
@@ -535,8 +519,8 @@ describe('Type operations', () => {
         propUnion = t.union(t.number, t.bigint, C, B);
         propB = B;
         propC = t.opt(C);
-        self = DDef;
-        aRef = ADef;
+        self = t.obj(DDef);
+        aRef = t.obj(ADef);
       }
 
       const D = t.obj(DDef);

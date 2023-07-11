@@ -135,12 +135,7 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
         for (const aKey of aKeys) {
           const aProp = aShape[aKey];
           const bProp = bShape[aKey];
-          const arePropsEqual =
-            aProp != null &&
-            bProp != null &&
-            areEqual(aProp.type, bProp.type, comparisonCache) &&
-            aProp.attributes.isOptional === bProp.attributes.isOptional &&
-            aProp.attributes.isReadonly === bProp.attributes.isReadonly;
+          const arePropsEqual = aProp != null && bProp != null && areEqual(aProp, bProp, comparisonCache);
 
           if (!arePropsEqual) {
             result = false;

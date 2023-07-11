@@ -10,6 +10,7 @@ describe('obj()', () => {
       age: t.opt(t.number),
       isActive: t.boolean
     });
+    type PersonTwo = t.Infer<typeof PersonTwo>;
     const shapeDefintion = {
       name: t.string,
       // age: t.opt(t.number),
@@ -22,9 +23,9 @@ describe('obj()', () => {
     const roundTrippedInstance = {
       kind: 'object',
       shape: {
-        name: { ...t.prop(t.string) },
-        age: { ...t.opt(t.number) },
-        isActive: { ...t.prop(t.boolean) }
+        name: t.string,
+        age: t.opt(t.number),
+        isActive: t.boolean
       },
       k: {
         name: 'name',
@@ -46,12 +47,9 @@ describe('obj()', () => {
     });
 
     type ObjB = t.Infer<typeof ObjB>;
-    type ObjBTs = t.Resolve<t.InferTypeTsType<typeof ObjB>>;
-    type ObjBRoundTripped = t.ToShapeType<ObjB>;
-
     const objBInstance: ObjB = { refToA: { name: 'hello' } };
-    const testFoo: ObjBRoundTripped = ObjB;
-    const testReverse: typeof ObjB = {} as unknown as ObjBRoundTripped;
+
+    expect(ObjB.shape).toEqual({ refToA: ObjA });
   });
 
   it('allows mapping of primitive defintions to TypeScript types', () => {
@@ -76,37 +74,10 @@ describe('obj()', () => {
       radius: t.number
     });
     type Circle = t.Infer<typeof Circle>;
-    type CircleDefintion = t.ToShapeType<Circle>;
-
-    const Square = t.obj({
-      discriminator: t.literal('square' as const),
-      width: t.number,
-      length: t.number
-    });
-
-    type Square = t.Infer<typeof Square>;
-  });
-
-  it('allows mapping of TypeScript types to primitive defintions', () => {
-    type strType = typeof t.string;
-    type MapPrimitiveStringTest = t.ToShapeType<string>;
-    type MapPrimitiveNumTest = t.ToShapeType<number>;
-    type MapPrimitiveObjTest = t.ToShapeType<AnyObject>;
-
-    type MappedString = t.ToShapeType<string>;
-    type MappedNumber = t.ToShapeType<number>;
-
-    type MappedLiteral = t.ToShapeType<'fooLiteral'>;
-
-    type MappedObj = t.ToShapeType<{
-      name: string;
-      age: number;
-      aLiteral: 'someLiteral';
-      address: {
-        street: string;
-      };
-    }>;
-    type MappedObjShape = t.Infer<MappedObj>;
+    const circle: Circle = {
+      discriminator: 'circle',
+      radius: 21
+    };
   });
 
   it('allows interfaces', () => {
@@ -122,8 +93,8 @@ describe('obj()', () => {
 
     type Address = t.Infer<typeof Address>;
 
-    expect(Person.shape.name.type).toEqual(t.string);
-    expect(Address.shape.owner.type).toEqual(Person);
+    expect(Person.shape.name).toEqual(t.string);
+    expect(Address.shape.owner).toEqual(Person);
   });
 
   it('infers correct primitive types', () => {
@@ -157,7 +128,8 @@ describe('obj()', () => {
     const Person = t.obj({
       name: t.string,
       age: t.number,
-      isActive: t.boolean
+      isActive: t.boolean,
+      optProp: t.string.opt()
     });
 
     const Address = t.obj({
@@ -170,13 +142,12 @@ describe('obj()', () => {
       name: string;
       age: number;
       isActive: boolean;
+      optProp?: string;
     };
 
     type ExpectedAddressType = {
       owner: ExpectedPersonType;
     };
-
-    type InferredShapeType = t.Infer<typeof Address>;
 
     const person = {
       name: 'bob',
@@ -188,7 +159,7 @@ describe('obj()', () => {
       owner: person
     };
 
-    const assigned: InferredShapeType = addressDeclaredFromInferredType;
+    const assigned: Address = addressDeclaredFromInferredType;
 
     expect(addressDeclaredFromInferredType.owner).toEqual({
       name: 'bob',
@@ -199,20 +170,21 @@ describe('obj()', () => {
 
   it('allows self recursion', () => {
     class ADef {
-      self = t.obj(ADef).opt();
+      self? = t.obj(ADef).opt();
     }
 
     const A = t.obj(ADef);
+    type A = t.Infer<typeof A>;
 
-    type A = t.InferTypeTsType<typeof A>;
-    type ATs = t.TsType<typeof A>;
+    const a: A = { self: { self: { self: { self: {} } } } };
 
-    expect(A.shape.self.type.memberTypes[0]).toEqual(A);
+    expect(A.shape.self.memberTypes[0]).toEqual(A);
 
     type ExpectedAShape = { self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
   });
+  1;
 
   it('allows classes for obj()', () => {
     class ADef {
@@ -222,7 +194,7 @@ describe('obj()', () => {
     const A = t.obj(ADef);
     type A = t.Infer<typeof A>;
 
-    expect(A.shape.prop.type).toEqual(t.string);
+    expect(A.shape.prop).toEqual(t.string);
 
     type ExpectedAShape = { prop: string };
     expectTypesSupportAssignment<ExpectedAShape, A>();
@@ -231,24 +203,24 @@ describe('obj()', () => {
 
   it('allows mutual recursion', () => {
     class ADef {
-      b = BDef;
+      b? = t.obj(BDef).opt();
       strProp = t.string;
     }
 
     class BDef {
-      a = ADef;
+      a = t.obj(ADef);
     }
 
     const A = t.obj(ADef);
-    type A = t.InferTypeTsType<typeof A>;
+    type A = t.Infer<typeof A>;
 
     const B = t.obj(BDef);
-    type B = t.InferTypeTsType<typeof B>;
+    type B = t.Infer<typeof B>;
 
-    expect(A.shape.b.type).toEqual(B);
-    expect(B.shape.a.type).toEqual(A);
+    expect(A.shape.b.memberTypes[0]).toEqual(B);
+    expect(B.shape.a).toEqual(A);
 
-    type ExpectedAShape = { b: B; strProp: string };
+    type ExpectedAShape = { b?: B; strProp: string };
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
 
@@ -259,16 +231,38 @@ describe('obj()', () => {
 
   it('supports self references with arrays', () => {
     class ADef {
-      children = t.array(t.obj(ADef));
+      children? = t.array(t.obj(ADef)).opt();
+      self? = t.obj(ADef).opt();
     }
 
     const A = t.obj(ADef);
-    type A = t.InferTypeTsType<typeof A>;
+    type A = t.Infer<typeof A>;
 
     const foo: A = { children: [{ children: [] }] };
-    expect(A.shape.children.type.elementType).toEqual(A);
 
-    type ExpectedAShape = { children: A[] };
+    expect(A.shape.children.memberTypes[0]).toEqual(t.array(A));
+
+    type ExpectedAShape = { children?: A[]; self?: A };
+    expectTypesSupportAssignment<ExpectedAShape, A>();
+    expectTypesSupportAssignment<A, ExpectedAShape>();
+  });
+
+  it('supports self references with tuples', () => {
+    class ADef {
+      children? = t.tuple([t.obj(ADef), t.obj(ADef)]).opt();
+      self? = t.obj(ADef).opt();
+    }
+
+    const A = t.obj(ADef);
+    type A = t.Infer<typeof A>;
+
+    const exampleAssignment: A = { children: [{}, {}] };
+
+    expect(A.shape.children.memberTypes[0]).toEqual(t.tuple([A, A]));
+    type ExpectedAShape = {
+      children?: [ExpectedAShape, ExpectedAShape];
+      self?: ExpectedAShape;
+    };
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
   });
@@ -277,20 +271,11 @@ describe('obj()', () => {
     it('makes optional property defintions into optional TS properties', () => {
       const target = t.obj({ prop: t.opt(t.string) });
 
-      type Target = t.InferTypeTsType<typeof target>;
+      type Target = t.Infer<typeof target>;
 
       const ExpectedResult = t.obj({
-        prop: {
-          type: t.union(t.string, t.undef),
-          attributes: { isOptional: true as const, isReadonly: false as const }
-        }
+        prop: t.union(t.string, t.undef)
       });
-      const shapeDef = {
-        prop: {
-          type: t.union(t.string, t.undef),
-          attributes: { isOptional: true as const, isReadonly: false as const }
-        }
-      };
 
       type ExpectedDefinitionType = typeof ExpectedResult;
       type TargetType = typeof target;
@@ -298,43 +283,27 @@ describe('obj()', () => {
       expectTypesSupportAssignment<ExpectedDefinitionType, TargetType>();
       expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
 
-      type ResultShape = t.InferTypeTsType<typeof ExpectedResult>;
-      type ExpectedResultShape = { readonly prop?: string };
-      expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
-      expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
-    });
-
-    it('makes readonly property defintions into readonly TS properties', () => {
-      const target = t.obj({ prop: t.ro(t.string) });
-
-      const ExpectedResult = t.obj({
-        prop: { type: t.string, attributes: { isOptional: false as const, isReadonly: true as const } }
-      });
-      type ExpectedDefinitionType = typeof ExpectedResult;
-      expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
-      expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
-
-      type ResultShape = t.Infer<typeof ExpectedResult>;
-      type ExpectedResultShape = { readonly prop: string };
-      expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
-      expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
-    });
-
-    it('makes optional readonly property defintions into optional readonly TS properties', () => {
-      const target = t.obj({ prop: t.optRo(t.string) });
-
-      const ExpectedResult = t.obj({
-        prop: { type: t.union(t.string, t.undef), attributes: { isOptional: true as const, isReadonly: true as const } }
-      });
-      type ExpectedDefinitionType = typeof ExpectedResult;
-      expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
-      expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
-
       type ResultShape = t.Infer<typeof ExpectedResult>;
       type ExpectedResultShape = { readonly prop?: string };
       expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
       expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
     });
+
+    // it('makes optional readonly property defintions into optional readonly TS properties', () => {
+    //   const target = t.obj({ prop: t.optRo(t.string) });
+
+    //   const ExpectedResult = t.obj({
+    //     prop: t.union(t.string, t.undef)
+    //   });
+    //   type ExpectedDefinitionType = typeof ExpectedResult;
+    //   expectTypesSupportAssignment<ExpectedDefinitionType, typeof target>();
+    //   expectTypesSupportAssignment<typeof target, ExpectedDefinitionType>();
+
+    //   type ResultShape = t.Infer<typeof ExpectedResult>;
+    //   type ExpectedResultShape = { readonly prop?: string };
+    //   expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
+    //   expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
+    // });
   });
 
   describe('fluent interface', () => {
@@ -346,28 +315,13 @@ describe('obj()', () => {
         propNullishOpt: t.string.nullish().opt(),
         propComplicatedOpt: t.union(t.string).nullish().opt()
       });
-      type Target = t.InferTypeTsType<typeof target>;
+      type Target = t.Infer<typeof target>;
       const ExpectedResult = t.obj({
-        propOpt: {
-          type: t.union(t.string, t.undef),
-          attributes: { isOptional: true as const, isReadonly: false as const }
-        },
-        propOptN: {
-          type: t.union(t.string, t.undef, t.nul),
-          attributes: { isOptional: true as const, isReadonly: false as const }
-        },
-        propNullish: {
-          type: t.union(t.string, t.undef, t.nul),
-          attributes: { isOptional: false as const, isReadonly: false as const }
-        },
-        propNullishOpt: {
-          type: t.union(t.string, t.undef, t.nul),
-          attributes: { isOptional: true as const, isReadonly: false as const }
-        },
-        propComplicatedOpt: {
-          type: t.union(t.string, t.undef, t.nul),
-          attributes: { isOptional: true as const, isReadonly: false as const }
-        }
+        propOpt: t.union(t.string, t.undef),
+        propOptN: t.union(t.string, t.undef, t.nul),
+        propNullish: t.union(t.string, t.undef, t.nul),
+        propNullishOpt: t.union(t.string, t.undef, t.nul),
+        propComplicatedOpt: t.union(t.string, t.undef, t.nul)
       });
       type ExpectedDefinitionType = typeof ExpectedResult;
 
@@ -386,7 +340,7 @@ describe('obj()', () => {
           .opt()
       });
 
-      type A = t.InferTypeTsType<typeof ObjA>;
+      type A = t.Infer<typeof ObjA>;
       interface IA {
         name: string;
         child?: {
@@ -415,14 +369,10 @@ describe('obj()', () => {
         propNumberLiteral = t.literal(1);
         propUnion = t.union(t.number, t.bigint, C, B);
         propB = B;
-        propC = t.opt(C);
+        propC? = t.opt(C);
       }
       const A = t.obj(ADef);
-
-      type ACons = typeof A;
-      type A = t.InferTypeTsType<ACons>;
-      type ATs = t.Resolve<t.TsType<ACons>>;
-      type ARoundTrip = t.ToShapeType<A>;
+      type A = t.Infer<typeof A>;
 
       interface IC {
         prop0: boolean;

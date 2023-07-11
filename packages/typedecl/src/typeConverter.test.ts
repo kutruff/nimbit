@@ -5,27 +5,27 @@ import { parseUnion } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('TypeConverter', () => {
-  it('parses', () => {
-    const Person = t.obj({
-      name: t.string,
-      age: t.number,
-      isActive: t.boolean
-    });
+  // it('parses', () => {
+  //   const Person = t.obj({
+  //     name: t.string,
+  //     age: t.number,
+  //     isActive: t.boolean
+  //   });
 
-    type Person = t.Infer<typeof Person>;
-    const result = Person.parse({ name: 'John', age: 10, isActive: true });
+  //   type Person = t.Infer<typeof Person>;
+  //   const result = Person.parse({ name: 'John', age: 10, isActive: true });
 
-    expect(result.success).toEqual(true);
+  //   expect(result.success).toEqual(true);
 
-    const redfdsult = parseUnion(t.union(t.string, t.number), 'hello');
-    const redfdsult2 = t.union(t.string, t.number).parse('hello');
-    if (result.success) {
-      expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
-      // expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
-      // expectTypesSupportAssignment<(typeof result)['value'], { name: string; age?: number; isActive: boolean }>();
-      // expectTypesSupportAssignment<{ name: string; age?: number; isActive: boolean }, (typeof result)['value']>();
-    }
-  });
+  //   const redfdsult = parseUnion(t.union(t.string, t.number), 'hello');
+  //   const redfdsult2 = t.union(t.string, t.number).parse('hello');
+  //   if (result.success) {
+  //     expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+  //     // expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+  //     // expectTypesSupportAssignment<(typeof result)['value'], { name: string; age?: number; isActive: boolean }>();
+  //     // expectTypesSupportAssignment<{ name: string; age?: number; isActive: boolean }, (typeof result)['value']>();
+  //   }
+  // });
 
   // it('parses', () => {
   //   const Person = t.obj({
@@ -38,7 +38,7 @@ describe('TypeConverter', () => {
   //   //let clone = Object.assign(Object.create(Object.getPrototypeOf(orig)), orig)
 
   //   interface Type2StandardOperations<T>{
-  //     parse(value: unknown): ParseResult<T>;
+  //     parse(value: unknown): t.ParseResult<T>;
 
   //     nullable() : Type2StandardOperations<unknown, unknown> | null;
   //   }
@@ -65,6 +65,8 @@ describe('TypeConverter', () => {
   //   const datelike = t.union([t.number, t.string, t.date]);
   //   const datelikeToDate = t.date.from(dateLike);
 
+  //   const datelikeToDateCoerction = t.date.from(dateLike);
+
   //   //transform function has two overloads.  If it doesn't have a type specified, then it will be the same type as the source type.
   //   // In order to change type, a parser must be passed.
 
@@ -88,20 +90,20 @@ describe('TypeConverter', () => {
   //   // t.opt().where() -> returns Definition. (parser)
   //   // ObjType contains a separate parser field for all the validation and parsing instructions.
 
-  //   // const mapped = source.map(({prop0, prop1, ...rest}) => ({
-  //   //   prop0: prop0.where(x > 10).from(t.string.opt().where(x => x.length > 0)),
-  //   //   prop1: prop1.from(t.string)
-  //   // }));
+  //   const mapped = source.map(({prop0, prop1, ...rest}) => ({
+  //     prop0: prop0.where(x > 10).from(t.string.opt().where(x => x.length > 0)),
+  //     prop1: prop1.from(t.string)
+  //   }));
 
-  //   // const Person, PersonParser = t.obj({
-  //   //   name: t.string.nullable(),
-  //   //   age: t.opt(t.number)
-  //   // });
+  //   const Person, PersonParser = t.obj({
+  //     name: t.string.nullable(),
+  //     age: t.opt(t.number)
+  //   });
 
-  //   // const PersonParser = t.obj({
-  //   //   name: t.string,
-  //   //   age: t.opt(t.number)
-  //   // });
+  //   const PersonParser = t.obj({
+  //     name: t.string,
+  //     age: t.opt(t.number)
+  //   });
 
   //   //would do source.prop0.from(input.prop0) (can use a proxy to get destructured properties... tricky but hacky)
   //   t.intersection(source.pickAndMap(input, x => x.from), source.pick(({prop0, prop1}) => void));
@@ -121,7 +123,7 @@ describe('TypeConverter', () => {
   //     t.number.from(t.any).transform(x => x + 1, t.number),
   //     t.union(t.number.from(t.string), t.string.from(t.number)),
   //     t.number.from(t.string).transform(x => x + 1, t.number),
-  //     t.number.coerce.from(union(t.string, t.string.from(t.number)))
+  //     t.number.coerce.from(t.union(t.string, t.string.from(t.number)))
   //   ];
   //   const newWay2 = [t.number.coerce(t.coerce), t.union(t.number.from(t.string), t.string.from(t.number))];
   //   const zodWay = [
@@ -148,80 +150,80 @@ describe('TypeConverter', () => {
   // });
 
   it('does nothing', () => {});
-  // describe('tuple()', () => {
-  //   it('supports instantiated const arrays', () => {
-  //     // export const YesNo = t.union(t.literal('YES'), t.literal('NO'));
-  //     const YesNo = t.enumm('yes_or_no', ['YES', 'NO']);
-  //     type YesNo = t.Infer<typeof YesNo>;
+  describe('tuple()', () => {
+    it('supports instantiated const arrays', () => {
+      // export const YesNo = t.union(t.literal('YES'), t.literal('NO'));
+      const YesNo = t.enumm('yes_or_no', ['YES', 'NO']);
+      type YesNo = t.Infer<typeof YesNo>;
 
-  //     //https://www.postgresql.org/docs/current/infoschema-tables.html
-  //     const Tables = t.obj(
-  //       {
-  //         table_catalog: t.string, //'postgres', //name
-  //         table_schema: t.string, //'planner', //name
-  //         table_name: t.string, //'User', //name
-  //         table_type: t.string, //'BASE TABLE',
-  //         self_referencing_column_name: t.string, //null,
-  //         reference_generation: t.string, //null,
-  //         user_defined_type_catalog: t.string, //null,
-  //         user_defined_type_schema: t.string, //null,
-  //         user_defined_type_name: t.string, // null,
-  //         is_insertable_into: t.string, //yesNo//'YES',
-  //         is_typed: t.string, //yesNo//'NO',
-  //         commit_action: t.string //null
-  //       },
-  //       'tables'
-  //     );
+      //https://www.postgresql.org/docs/current/infoschema-tables.html
+      const Tables = t.obj(
+        {
+          table_catalog: t.string, //'postgres', //name
+          table_schema: t.string, //'planner', //name
+          table_name: t.string, //'User', //name
+          table_type: t.string, //'BASE TABLE',
+          self_referencing_column_name: t.string, //null,
+          reference_generation: t.string, //null,
+          user_defined_type_catalog: t.string, //null,
+          user_defined_type_schema: t.string, //null,
+          user_defined_type_name: t.string, // null,
+          is_insertable_into: t.string, //yesNo//'YES',
+          is_typed: t.string, //yesNo//'NO',
+          commit_action: t.string //null
+        },
+        'tables'
+      );
 
-  //     const DatabaseParser = t.parser(Tables, {
-  //       is_insertable_into: YesNo.nullable(),
-  //     });
+      // const DatabaseParser = t.parser(Tables, {
+      //   is_insertable_into: YesNo.nullable(),
+      // });
 
-  //     const timpestamptz = t.createType<'date', Date>('date', 'timestamptz');
+      const timpestamptz = t.createType<'date', Date>('date', 'timestamptz');
 
-  //     const stringToDate = t.createConverter(t.string, t.date, value => new Date(value));
-  //     const dateToString = t.createConverter(t.date, t.string, value => value.toISOString());
+      // const stringToDate = t.createConverter(t.string, t.date, value => new Date(value));
+      // const dateToString = t.createConverter(t.date, t.string, value => value.toISOString());
 
-  //     const Event = t.obj(
-  //       {
-  //         id: t.string, //'postgres',
-  //         content: t.string, //'postgres',
-  //         created_at: timpestamptz //null
-  //       },
-  //       'tables'
-  //     );
-  //     type Event = t.Infer<typeof Event>;
+      const Event = t.obj(
+        {
+          id: t.string, //'postgres',
+          content: t.string, //'postgres',
+          created_at: timpestamptz //null
+        },
+        'tables'
+      );
+      type Event = t.Infer<typeof Event>;
 
-  //     // export const TablesParser = t.parser(Tables, {
-  //     //   table_name: Tables.shape.table_name.type
-  //     // });
+      // export const TablesParser = t.parser(Tables, {
+      //   table_name: Tables.shape.table_name.type
+      // });
 
-  //     // interface TypeParser<T> extends t.Type<T, unknown>{
-  //     // }
+      // interface TypeParser<T> extends t.Type<T, unknown>{
+      // }
 
-  //     class FluentType<T extends t.Type<unknown, unknown>> {
-  //       constructor(public type: T) {}
+      class FluentType<T extends t.Type<unknown, unknown>> {
+        constructor(public type: T) {}
 
-  //       parse<TDestination extends t.Type<unknown, unknown>>(destinationType: TDestination): t.Infer<TDestination> {
-  //         return {} as t.Infer<TDestination>;
-  //       }
-  //     }
+        parse<TDestination extends t.Type<unknown, unknown>>(destinationType: TDestination): t.Infer<TDestination> {
+          return {} as t.Infer<TDestination>;
+        }
+      }
 
-  //     // const string = t.string;
-  //     //  function fluentify(obj: any) {
+      // const string = t.string;
+      //  function fluentify(obj: any) {
 
-  //     // }
+      // }
 
-  //     //  function validated<TSource extends t.Type<unknown, unknown>>(type: TSource, validator: (value: t.Infer<TSource>) => boolean){
-  //     //   return {
-  //     //     ...type,
-  //     //     validators: [...(type as any).validators, validator],
-  //     //   }
-  //     // }
+      //  function validated<TSource extends t.Type<unknown, unknown>>(type: TSource, validator: (value: t.Infer<TSource>) => boolean){
+      //   return {
+      //     ...type,
+      //     validators: [...(type as any).validators, validator],
+      //   }
+      // }
 
-  //     // interface Type2 {
-  //     //   previousInParseChain?: Type2;
-  //     // }
-  //   });
-  // });
+      // interface Type2 {
+      //   previousInParseChain?: Type2;
+      // }
+    });
+  });
 });

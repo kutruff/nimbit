@@ -14,7 +14,8 @@ import {
   type Constructor,
   type ObjectKeyMap,
   type ParseResult,
-  type Prop,
+  type ShapeDefinition,
+  type ShapeDefinitionToObjType,
   type Type,
   type UnionType
 } from '.';
@@ -73,39 +74,6 @@ export function toResult<T>(success: boolean, value?: T): ParseResult<T> {
   return success ? { success: true, value: value as any } : { success: false };
 }
 
-export interface Shape {
-  [key: string]: Prop<Type<unknown, unknown>, unknown, unknown>;
-}
-
-// Object definition allow either a property defintion or a type directly
-export type ShapeDefinition =
-  | {
-      [key: string]: Prop<unknown, unknown, unknown> | Type<unknown, unknown> | Constructor;
-    }
-  | Constructor;
-
-export type ShapeDefinitionToShape<T> = T extends Constructor
-  ? ShapeDefinitionToShape<InstanceType<T>>
-  : {
-      [P in keyof T]: T[P] extends Constructor
-        ? Prop<ObjType<ShapeDefinitionToShape<InstanceType<T[P]>>, ToTsTypes<InstanceType<T[P]>>>, false, false>
-        : T[P] extends Prop<unknown, unknown, unknown>
-        ? T[P]
-        : Prop<T[P], false, false>;
-    };
-
-export type ToTsTypes<T> = T extends Type<unknown, unknown>
-  ? T[typeof _type]
-  : T extends Constructor
-  ? ToTsTypes<InstanceType<T>>
-  : T extends Prop<unknown, unknown, unknown>
-  ? ToTsTypes<T['type']>
-  : {
-      [P in keyof T]: ToTsTypes<T[P]>;
-    };
-
-export type ShapeDefinitionToObjType<T> = ObjType<ShapeDefinitionToShape<T>, ToTsTypes<T>>;
-
 const constructorsToObj = new WeakMap();
 
 //Note: the name is important here for recursive objects.
@@ -126,12 +94,10 @@ export function obj<TShapeDefinition extends ShapeDefinition>(
   }
 
   for (const key of getKeys(shapeDefinition)) {
-    if (isProp(shapeDefinition[key])) {
-      shape[key] = { ...shapeDefinition[key] };
-    } else if (typeof shapeDefinition[key] === 'function') {
-      shape[key] = createProp(obj(shapeDefinition[key] as Constructor), false, false);
+    if (typeof shapeDefinition[key] === 'function') {
+      shape[key] = obj(shapeDefinition[key] as Constructor);
     } else {
-      shape[key] = createProp(shapeDefinition[key] as Type, false, false);
+      shape[key] = shapeDefinition[key] as Type;
     }
   }
 
@@ -139,44 +105,28 @@ export function obj<TShapeDefinition extends ShapeDefinition>(
   return resultObj as ShapeDefinitionToObjType<TShapeDefinition>;
 }
 
-export function prop<T extends Type>(type: T) {
-  return createProp(type, false as const, false as const);
-}
-
 export function opt<T extends Type>(type: T) {
-  return createProp(union(type, undef), true as const, false as const);
+  return union(type, undef);
 }
 
 export function optN<T extends Type>(type: T) {
-  return createProp(union(type, undef, nul), true as const, false as const);
+  return union(type, undef, nul);
 }
 
-export function ro<T extends Type>(type: T) {
-  return createProp(type, false as const, true as const);
-}
+// export function ro<T extends Type>(type: T) {
+//   return type;
+// }
 
-export function optRo<T extends Type>(type: T) {
-  return createProp(union(type, undef), true as const, true as const);
-}
+// export function optRo<T extends Type>(type: T) {
+//   return union(type, undef);
+// }
 
-export function makeOptional<T extends Type, R extends boolean>(prop: Prop<T, unknown, R>) {
-  return createProp(union(prop.type, undef), true, prop.attributes.isReadonly);
-}
-
-export function makeRequired<T extends Type, R extends boolean>(prop: Prop<T, unknown, R>) {
-  if (!prop.attributes.isOptional || prop.type.kind !== 'union') {
-    return createProp(prop.type, false, prop.attributes.isReadonly);
+export function makeRequired<T extends Type>(type: T) {
+  if (type.kind !== 'union') {
+    return type;
   }
 
-  return createProp(exclude(prop.type as unknown as UnionType<T, unknown>, undef), false, prop.attributes.isReadonly);
-}
-
-export function makeReadonly<T extends Type, O extends boolean>(prop: Prop<T, O, unknown>) {
-  return createProp<T, O, true>(prop.type, prop.attributes.isOptional, true);
-}
-
-export function makeWritable<T extends Type, O extends boolean>(prop: Prop<T, O, unknown>) {
-  return createProp<T, O, false>(prop.type, prop.attributes.isOptional, false);
+  return exclude(type as unknown as UnionType<T, unknown>, undef);
 }
 
 export function nullable<T extends Type>(type: T) {
@@ -185,23 +135,4 @@ export function nullable<T extends Type>(type: T) {
 
 export function nullish<T extends Type>(type: T) {
   return union(type, undef, nul);
-}
-
-export function createProp<T extends Type<unknown, unknown>, TOptional = true, TReadonly = false>(
-  type: T,
-  isOptional: TOptional,
-  isReadonly: TReadonly
-): Prop<T, TOptional, TReadonly> {
-  return {
-    type,
-    attributes: {
-      isOptional: isOptional,
-      isReadonly: isReadonly
-    }
-  };
-}
-
-export function isProp<T, O, R>(possibleProp: T | Prop<T, O, R>): possibleProp is Prop<T, O, R> {
-  const prop = possibleProp as unknown as any;
-  return prop.attributes != null && prop.type != null && prop.type.kind != null;
 }

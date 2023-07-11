@@ -5,7 +5,7 @@ describe('Unions of types', () => {
   describe('union()', () => {
     it('combines simple primitives', () => {
       const Target = t.union(t.string, t.boolean);
-      type Target = t.InferTypeTsType<typeof Target>;
+      type Target = t.Infer<typeof Target>;
 
       type ExpectedDefinitionType = t.UnionType<typeof t.string | t.BooleanType, string | boolean>;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
@@ -20,7 +20,7 @@ describe('Unions of types', () => {
     describe('union of unions', () => {
       it('combines peer unions', () => {
         const Target = t.union(t.union(t.string, t.number), t.union(t.boolean, t.bigint));
-        type Target = t.InferTypeTsType<typeof Target>;
+        type Target = t.Infer<typeof Target>;
 
         type ExpectedDefinitionType = t.UnionType<
           typeof t.string | t.BooleanType | t.NumberType | t.Typ<'bigint', bigint>,
@@ -92,15 +92,38 @@ describe('Unions of types', () => {
           }),
           t.obj({
             prop: t.string,
-            subUnion01: t.union(t.boolean, t.union(t.number, t.bigint))
+            subUnion01: t.union(t.string, t.union(t.number, t.bigint))
           })
         )
       });
 
       type Target = t.Infer<typeof Target>;
-      type TargetRoundTripped = t.ToShapeType<Target>;
-      expectTypesSupportAssignment<TargetRoundTripped, typeof Target>();
-      expectTypesSupportAssignment<typeof Target, TargetRoundTripped>();
+      const targets: Array<Target> = [
+        {
+          prop: 'strValue',
+          subUnion0: { prop: 'subValue', subUnion00: true }
+        },
+        {
+          prop: 'strValue',
+          subUnion0: { prop: 'subValue', subUnion00: 1 }
+        },
+        {
+          prop: 'strValue',
+          subUnion0: { prop: 'subValue', subUnion00: BigInt(1) }
+        },
+        {
+          prop: 'strValue',
+          subUnion0: { prop: 'subValue', subUnion01: 'str' }
+        },
+        {
+          prop: 'strValue',
+          subUnion0: { prop: 'subValue', subUnion01: 2 }
+        },
+        {
+          prop: 'strValue',
+          subUnion0: { prop: 'subValue', subUnion01: BigInt(1) }
+        },
+      ];
     });
   });
 });

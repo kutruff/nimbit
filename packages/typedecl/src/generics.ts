@@ -46,12 +46,12 @@ export type UndefinedProps<T extends object> = {
 // https://stackoverflow.com/a/75587790
 export type MakeUndefinedOptional<T> = T extends object ? UndefinedProps<T> & Omit<T, keyof UndefinedProps<T>> : T;
 
-// TODO: support other collections / tuples and not just arrays?  What about unions?
-export type RecursiveMakeUndefinedOptional<T> = T extends ReadonlyArray<infer U>
-  ? Array<RecursiveMakeUndefinedOptional<MakeUndefinedOptional<U>>>
-  : T extends object
-  ? { [P in keyof T]: RecursiveMakeUndefinedOptional<MakeUndefinedOptional<T[P]>> }
-  : T;
+// TODO: Presently unecessary as we are enforcing all types to infer one level below themselvs.
+// export type RecursiveMakeUndefinedOptional<T> = T extends ReadonlyArray<infer U>
+//   ? Array<RecursiveMakeUndefinedOptional<MakeUndefinedOptional<U>>>
+//   : T extends object
+//   ? { [P in keyof T]: RecursiveMakeUndefinedOptional<MakeUndefinedOptional<T[P]>> }
+//   : T;
 
 //TODO: deprecated  by UndefinedProps
 export type OptionalPropertyNames<T> = {

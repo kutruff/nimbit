@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Typ, type Infer, type InferTypeTsType, type ParseResult, type TsType, type Type } from '.';
+import { Typ, type ParseResult, type TsType, type Type } from '.';
 
 export function array<TElement extends Type<unknown, unknown>>(
   element: TElement

@@ -30,6 +30,7 @@ export class BooleanType extends Typ<'boolean', boolean> {
     return toParseResult<boolean>(value, typeof value === 'boolean');
   }
 }
+
 export const boolean = new BooleanType('boolean', 'boolean');
 
 export const bigint = createType<'bigint', bigint>('bigint', 'bigint');
