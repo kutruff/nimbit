@@ -10,3 +10,4 @@ export * from './literal';
 export * from './array';
 export * from './enum';
 export * from './tuple';
+export * from './typeConverter';

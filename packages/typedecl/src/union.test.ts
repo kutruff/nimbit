@@ -23,7 +23,7 @@ describe('Unions of types', () => {
         type Target = t.Infer<typeof Target>;
 
         type ExpectedDefinitionType = t.UnionType<
-          typeof t.string | t.BooleanType | t.NumberType | t.Typ<'bigint', bigint>,
+          typeof t.string | t.BooleanType | t.NumberType | t.BigIntType,
           string | number | boolean | bigint
         >;
 
@@ -44,7 +44,7 @@ describe('Unions of types', () => {
           type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
-            typeof t.string | t.BooleanType | t.Typ<'bigint', bigint>,
+            typeof t.string | t.BooleanType | t.BigIntType,
             string | boolean | bigint
           >;
 
@@ -63,7 +63,7 @@ describe('Unions of types', () => {
           type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
-            typeof t.string | t.BooleanType | t.NumberType | t.Typ<'bigint', bigint>,
+            typeof t.string | t.BooleanType | t.NumberType | t.BigIntType,
             string | boolean | number | bigint
           >;
 
@@ -122,7 +122,7 @@ describe('Unions of types', () => {
         {
           prop: 'strValue',
           subUnion0: { prop: 'subValue', subUnion01: BigInt(1) }
-        },
+        }
       ];
     });
   });

@@ -39,7 +39,7 @@ export class ObjType<TShape, T> extends Typ<'object', T> {
     const shape = this.shape as any;
     for (const key of getKeys(shape)) {
       const prop = shape[key];
-      const propResult = prop.type.parse((value as any)[key]);
+      const propResult = prop.parse((value as any)[key]);
 
       if (!propResult.success) {
         return { success: false };
@@ -56,10 +56,9 @@ export class ObjType<TShape, T> extends Typ<'object', T> {
     const result: any = {};
     const shape = this.shape as any;
     for (const key of getKeys(shape)) {
-      const propResult = shape[key].type.parse((value as any)[key]);
+      const propResult = shape[key].parse((value as any)[key]);
 
       if (!propResult.success) {
-        console.log(key);
         return { success: false };
       }
       result[key] = propResult.value;
@@ -112,14 +111,6 @@ export function opt<T extends Type>(type: T) {
 export function optN<T extends Type>(type: T) {
   return union(type, undef, nul);
 }
-
-// export function ro<T extends Type>(type: T) {
-//   return type;
-// }
-
-// export function optRo<T extends Type>(type: T) {
-//   return union(type, undef);
-// }
 
 export function makeRequired<T extends Type>(type: T) {
   if (type.kind !== 'union') {

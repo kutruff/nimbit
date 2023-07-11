@@ -184,7 +184,6 @@ describe('obj()', () => {
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
   });
-  1;
 
   it('allows classes for obj()', () => {
     class ADef {
@@ -310,7 +309,7 @@ describe('obj()', () => {
     it('optN()', () => {
       const target = t.obj({
         propOpt: t.string.opt(),
-        propOptN: t.string.optN(),
+        propOptN: t.string.optNul(),
         propNullish: t.string.nullish(),
         propNullishOpt: t.string.nullish().opt(),
         propComplicatedOpt: t.union(t.string).nullish().opt()
