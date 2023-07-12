@@ -14,15 +14,19 @@ import {
   type Type
 } from '.';
 
-export class UnionType<TMembers extends Type<unknown, unknown>, T>
-  extends Typ<'union', T>
+export class UnionType<TMembers extends Type<unknown, unknown>, T, TInput = T>
+  extends Typ<'union', T, TInput>
   implements IUnionType<TMembers>
 {
   constructor(public memberTypes: TMembers[], public name?: string) {
     super('union', name);
   }
 
-  parse(value: unknown): ParseResult<T> {
+  _withInput<TNewInput>(): UnionType<TMembers, T, TNewInput> {
+    return undefined as any;
+  }
+
+  parse(value: TInput): ParseResult<T> {
     for (const member of this.memberTypes) {
       const result = (member as any).parse(value);
       if (result.success) {
@@ -58,7 +62,11 @@ function flattenUnionMembers<T extends Type<unknown, unknown>[]>(members: T) {
 
 export function union<T extends Type<unknown, unknown>[]>(
   ...args: T
-): UnionType<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>> {
+): UnionType<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>, TsType<ElementType<T>>> {
   const flattenedMembers = flattenUnionMembers(args);
-  return new UnionType(flattenedMembers) as UnionType<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>>;
+  return new UnionType(flattenedMembers) as UnionType<
+    FlattenedUnion<ElementType<T>>,
+    TsType<ElementType<T>>,
+    TsType<ElementType<T>>
+  >;
 }

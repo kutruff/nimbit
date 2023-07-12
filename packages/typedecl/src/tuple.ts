@@ -4,11 +4,19 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Typ, type InferTupleKeys, type ParseResult, type Type } from '.';
 
-export class TupleType<TElements extends Type<unknown, unknown>[]> extends Typ<'tuple', InferTupleKeys<TElements>> {
+export class TupleType<
+  TElements extends readonly [Type<unknown, unknown>, ...Type<unknown, unknown>[]],
+  TInput = InferTupleKeys<TElements>
+> extends Typ<'tuple', InferTupleKeys<TElements>, TInput> {
   constructor(public elementTypes: TElements, public name?: string) {
     super('tuple', name);
   }
-  parse(value: unknown): ParseResult<InferTupleKeys<TElements, []>> {
+
+  _withInput<TNewInput>(): TupleType<TElements, TNewInput> {
+    return undefined as any;
+  }
+
+  parse(value: TInput): ParseResult<InferTupleKeys<TElements, []>> {
     if (!Array.isArray(value) || value.length !== this.elementTypes.length) {
       return { success: false };
     }
@@ -18,7 +26,7 @@ export class TupleType<TElements extends Type<unknown, unknown>[]> extends Typ<'
 
     for (let i = 0; i < this.elementTypes.length; i++) {
       const result = (this.elementTypes[i] as any).parse(valueAsArray[i]);
-      
+
       if (!result.success) {
         return { success: false };
       }
@@ -29,6 +37,6 @@ export class TupleType<TElements extends Type<unknown, unknown>[]> extends Typ<'
   }
 }
 
-export function tuple<TTuple extends [Type<unknown, unknown>, ...Type<unknown, unknown>[]]>(values: TTuple) {
+export function tuple<TTuple extends readonly [Type<unknown, unknown>, ...Type<unknown, unknown>[]]>(values: TTuple) {
   return new TupleType(values);
 }

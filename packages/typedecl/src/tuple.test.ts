@@ -31,14 +31,15 @@ describe('Tuples', () => {
     it('fails to parse wrong sized tuple', () => {
       const Target = t.tuple([t.string, t.number, t.boolean]);
       type Target = t.Infer<typeof Target>;
-      const instance = Target.parse(['a', 1]);
+      // const shouldNotCompile = Target.parse(['a', 1] );
+      const instance = Target.parse(['a', 1] as any);
       expect(instance.success).toEqual(false);
     });
 
     it('fails to parse incorrectly typed tuple', () => {
       const Target = t.tuple([t.string, t.number, t.boolean]);
       type Target = t.Infer<typeof Target>;
-      const instance = Target.parse(['a', 1, 'true']);
+      const instance = Target.parse(['a', 1, 'true'] as any);
       expect(instance.success).toEqual(false);
     });
   });

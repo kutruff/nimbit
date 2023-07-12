@@ -20,19 +20,23 @@ import {
   type UnionType
 } from '.';
 
-export class ObjType<TShape, T> extends Typ<'object', T> {
+export class ObjType<TShape, T, TInput = T> extends Typ<'object', T, TInput> {
   constructor(public shape: TShape, public k: ObjectKeyMap<TShape>, public name?: string) {
     super('object', name);
   }
 
+  _withInput<TNewInput>(): ObjType<TShape, T, TNewInput> {
+    return undefined as any;
+  }
+
   parseString(value: unknown): ParseResult<T> {
     if (typeof value !== 'string') {
-      return { success: false };
+      return fail();
     }
     try {
       value = JSON.parse(value);
     } catch (err) {
-      return { success: false };
+      return fail();
     }
 
     const result: any = {};
@@ -42,35 +46,74 @@ export class ObjType<TShape, T> extends Typ<'object', T> {
       const propResult = prop.parse((value as any)[key]);
 
       if (!propResult.success) {
-        return { success: false };
+        return fail();
       }
       result[key] = propResult.value;
     }
-    return { success: true, value: result };
+    return pass(result);
   }
 
-  parse(value: unknown): ParseResult<T> {
+  parse(value: TInput): ParseResult<T> {
     if (typeof value !== 'object' || value === null) {
-      return { success: false };
+      return fail();
     }
     const result: any = {};
+
     const shape = this.shape as any;
     for (const key of getKeys(shape)) {
       const propResult = shape[key].parse((value as any)[key]);
 
       if (!propResult.success) {
-        return { success: false };
+        return fail();
       }
       result[key] = propResult.value;
     }
-    return { success: true, value: result };
+    return pass(result);
   }
+
+  // to<TDestType, TDest>(
+  //   destination: Typ<TDestType, TDest>,
+  //   converter?: TypeConverter<T, TDest>
+  // ): Typ<TDestType, TDest, TInput> {
+  //   const clone = cloneObject(destination);
+  //   const destinationParse = clone.parse;
+  //   const source = this;
+  //   clone.parse = function (value: TInput) {
+  //     const sourceResult = source.parse(value);
+
+  //     if (sourceResult.success) {
+  //       let value;
+  //       if (converter) {
+  //         const convertedResult = converter(sourceResult.value);
+  //         if (convertedResult.success) {
+  //           value = convertedResult.value;
+  //         } else {
+  //           return { success: false };
+  //         }
+  //       } else {
+  //         value = sourceResult.value;
+  //       }
+
+  //       return destinationParse(value);
+  //     }
+  //     return { success: false };
+  //   };
+  //   return clone;
+  // }
 }
 
-export function toResult(success: false): { success: false };
-export function toResult<T>(success: true, value: T): { success: true; value: T };
-export function toResult<T>(success: boolean, value?: T): ParseResult<T> {
-  return success ? { success: true, value: value as any } : { success: false };
+// export function toResult(success: false): { success: false };
+// export function toResult<T>(success: true, value: T): { success: true; value: T };
+// export function toResult<T>(success: boolean, value?: T): ParseResult<T> {
+//   return success ? { success: true, value: value as any } : { success: false };
+// }
+
+export function pass<T>(value: T): ParseResult<T> {
+  return { success: true as const, value };
+}
+
+export function fail(error?: string) {
+  return { success: false as const, error };
 }
 
 const constructorsToObj = new WeakMap();

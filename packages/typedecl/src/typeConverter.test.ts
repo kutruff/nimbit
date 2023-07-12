@@ -1,5 +1,4 @@
 import * as t from '.';
-import { toParseResult } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('TypeConverter', () => {
@@ -47,39 +46,39 @@ describe('TypeConverter', () => {
     }
   });
 
-  function parseNumber(x: unknown) {
-    const result = Number(x);
-    return toParseResult<number>(result, !isNaN(result));
-  }
+  // function parseNumber(x: unknown) {
+  //   const result = Number(x);
+  //   return toParseResult<number>(result, !isNaN(result));
+  // }
 
-  it('parsedFrom() works', () => {
-    const target = t.number.from(parseNumber);
+  // it('from() works', () => {
+  //   const target = t.number.from(parseNumber);
 
-    const result = target.parse('2123');
-    expect(result.success).toEqual(true);
-    if (result.success) {
-      expect(result.value).toEqual(2123);
-    }
-  });
+  //   const result = target.parse('2123');
+  //   expect(result.success).toEqual(true);
+  //   if (result.success) {
+  //     expect(result.value).toEqual(2123);
+  //   }
+  // });
 
-  it('parsedFrom() is a chain of from in right to left', () => {
-    const target = t.number
-      .from(x => {
-        const result = 2 * Number(x);
-        return toParseResult(result, !isNaN(result));
-      })
-      .from(x => {
-        const result = Number(x) + 1;
-        return toParseResult(result, !isNaN(result));
-      });
+  // it('from() is a chain of from in right to left', () => {
+  //   const target = t.number
+  //     .from(x => {
+  //       const result = 2 * Number(x);
+  //       return toParseResult(result, !isNaN(result));
+  //     })
+  //     .from(x => {
+  //       const result = Number(x) + 1;
+  //       return toParseResult(result, !isNaN(result));
+  //     });
 
-    const result = target.parse('24');
+  //   const result = target.parse('24');
 
-    expect(result.success).toEqual(true);
-    if (result.success) {
-      expect(result.value).toEqual(50);
-    }
-  });
+  //   expect(result.success).toEqual(true);
+  //   if (result.success) {
+  //     expect(result.value).toEqual(50);
+  //   }
+  // });
 
   it('supports to', () => {
     const target = t.string.to(t.number, parseNumber);
@@ -92,26 +91,117 @@ describe('TypeConverter', () => {
     }
   });
 
-  it('supports to as method', () => {
-    const target = t.string.to(x => ({ success: true, value: x + 'hello' }));
+  // it('supports to as method', () => {
+  //   const target = t.string.to(x => ({ success: true, value: x + 'hello' }));
 
-    const result = target.parse('24');
+  //   const result = target.parse('24');
 
-    expect(result.success).toEqual(true);
-    if (result.success) {
-      expect(result.value).toEqual('24hello');
-    }
-  });
+  //   expect(result.success).toEqual(true);
+  //   if (result.success) {
+  //     expect(result.value).toEqual('24hello');
+  //   }
+  // });
+
+  // it('to() chains left to right', () => {
+  //   const target = t.string
+  //     .to(x => ({ success: true, value: x + 'hello' }))
+  //     .to(x => ({ success: true, value: x + 'there' }));
+
+  //   const result = target.parse('24');
+
+  //   expect(result.success).toEqual(true);
+  //   if (result.success) {
+  //     expect(result.value).toEqual('24hellothere');
+  //   }
+  // });
+
+  // it('from() first then to() chains', () => {
+  //   // const target = t
+  //   //   .from(
+  //   //     t
+  //   //       .from(t.string, t.string, x => ({ success: true, value: x + 'from1' }))
+  //   //       .to(x => ({ success: true, value: x + 'to1 ' })),
+  //   //     t.string,
+  //   //     x => ({ success: true, value: x + 'from2' })
+  //   //   )
+  //   //   .to(x => ({ success: true, value: x + 'to2 ' }));
+
+  //   const target = t
+  //     .feed(x => ({ success: true, value: x + 'from2' }), t.string)
+
+  //     .to(x => ({ success: true, value: x + 'to2 ' }));
+
+  //   // .to(x => ({ success: true, value: x + 'to2 ' }))
+  //   // .from(x => ({ success: true, value: x + 'from1 ' }))
+  //   // .to(x => ({ success: true, value: x + 'to3 ' }))
+  //   // .from(x => ({ success: true, value: x + 'from2 ' }))
+  //   // .to(x => ({ success: true, value: x + 'to4 ' }))
+  //   // .from(x => ({ success: true, value: x + 'from3 ' }));
+
+  //   const result = target.parse('24');
+
+  //   expect(result.success).toEqual(true);
+  //   if (result.success) {
+  //     expect(result.value).toEqual('24from3 from2 from1 to1 to2 to3 to4 ');
+  //   }
+  // });
+
+  // it('from() first then to() chains', () => {
+  //   const target = t.string
+  //     .to(x => ({ success: true, value: x + 'to1 ' }))
+  //     .to(x => ({ success: true, value: x + 'to2 ' }))
+  //     .from(x => ({ success: true, value: x + 'from1 ' }))
+  //     .to(x => ({ success: true, value: x + 'to3 ' }))
+  //     .from(x => ({ success: true, value: x + 'from2 ' }))
+  //     .to(x => ({ success: true, value: x + 'to4 ' }))
+  //     .from(x => ({ success: true, value: x + 'from3 ' }));
+
+  //   const result = target.parse('24');
+
+  //   expect(result.success).toEqual(true);
+  //   if (result.success) {
+  //     expect(result.value).toEqual('24from3 from2 from1 to1 to2 to3 to4 ');
+  //   }
+  // });
+
+  // it('complex chain', () => {
+  //   const target = t.string
+  //     // .to(x => ({ success: true, value: x + 'to1 ' }))
+  //     // .to(x => ({ success: true, value: x + 'to2 ' }))
+  //     // .from(x => ({ success: true, value: x + 'from1 ' }))
+  //     // .to(x => ({ success: true, value: x + 'to3 ' }))
+  //     // .from(x => ({ success: true, value: x + 'from2 ' }))
+  //     .to(t.number, parseNumber)
+  //     .from(x => {
+  //       console.log(x, typeof x);
+  //       return { success: true, value: x as string };
+  //     });
+
+  //   const result = target.parse('24');
+
+  //   expect(result.success).toEqual(true);
+  //   if (result.success) {
+  //     expect(result.value).toEqual('24from3 from2 from1 to1 to2 to3 to4 ');
+  //   }
+  // });
 
   const coerceToDate = (x: string | number | Date) => {
     const result = new Date(x);
-    return toParseResult<Date>(result, !isNaN(result.getTime()));
+    return !isNaN(result.getTime()) ? t.pass(result) : t.fail();
   };
 
   it('to() makes datelike easy', () => {
     const DateLike = t.union(t.number, t.string, t.date).to(t.date, coerceToDate);
 
+    type foo = (typeof DateLike)['kind'];
+    type DateLike = t.Infer<typeof DateLike>;
+    const assigned: DateLike = new Date();
     const result = DateLike.parse(1232131);
+    if (result.success) {
+      expect(result.value).toEqual(new Date(1232131));
+    }
+    type adfdaf = Date extends object ? true : false;
+    type adfdaf2 = Int16Array extends object ? true : false;
 
     expect(result.success).toEqual(true);
     if (result.success) {
@@ -119,8 +209,99 @@ describe('TypeConverter', () => {
     }
   });
 
-  it('from() makes datelike easy', () => {
-    const DateLike = t.date.from(t.union(t.number, t.string, t.date), coerceToDate);
+  it('to() basic objects', () => {
+    const Source = t.obj({ prop: t.string });
+    const target = Source.to(t.obj({ prop: t.number }), x => ({ success: true, value: { prop: Number(x.prop) } }));
+    const result = target.parse({ prop: '1243' });
+
+    const EnumTest = t.enumm('EnumTest', ['a', 'b', 'c']);
+    const enumResult = EnumTest.parse('a');
+    const enumToString = EnumTest.to(t.string, x => t.pass(x));
+    type enumToString = t.Infer<typeof enumToString>;
+
+    const ArrayTest = t.array(t.number);
+    type ArrayTest = t.Infer<typeof ArrayTest>;
+    const arrayToString = ArrayTest.to(t.string, x => t.pass(x.join(',')));
+    type arrayToString = t.Infer<typeof arrayToString>;
+    const arrayToStringResult = arrayToString.parse([1, 2, 3]);
+
+    expect(result.success).toEqual(true);
+    if (result.success) {
+      expect(result.value.prop).toEqual(1243);
+    }
+  });
+
+  it('to() stress test', () => {
+    class ADef {
+      self? = t.obj(ADef).opt();
+      literalProp = t.literal('hello').to(t.literal('world'), x => ({ success: true, value: 'world' as const }));
+      tupleProp = t
+        .tuple([t.string, t.string])
+        .to(t.tuple([t.string, t.number]), x => ({ success: true, value: [x[0], Number(x[1])] as const }));
+    }
+
+    const tupleTest = t
+      .tuple([t.string, t.string])
+      .to(t.tuple([t.string, t.number]), x => ({ success: true, value: [x[0], Number(x[1])] as const }));
+    const resultTuple = tupleTest.parse(['hello', '123']);
+    if (resultTuple.success) {
+      resultTuple.value;
+    }
+
+    const literalTest = t.literal('hello').to(t.literal('world'), x => ({ success: true, value: 'world' as const }));
+    const result = literalTest.parse('hello');
+    if (result.success) {
+      result.value;
+    }
+    const A = t.obj(ADef);
+    type A = t.Infer<typeof A>;
+    const target = A.to(t.obj({ prop: A }), x => ({ success: true, value: { prop: x } }));
+
+    type adfadgagdag = t.Infer<typeof target>;
+    const result2 = target.parse({
+      literalProp: 'world',
+      tupleProp: ['myString', 123],
+      self: { literalProp: 'world', tupleProp: ['someString', 2354] }
+    });
+
+    if (result2.success) {
+      result2.value.prop;
+      expect(result2.value.prop.self?.tupleProp[1]).toEqual(2354);
+    }
+    // const a: A = { self: {literalProp: 'world', } } } };
+
+    expect(A.shape.self.memberTypes[0]).toEqual(A);
+  });
+
+  it('to() allows self recursion', () => {
+    class ADef {
+      self? = t.obj(ADef).opt();
+    }
+
+    const A = t.obj(ADef);
+    type A = t.Infer<typeof A>;
+    const target = A.to(t.obj({ prop: A }), x => ({ success: true, value: { prop: x } }));
+
+    type adfadgagdag = t.Infer<typeof target>;
+    const result2 = target.parse({ self: {} });
+    if (result2.success) {
+      result2.value.prop;
+    }
+    const a: A = { self: { self: { self: { self: {} } } } };
+
+    expect(A.shape.self.memberTypes[0]).toEqual(A);
+
+    type ExpectedAShape = { self?: A };
+    expectTypesSupportAssignment<ExpectedAShape, A>();
+    expectTypesSupportAssignment<A, ExpectedAShape>();
+  });
+
+  it('feed() allows coercions', () => {
+    const AnotherDateLike = t.unknown.to(t.date); //, x => coerceToDate(x as any));
+    const DateLike = t.coerce(coerceToDate, t.date);
+
+    // const DateLike = t.date.from(t.union(t.number, t.string, t.date), coerceToDate);
+    // const DateLike2 = t.date.from(DateLike);
 
     const result = DateLike.parse(1232131);
 

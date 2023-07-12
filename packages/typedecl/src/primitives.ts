@@ -1,79 +1,90 @@
-import { createType, Typ, type ParseResult } from '.';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createType, fail, pass, Typ, type ParseResult } from '.';
 
-export class Primitive<TKind extends string, TType> extends Typ<TKind, TType> {
-  constructor(kind: TKind) {
-    super(kind, kind);
-  }
-}
-
-export class StringType extends Typ<'string', string> {
-  parseString(value: unknown) {
-    return toParseResult<string>(value, typeof value === 'string');
-  }
-
-  parse(value: unknown) {
-    return toParseResult<string>(value, typeof value === 'string');
-  }
-}
-
-export const string = new StringType('string', 'string');
-
-export class NumberType extends Typ<'number', number> {
-  parseString(value: string) {
-    const result = Number(value);
-    return toParseResult<number>(result, isNaN(result));
-  }
-
-  parse(value: unknown) {
-    return toParseResult<number>(value, typeof value === 'number');
-  }
-}
-
-export const number = new NumberType('number', 'number');
-
-export class BooleanType extends Typ<'boolean', boolean> {
-  parse(value: unknown) {
-    return toParseResult<boolean>(value, typeof value === 'boolean');
-  }
-}
-
-export const boolean = new BooleanType('boolean', 'boolean');
+//TODO: using this will avoid the need for passing kind twice
+// export class Primitive<TKind extends string, TType> extends Typ<TKind, TType> {
+//   constructor(kind: TKind) {
+//     super(kind, kind);
+//   }
+// }
 
 export class NullType extends Typ<'null', null> {
-  parse(value: unknown) {
-    return toParseResult<null>(value, value === null);
+  parse(value: null) {
+    return value === null ? pass(value) : fail();
   }
 }
 
 export const nul = new NullType('null', 'null');
 
 export class UndefinedType extends Typ<'undefined', undefined> {
-  parse(value: unknown) {
-    return toParseResult<undefined>(value, value === undefined);
+  parse(value: undefined) {
+    return value === undefined ? pass(value) : fail();
   }
 }
 
 export const undef = new UndefinedType('undefined', 'undefined');
 
-export class DateType extends Typ<'date', Date> {
-  parse(value: unknown) {
-    return toParseResult<Date>(value, value instanceof Date && !isNaN(value.getTime()));
-  }
-}
-
-export class AnyType extends Typ<'any', unknown> {
-  parse(value: unknown) {
+export class AnyType extends Typ<'any', any> {
+  parse(value: any) {
     return { success: true, value };
   }
 }
 
 export const any = new AnyType('any', 'any');
 
+export class UnknownType extends Typ<'unknown', unknown> {
+  parse(value: unknown) {
+    return { success: true, value };
+  }
+}
+
+export const unknown = new UnknownType('unknown', 'unknown');
+
+export const never = createType<'never', never>('never', 'never');
+
+export class StringType extends Typ<'string', string> {
+  parse(value: string) {
+    return typeof value === 'string' ? pass(value) : fail();    
+  }
+}
+
+export const string = new StringType('string', 'string');
+
+export class NumberType extends Typ<'number', number> {
+  // parseString(value: string) {
+  //   const result = Number(value);
+  //   return toParseResult<number>(result, isNaN(result));
+  // }
+
+  parse(value: number) {
+    return typeof value === 'number' ? pass(value) : fail();
+    // return toParseResult<number>(value, typeof value === 'number');
+  }
+}
+
+export const number = new NumberType('number', 'number');
+
+export class BooleanType extends Typ<'boolean', boolean> {
+  parse(value: boolean) {
+    return typeof value === 'boolean' ? pass(value) : fail();
+    // return toParseResult<boolean>(value, typeof value === 'boolean');
+  }
+}
+
+export const boolean = new BooleanType('boolean', 'boolean');
+
+export class DateType extends Typ<'date', Date> {
+  parse(value: Date) {
+    return value instanceof Date && !isNaN(value.getTime()) ? pass(value) : fail();
+  }
+}
+
 export const date = new DateType('date', 'date');
 
 export class BigIntType extends Typ<'bigint', bigint> {
-  parse(value: unknown) {
-    return toParseResult<Date>(value, typeof value === 'bigint');
+  parse(value: bigint) {
+    return typeof value === 'bigint' ? pass(value) : fail();
   }
 }
 
@@ -82,7 +93,6 @@ export const bigint = new BigIntType('bigint', 'bigint');
 // export const bigint = createType<'bigint', bigint>('bigint', 'bigint');
 // export const date = createType<'date', Date>('date', 'date');
 
-export const never = createType<'never', never>('never', 'never');
 // export const int8Array = createType<'int8Array', Int8Array>('int8Array', 'int8Array');
 // export const uint8Array = createType<'uint8Array', Uint8Array>('uint8Array', 'uint8Array');
 //prettier-ignore
@@ -96,9 +106,9 @@ export const never = createType<'never', never>('never', 'never');
 // export const float32Array = createType<'float32Array', Float32Array>('float32Array', 'float32Array');
 // export const float64Array = createType<'float64Array', Float64Array>('float64Array', 'float64Array');
 
-export function toParseResult<T>(value: unknown, success: boolean): ParseResult<T> {
-  return success ? { success, value: value as T } : { success };
-}
+// export function toParseResult<T>(value: unknown, success: boolean): ParseResult<T> {
+//   return success ? { success, value: value as T } : { success };
+// }
 
 // function CreateTyp<TKind extends string, TType>(kind: TKind, parse: (value: unknown) => ParseResult<TType>) {
 //   const theClass = class extends Typ<TKind, TType> {

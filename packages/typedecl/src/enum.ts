@@ -15,17 +15,23 @@ export function enumm<TEnumValues extends [TValue, ...TValue[]], TValue extends 
   return new EnumType(values, createMapOfTupleKeys(values), name);
 }
 
-export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> extends Typ<
-  'enum',
-  TupleKeysToUnion<TEnumValues>
-> {
+export class EnumType<
+  TEnumValues extends unknown[],
+  TMapOfEnumKeyToValue,
+  TInput = TupleKeysToUnion<TEnumValues>
+> extends Typ<'enum', TupleKeysToUnion<TEnumValues>> {
   enum: TMapOfEnumKeyToValue;
   //TODO: may want to turn array into a Set for efficiency?
   constructor(public values: TEnumValues, enumMap: TMapOfEnumKeyToValue, public name?: string) {
     super('enum', name);
     this.enum = enumMap;
   }
-  parse(value: unknown): ParseResult<TupleKeysToUnion<TEnumValues>> {
+
+  _withInput<TNewInput>(): EnumType<TEnumValues, TMapOfEnumKeyToValue, TNewInput> {
+    return undefined as any;
+  }
+
+  parse(value: TInput): ParseResult<TupleKeysToUnion<TEnumValues>> {
     for (const element of this.values) {
       if (value === element) {
         return { success: true, value: element as any };

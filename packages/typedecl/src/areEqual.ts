@@ -100,7 +100,7 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
       break;
     }
     case 'tuple': {
-      const aTyped = a as TupleType<Type<unknown, unknown>[]>;
+      const aTyped = a as TupleType<[Type<unknown, unknown>, ...Type<unknown, unknown>[]]>;
       const bTyped = b as typeof aTyped;
       const aElements = aTyped.elementTypes;
       const bElements = bTyped.elementTypes;

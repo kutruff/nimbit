@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/unbound-method */
@@ -46,8 +48,9 @@ export type ShapeDefinitionToObjType<T> = T extends Constructor
 export type TsType<T extends Type<unknown, unknown>> = T[typeof _type];
 export type Infer<T extends Type<unknown, unknown>> = Resolve<T[typeof _type]>;
 
-export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
+export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type<TKind, T> {
   [_type]!: T;
+
   constructor(public kind: TKind, public name?: string) {}
   opt() {
     //TODO: switch optional to be a union of undefined and the type
@@ -66,16 +69,17 @@ export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
     return union(this, undef, nul);
   }
 
-  parse(_value: unknown): ParseResult<unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  parse(value: TInput): ParseResult<T> {
     return { success: false };
   }
 
   where(predicate: (value: T) => boolean): typeof this {
-    const clone = cloneWithPrototype(this);
+    const clone = cloneObject(this);
     const originalParse = clone.parse;
-    clone.parse = function (value: unknown) {
-      const result = originalParse(value) as ParseResult<T>;
-      if (result.success && predicate.call(clone, result.value)) {
+    clone.parse = function (value: TInput) {
+      const result = originalParse(value);
+      if (result.success && predicate(result.value)) {
         return result;
       }
       return { success: false };
@@ -83,97 +87,67 @@ export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
     return clone;
   }
 
-  from<TSource extends Typ<unknown, TSrc>, TSrc>(source: TSource, converter?: TypeConverter<TSrc, T>): typeof this;
-  from(converter: TypeConverter<T, T>): typeof this;
-  from<TSource extends Typ<unknown, TSrc>, TSrc>(
-    source: TSource | TypeConverter<TSrc, T>,
-    converter?: TypeConverter<TSrc, T>
-  ): typeof this {
-    const clone = cloneWithPrototype(this);
-    const originalParse = clone.parse;
-
-    if (typeof source === 'function') {
-      clone.parse = function (value: unknown) {
-        const lastResult = source(value as TSrc);
-
-        if (lastResult.success) {
-          return originalParse(lastResult.value);
-        }
-
-        return { success: false };
-      };
-    } else {
-      clone.parse = function (value: unknown) {
-        let lastResult = source.parse(value);
-
-        if (lastResult.success) {
-          if (converter) {
-            lastResult = converter(value as TSrc);
-          }
-
-          if (lastResult.success) {
-            return originalParse(lastResult.value);
-          }
-        }
-        return { success: false };
-      };
-    }
-
-    return clone;
+  _withInput<TNewInput>(): Typ<TKind, T, TNewInput> {
+    return undefined as any;
   }
 
-  to<TDestination extends Typ<unknown, TDest>, TDest>(
-    destination: TDestination,
+  //TODO: benchmark cloning vs using a deep prototype chain that calls super.parse instead
+  to<TDestKind, TDest>(
+    destination: Typ<TDestKind, TDest, unknown>,
     converter?: TypeConverter<T, TDest>
-  ): TDestination;
-  to(converter: TypeConverter<T, T>): typeof this;
-  to<TDestination extends Typ<unknown, TDest>, TDest>(
-    destinationOrConverter: TDestination | TypeConverter<T, TDest>,
-    converter?: TypeConverter<T, TDest>
-  ): TDestination | typeof this {
-    if (typeof destinationOrConverter === 'function') {
-      const clone = cloneWithPrototype(this);
-      const destinationParse = clone.parse;
+  ): ReturnType<typeof destination._withInput<TInput>> {
+    const clone = cloneObject(destination);
+    const destinationParse = clone.parse.bind(clone);
+    const source = this;
+    clone.parse = function (value: TInput) {
+      const sourceResult = source.parse(value);
 
-      clone.parse = function (value: T) {
-        const lastResult = destinationOrConverter(value);
-
-        if (lastResult.success) {
-          return destinationParse(lastResult.value);
+      if (sourceResult.success) {
+        let value;
+        if (converter) {
+          const convertedResult = converter(sourceResult.value);
+          if (convertedResult.success) {
+            value = convertedResult.value;
+          } else {
+            return { success: false };
+          }
+        } else {
+          value = sourceResult.value;
         }
 
-        return { success: false };
-      };
-      return clone;
-    } else {
-      const clone = cloneWithPrototype(destinationOrConverter);
-      const destinationParse = clone.parse;
-      const source = this;
-      clone.parse = function (value: T) {
-        let lastResult = source.parse(value);
+        return destinationParse(value);
+      }
+      return { success: false };
+    };
 
-        if (lastResult.success) {
-          if (converter) {
-            lastResult = converter(value);
-          }
-
-          if (lastResult.success) {
-            return destinationParse(lastResult.value);
-          }
-        }
-        return { success: false };
-      };
-      return clone;
-    }
+    return clone as any;
   }
+}
+
+export function coerce<TDestKind, TDest, TSourceInput>(
+  converter: TypeConverter<TSourceInput, TDest>,
+  destination: Typ<TDestKind, TDest, unknown>
+): ReturnType<typeof destination._withInput<TSourceInput>> {
+  const clone = cloneObject(destination);
+  const originalParse = clone.parse.bind(clone);
+
+  clone.parse = function (value: TSourceInput) {
+    const lastResult = converter(value);
+
+    if (lastResult.success) {
+      return originalParse(lastResult.value);
+    }
+    return fail();
+  };
+  return clone;
 }
 
 //TODO: audit for any form of of prototype poisoning.
-function cloneWithPrototype<T>(obj: T) {
+function cloneObject<T>(obj: T) {
   return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) as T;
 }
 
-export type ParseResult<T> = { success: true; value: T } | { success: false };
+export type ParseResult<T> = { success: true; value: T } | { success: false; error?: string };
 
 //TODO: remove
 export const createType = <TKind, T>(kind: TKind, name: string) => new Typ<TKind, T>(kind, name);

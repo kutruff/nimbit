@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -6,16 +7,20 @@ import { Typ, type ParseResult, type TsType, type Type } from '.';
 
 export function array<TElement extends Type<unknown, unknown>>(
   element: TElement
-): ArrayType<TElement, Array<TsType<TElement>>> {
-  return new ArrayType<TElement, Array<TsType<TElement>>>(element);
+): ArrayType<TElement, Array<TsType<TElement>>, Array<TsType<TElement>>> {
+  return new ArrayType<TElement, Array<TsType<TElement>>, Array<TsType<TElement>>>(element);
 }
 
-export class ArrayType<TElement, T> extends Typ<'array', T> {
+export class ArrayType<TElement, T, TInput = unknown> extends Typ<'array', T, TInput> {
   constructor(public elementType: TElement, public name?: string) {
     super('array', name);
   }
 
-  parse(value: unknown): ParseResult<Array<T>> {
+  _withInput<TNewInput>(): ArrayType<TElement, T, TNewInput> {
+    return undefined as any;
+  }
+
+  parse(value: TInput): ParseResult<T> {
     if (!Array.isArray(value)) {
       return { success: false };
     }
@@ -28,6 +33,6 @@ export class ArrayType<TElement, T> extends Typ<'array', T> {
       }
       parsedArray.push(result.value);
     }
-    return { success: true, value: parsedArray };
+    return { success: true, value: parsedArray as T };
   }
 }

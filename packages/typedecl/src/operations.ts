@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {
   areEqual,
   never,
@@ -25,14 +24,10 @@ export type ObjIntersection<TObjA extends ObjType<unknown, unknown>, TObjB exten
   TObjA[typeof _type] & TObjB[typeof _type]
 >;
 
-export function intersection<TShapeA, TsTypeA, TShapeB, TsTypeB>(
+export function merge<TShapeA, TsTypeA, TShapeB, TsTypeB>(
   objectTypeA: ObjType<TShapeA, TsTypeA>,
   objectTypeB: ObjType<TShapeB, TsTypeB>
 ): ObjIntersection<typeof objectTypeA, typeof objectTypeB> {
-  // ObjType<
-  //   (typeof objectTypeA)['shape'] & (typeof objectTypeB)['shape'],
-  //   (typeof objectTypeA)[typeof _type] & (typeof objectTypeB)[typeof _type]
-  // >
   const merged = {} as Shape;
 
   const shapeA = objectTypeA.shape as Shape;
@@ -51,7 +46,7 @@ export function intersection<TShapeA, TsTypeA, TShapeB, TsTypeB>(
     } else if (propertyA != null && propertyB != null) {
       if (propertyA.kind === 'any') {
         merged[key] = propertyB;
-      } else if (propertyA.kind === 'any') {
+      } else if (propertyB.kind === 'any') {
         merged[key] = propertyA;
       } else {
         switch (propertyA.kind) {
@@ -60,13 +55,13 @@ export function intersection<TShapeA, TsTypeA, TShapeB, TsTypeB>(
               return never as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
             }
 
-            merged[key] = intersection(propertyA as any, propertyB as any) as any;
+            merged[key] = merge(propertyA as any, propertyB as any) as any;
             break;
           }
           default: {
             //TODO: what happens with optional and readonly props?
             if (areEqual(propertyA, propertyB)) {
-              merged[key] = propertyA;
+              merged[key] = propertyB;
             } else {
               return never as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
             }
@@ -77,15 +72,8 @@ export function intersection<TShapeA, TsTypeA, TShapeB, TsTypeB>(
     }
   }
 
-  const result = obj(merged);
-  return result as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
+  return obj(merged) as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
 }
-
-// export type PartialType<T> = {
-//   [P in keyof T]: T[P] extends infer T extends Type<unknown, unknown>
-//     ? UnionType<FlattenedUnion<T | typeof undef>, TsType<T | typeof undef>>
-//     : T[P];
-// };
 
 export type PartialType<T> = {
   [P in keyof T]: T[P] extends Type<unknown, unknown>
@@ -108,10 +96,6 @@ export function partial<TShape, T>(
 type RemoveUnionUndef<T> = T extends UnionType<infer U, unknown>
   ? UnionType<FlattenedUnion<Exclude<U, typeof undef>>, ToTsTypes<Exclude<U, typeof undef>>>
   : T;
-
-// export type RequiredType<T> = {
-//   [P in keyof T]: T[P] extends Prop<infer T, true, infer R> ? Prop<RemoveUnionUndef<T>, false, R> : T[P];
-// };
 
 export type RequiredType<T> = {
   [P in keyof T]: RemoveUnionUndef<T[P]>;
@@ -195,11 +179,6 @@ export function exclude<TMemberTypes extends Type, T, K extends Type[]>(
   ...types: K
 ) {
   const result = { ...unionType, memberTypes: unionType.memberTypes.filter(x => !types.find(k => areEqual(x, k))) };
-
-  // if (result.memberTypes.length === 0) {
-  //   return never;
-  // }
-
   return union(result as UnionType<Exclude<TMemberTypes, ElementType<K>>, Exclude<T, TsType<ElementType<K>>>>);
 }
 
@@ -208,10 +187,5 @@ export function extract<TMemberTypes extends Type, T, K extends Type[]>(
   ...keys: K
 ) {
   const result = { ...unionType, memberTypes: unionType.memberTypes.filter(x => keys.find(k => areEqual(x, k))) };
-
-  // if (result.memberTypes.length === 0) {
-  //   return never;
-  // }
-
   return union(result as UnionType<Extract<TMemberTypes, ElementType<K>>, Extract<T, TsType<ElementType<K>>>>);
 }
