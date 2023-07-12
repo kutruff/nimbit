@@ -1,4 +1,5 @@
 import * as t from '.';
+import { pass } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('TypeConverter', () => {
@@ -46,10 +47,10 @@ describe('TypeConverter', () => {
     }
   });
 
-  // function parseNumber(x: unknown) {
-  //   const result = Number(x);
-  //   return toParseResult<number>(result, !isNaN(result));
-  // }
+  function parseNumber(x: unknown) {
+    const result = Number(x);
+    return !isNaN(result) ? t.pass(result) : t.fail();
+  }
 
   // it('from() works', () => {
   //   const target = t.number.from(parseNumber);
@@ -211,7 +212,7 @@ describe('TypeConverter', () => {
 
   it('to() basic objects', () => {
     const Source = t.obj({ prop: t.string });
-    const target = Source.to(t.obj({ prop: t.number }), x => ({ success: true, value: { prop: Number(x.prop) } }));
+    const target = Source.to(t.obj({ prop: t.number }), x => pass({ prop: Number(x.prop) }));
     const result = target.parse({ prop: '1243' });
 
     const EnumTest = t.enumm('EnumTest', ['a', 'b', 'c']);
@@ -234,28 +235,28 @@ describe('TypeConverter', () => {
   it('to() stress test', () => {
     class ADef {
       self? = t.obj(ADef).opt();
-      literalProp = t.literal('hello').to(t.literal('world'), x => ({ success: true, value: 'world' as const }));
+      literalProp = t.literal('hello').to(t.literal('world'), x => pass('world' as const));
       tupleProp = t
         .tuple([t.string, t.string])
-        .to(t.tuple([t.string, t.number]), x => ({ success: true, value: [x[0], Number(x[1])] as const }));
+        .to(t.tuple([t.string, t.number]), x => pass([x[0], Number(x[1])] as const));
     }
 
     const tupleTest = t
       .tuple([t.string, t.string])
-      .to(t.tuple([t.string, t.number]), x => ({ success: true, value: [x[0], Number(x[1])] as const }));
+      .to(t.tuple([t.string, t.number]), x => pass([x[0], Number(x[1])] as const));
     const resultTuple = tupleTest.parse(['hello', '123']);
     if (resultTuple.success) {
       resultTuple.value;
     }
 
-    const literalTest = t.literal('hello').to(t.literal('world'), x => ({ success: true, value: 'world' as const }));
+    const literalTest = t.literal('hello').to(t.literal('world'), x => pass('world' as const));
     const result = literalTest.parse('hello');
     if (result.success) {
       result.value;
     }
     const A = t.obj(ADef);
     type A = t.Infer<typeof A>;
-    const target = A.to(t.obj({ prop: A }), x => ({ success: true, value: { prop: x } }));
+    const target = A.to(t.obj({ prop: A }), x => pass({ prop: x }));
 
     type adfadgagdag = t.Infer<typeof target>;
     const result2 = target.parse({
@@ -280,7 +281,7 @@ describe('TypeConverter', () => {
 
     const A = t.obj(ADef);
     type A = t.Infer<typeof A>;
-    const target = A.to(t.obj({ prop: A }), x => ({ success: true, value: { prop: x } }));
+    const target = A.to(t.obj({ prop: A }), x => pass({ prop: x }));
 
     type adfadgagdag = t.Infer<typeof target>;
     const result2 = target.parse({ self: {} });

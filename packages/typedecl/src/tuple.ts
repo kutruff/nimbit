@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Typ, type InferTupleKeys, type ParseResult, type Type } from '.';
+import { fail, pass, Typ, type InferTupleKeys, type ParseResult, type Type } from '.';
 
 export class TupleType<
   TElements extends readonly [Type<unknown, unknown>, ...Type<unknown, unknown>[]],
@@ -18,7 +18,7 @@ export class TupleType<
 
   parse(value: TInput): ParseResult<InferTupleKeys<TElements, []>> {
     if (!Array.isArray(value) || value.length !== this.elementTypes.length) {
-      return { success: false };
+      return fail();
     }
     const valueAsArray = value as unknown[];
     const parsedTuple = [];
@@ -28,12 +28,12 @@ export class TupleType<
       const result = (this.elementTypes[i] as any).parse(valueAsArray[i]);
 
       if (!result.success) {
-        return { success: false };
+        return fail();
       }
       parsedTuple[i] = result.value;
     }
 
-    return { success: true, value: parsedTuple as any };
+    return pass(parsedTuple as any);
   }
 }
 

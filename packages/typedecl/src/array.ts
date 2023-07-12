@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Typ, type ParseResult, type TsType, type Type } from '.';
+import { pass, Typ, type ParseResult, type TsType, type Type } from '.';
 
 export function array<TElement extends Type<unknown, unknown>>(
   element: TElement
@@ -22,17 +22,17 @@ export class ArrayType<TElement, T, TInput = unknown> extends Typ<'array', T, TI
 
   parse(value: TInput): ParseResult<T> {
     if (!Array.isArray(value)) {
-      return { success: false };
+      return fail();
     }
     const valueAsArray = value as unknown[];
     const parsedArray = [];
     for (const element of valueAsArray) {
       const result = (this.elementType as any).parse(element);
       if (!result.success) {
-        return { success: false };
+        return fail();
       }
       parsedArray.push(result.value);
     }
-    return { success: true, value: parsedArray as T };
+    return pass(parsedArray as T);
   }
 }

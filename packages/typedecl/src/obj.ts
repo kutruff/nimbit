@@ -4,9 +4,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   exclude,
+  fail,
   getKeys,
   keyMap,
   nul,
+  pass,
   Typ,
   undef,
   union,
@@ -70,50 +72,6 @@ export class ObjType<TShape, T, TInput = T> extends Typ<'object', T, TInput> {
     }
     return pass(result);
   }
-
-  // to<TDestType, TDest>(
-  //   destination: Typ<TDestType, TDest>,
-  //   converter?: TypeConverter<T, TDest>
-  // ): Typ<TDestType, TDest, TInput> {
-  //   const clone = cloneObject(destination);
-  //   const destinationParse = clone.parse;
-  //   const source = this;
-  //   clone.parse = function (value: TInput) {
-  //     const sourceResult = source.parse(value);
-
-  //     if (sourceResult.success) {
-  //       let value;
-  //       if (converter) {
-  //         const convertedResult = converter(sourceResult.value);
-  //         if (convertedResult.success) {
-  //           value = convertedResult.value;
-  //         } else {
-  //           return { success: false };
-  //         }
-  //       } else {
-  //         value = sourceResult.value;
-  //       }
-
-  //       return destinationParse(value);
-  //     }
-  //     return { success: false };
-  //   };
-  //   return clone;
-  // }
-}
-
-// export function toResult(success: false): { success: false };
-// export function toResult<T>(success: true, value: T): { success: true; value: T };
-// export function toResult<T>(success: boolean, value?: T): ParseResult<T> {
-//   return success ? { success: true, value: value as any } : { success: false };
-// }
-
-export function pass<T>(value: T): ParseResult<T> {
-  return { success: true as const, value };
-}
-
-export function fail(error?: string) {
-  return { success: false as const, error };
 }
 
 const constructorsToObj = new WeakMap();

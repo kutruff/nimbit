@@ -1,6 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   createMapOfTupleKeys,
+  fail,
+  pass,
   Typ,
   type MapOfTupleKeys,
   type ParseResult,
@@ -34,9 +36,9 @@ export class EnumType<
   parse(value: TInput): ParseResult<TupleKeysToUnion<TEnumValues>> {
     for (const element of this.values) {
       if (value === element) {
-        return { success: true, value: element as any };
+        return pass(element as any);
       }
     }
-    return { success: false };
+    return fail();
   }
 }

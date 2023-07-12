@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createType, fail, pass, Typ, type ParseResult } from '.';
+import { createType, fail, pass, Typ } from '.';
 
 //TODO: using this will avoid the need for passing kind twice
 // export class Primitive<TKind extends string, TType> extends Typ<TKind, TType> {
@@ -27,7 +26,7 @@ export const undef = new UndefinedType('undefined', 'undefined');
 
 export class AnyType extends Typ<'any', any> {
   parse(value: any) {
-    return { success: true, value };
+    return pass(value);
   }
 }
 
@@ -35,7 +34,7 @@ export const any = new AnyType('any', 'any');
 
 export class UnknownType extends Typ<'unknown', unknown> {
   parse(value: unknown) {
-    return { success: true, value };
+    return pass(value);
   }
 }
 
@@ -45,21 +44,15 @@ export const never = createType<'never', never>('never', 'never');
 
 export class StringType extends Typ<'string', string> {
   parse(value: string) {
-    return typeof value === 'string' ? pass(value) : fail();    
+    return typeof value === 'string' ? pass(value) : fail();
   }
 }
 
 export const string = new StringType('string', 'string');
 
 export class NumberType extends Typ<'number', number> {
-  // parseString(value: string) {
-  //   const result = Number(value);
-  //   return toParseResult<number>(result, isNaN(result));
-  // }
-
   parse(value: number) {
     return typeof value === 'number' ? pass(value) : fail();
-    // return toParseResult<number>(value, typeof value === 'number');
   }
 }
 
@@ -68,7 +61,6 @@ export const number = new NumberType('number', 'number');
 export class BooleanType extends Typ<'boolean', boolean> {
   parse(value: boolean) {
     return typeof value === 'boolean' ? pass(value) : fail();
-    // return toParseResult<boolean>(value, typeof value === 'boolean');
   }
 }
 

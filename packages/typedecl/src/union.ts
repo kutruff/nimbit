@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
+  fail,
   Typ,
   type _type,
   type ElementType,
@@ -34,7 +35,7 @@ export class UnionType<TMembers extends Type<unknown, unknown>, T, TInput = T>
       }
       // failedResults.push(result);
     }
-    return { success: false };
+    return fail();
   }
 }
 

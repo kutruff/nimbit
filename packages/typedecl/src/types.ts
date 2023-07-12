@@ -2,14 +2,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/unbound-method */
+
 import {
+  fail,
   nul,
   undef,
   union,
   type Constructor,
   type MakeUndefinedOptional,
   type ObjType,
+  type ParseResult,
   type Resolve,
   type TypeConverter
 } from '.';
@@ -71,7 +73,7 @@ export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   parse(value: TInput): ParseResult<T> {
-    return { success: false };
+    return fail();
   }
 
   where(predicate: (value: T) => boolean): typeof this {
@@ -82,7 +84,7 @@ export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type
       if (result.success && predicate(result.value)) {
         return result;
       }
-      return { success: false };
+      return fail();
     };
     return clone;
   }
@@ -109,7 +111,7 @@ export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type
           if (convertedResult.success) {
             value = convertedResult.value;
           } else {
-            return { success: false };
+            return fail();
           }
         } else {
           value = sourceResult.value;
@@ -117,7 +119,7 @@ export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type
 
         return destinationParse(value);
       }
-      return { success: false };
+      return fail();
     };
 
     return clone as any;
@@ -146,8 +148,6 @@ export function coerce<TDestKind, TDest, TSourceInput>(
 function cloneObject<T>(obj: T) {
   return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) as T;
 }
-
-export type ParseResult<T> = { success: true; value: T } | { success: false; error?: string };
 
 //TODO: remove
 export const createType = <TKind, T>(kind: TKind, name: string) => new Typ<TKind, T>(kind, name);
