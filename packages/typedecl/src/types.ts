@@ -76,7 +76,7 @@ export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type
 
   where(predicate: (value: T) => boolean): typeof this {
     const clone = cloneObject(this);
-    const originalParse = clone.parse;
+    const originalParse = clone.parse.bind(clone);
     clone.parse = function (value: TInput) {
       const result = originalParse(value);
       if (result.success && predicate(result.value)) {
