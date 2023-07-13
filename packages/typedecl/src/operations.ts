@@ -24,7 +24,7 @@ export type ObjIntersection<TObjA extends ObjType<unknown, unknown>, TObjB exten
   TObjA[typeof _type] & TObjB[typeof _type]
 >;
 
-export function merge<TShapeA, TsTypeA, TShapeB, TsTypeB>(
+export function intersection<TShapeA, TsTypeA, TShapeB, TsTypeB>(
   objectTypeA: ObjType<TShapeA, TsTypeA>,
   objectTypeB: ObjType<TShapeB, TsTypeB>
 ): ObjIntersection<typeof objectTypeA, typeof objectTypeB> {
@@ -55,7 +55,7 @@ export function merge<TShapeA, TsTypeA, TShapeB, TsTypeB>(
               return never as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
             }
 
-            merged[key] = merge(propertyA as any, propertyB as any) as any;
+            merged[key] = intersection(propertyA as any, propertyB as any) as any;
             break;
           }
           default: {

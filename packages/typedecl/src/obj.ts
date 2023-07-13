@@ -22,7 +22,7 @@ export class ObjType<TShape, T, TInput = T> extends Typ<'object', T, TInput> {
   constructor(public shape: TShape, public k: ObjectKeyMap<TShape>, public name?: string, public strict?: boolean) {
     super('object', name);
   }
-
+  
   parse(value: TInput, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
     if (typeof value !== 'object' || Array.isArray(value) || value === null) {
       return fail();

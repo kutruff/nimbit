@@ -351,7 +351,27 @@ describe('obj()', () => {
       expectTypesSupportAssignment<IA, A>();
     });
   });
+  describe('default()', () => {
+    it('returns default when undefined', () => {
+      const target = t.string.default('hello');
+      const result = target.parse(undefined);
 
+      expect(result.success).toEqual(true);
+      if (result.success) {
+        expect(result.value).toEqual('hello');
+      }
+    });
+
+    it('returns parsed value when not undefined', () => {
+      const target = t.string.default('world');
+      const result = target.parse('hello');
+
+      expect(result.success).toEqual(true);
+      if (result.success) {
+        expect(result.value).toEqual('hello');
+      }
+    });
+  });
   describe('stress tests', () => {
     it('can handle a very complex object hierarchy with optionals', () => {
       const C = t.obj({ prop0: t.boolean, distinctProp: t.number });

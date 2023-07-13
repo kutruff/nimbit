@@ -89,15 +89,21 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
     return fail();
   }
 
+  default(defaultValue: T): typeof this & Parser<TInput | undefined, T> {
+    const clone = cloneObject(this);
+    const originalParse = clone.parse.bind(clone);
+    clone.parse = function (value: TInput | undefined, opts = Typ.defaultOpts) {
+      return value === undefined ? pass(defaultValue as any) : originalParse(value, opts);
+    };
+    return clone;
+  }
+
   where(predicate: (value: T) => boolean): typeof this {
     const clone = cloneObject(this);
     const originalParse = clone.parse.bind(clone);
     clone.parse = function (value: TInput, opts = Typ.defaultOpts) {
       const result = originalParse(value, opts);
-      if (result.success && predicate(result.value)) {
-        return result;
-      }
-      return fail();
+      return result.success && predicate(result.value) ? result : fail();
     };
     return clone;
   }
@@ -115,23 +121,15 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
     const source = this;
     clone.parse = function (value: TInput, opts: ParseOptions = Typ.defaultOpts) {
       const sourceResult = source.parse(value, opts);
-
-      if (sourceResult.success) {
-        let value;
-        if (converter) {
-          const convertedResult = converter(sourceResult.value, opts);
-          if (convertedResult.success) {
-            value = convertedResult.value;
-          } else {
-            return fail();
-          }
-        } else {
-          value = sourceResult.value;
-        }
-
-        return destinationParse(value, opts);
+      if (!sourceResult.success) {
+        return sourceResult;
       }
-      return fail();
+
+      if (converter) {
+        const convertedResult = converter(sourceResult.value, opts);
+        return convertedResult.success ? destinationParse(convertedResult.value, opts) : convertedResult;
+      }
+      return destinationParse(sourceResult.value, opts);
     };
 
     return clone;
@@ -147,11 +145,7 @@ export function coerce<TDestination extends Typ<unknown, unknown, unknown>, TSou
 
   clone.parse = function (value: TSourceInput, opts = Typ.defaultOpts) {
     const lastResult = converter(value, opts);
-
-    if (lastResult.success) {
-      return originalParse(lastResult.value, opts);
-    }
-    return fail();
+    return lastResult.success ? originalParse(lastResult.value, opts) : lastResult;
   };
   return clone;
 }

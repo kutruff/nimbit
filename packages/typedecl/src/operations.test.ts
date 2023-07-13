@@ -7,7 +7,7 @@ describe('Type operations', () => {
     it('objects with distinct properties are merged', () => {
       const objA = t.obj({ propA: t.string });
       const objB = t.obj({ propB: t.number });
-      const result = t.merge(objA, objB);
+      const result = t.intersection(objA, objB);
       type result = t.Resolve<typeof result>;
       const ExpectedDefinitionType = t.obj({
         propA: t.string,
@@ -44,10 +44,10 @@ describe('Type operations', () => {
         type res = Merged['prop'];
         const objA = t.obj({ prop: t.any });
         const objB = t.obj({ prop: t.number });
-        const resultAB = t.merge(objA, objB);
+        const resultAB = t.intersection(objA, objB);
         expect(resultAB.shape.prop).toEqual(objB.shape.prop);
 
-        const resultBA = t.merge(objA, objB);
+        const resultBA = t.intersection(objA, objB);
         expect(resultBA.shape.prop).toEqual(objB.shape.prop);
       });
     });
@@ -91,7 +91,7 @@ describe('Type operations', () => {
         const ObjB = t.obj({ x: ObjE });
         const ObjC = t.obj({ x: ObjF });
 
-        const ObjABC = t.merge(t.merge(ObjA, ObjB), ObjC);
+        const ObjABC = t.intersection(t.intersection(ObjA, ObjB), ObjC);
         type ObjABC = t.Infer<typeof ObjABC>;
         const resultInstance: ObjABC = { x: { prop0: true, distinctProp: 1 } };
 
@@ -136,12 +136,12 @@ describe('Type operations', () => {
         const ObjA = t.obj({ x: ObjC });
         const ObjB = t.obj({ x: ObjD });
 
-        const ObjAB = t.merge(ObjA, ObjB);
+        const ObjAB = t.intersection(ObjA, ObjB);
         type ObjAB = t.Infer<typeof ObjAB>;
 
         const resultInstanceAB: ObjAB = { x: { prop0: true, distinctProp: 'what' } };
 
-        const ObjCD = t.merge(ObjC, ObjD);
+        const ObjCD = t.intersection(ObjC, ObjD);
         type ObjCD = t.Infer<typeof ObjCD>;
         const resultInstanceCD: ObjCD = { prop0: true, distinctProp: 'what' };
 
@@ -201,7 +201,7 @@ describe('Type operations', () => {
         const ObjA = t.obj({ x: ObjC });
         const ObjB = t.obj({ x: ObjD });
 
-        const ObjAB = t.merge(ObjA, ObjB);
+        const ObjAB = t.intersection(ObjA, ObjB);
         type ObjAB = t.Infer<typeof ObjAB>;
 
         //Should not compile:
@@ -528,7 +528,7 @@ describe('Type operations', () => {
       type ACons = typeof A;
       type A = t.Infer<ACons>;
       const result = t.pick(
-        t.omit(t.merge(A, t.omit(C, C.k.distinctProp)), A.k.propNumberLiteral),
+        t.omit(t.intersection(A, t.omit(C, C.k.distinctProp)), A.k.propNumberLiteral),
         'propRecursive',
         'propNum',
         'self'
