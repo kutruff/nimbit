@@ -404,7 +404,7 @@ describe('TypeConverter', () => {
 
   it('feed() allows coercions', () => {
     const AnotherDateLike = t.unknown.to(t.date); //, x => coerceToDate(x as any));
-    const DateLike = t.coercion(t.date, coerceToDate);
+    const DateLike = t.coerce(t.date, coerceToDate);
 
     // const DateLike = t.date.from(t.union(t.number, t.string, t.date), coerceToDate);
     // const DateLike2 = t.date.from(DateLike);

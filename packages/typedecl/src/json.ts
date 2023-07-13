@@ -1,7 +1,7 @@
 import {
   array,
   boolean,
-  coercion,
+  coerce,
   fail,
   nul,
   number,
@@ -18,12 +18,12 @@ const anyObject = obj({}, undefined, false);
 const jsonOutput = union(anyObject, array(unknown), string, number, boolean, nul);
 export type json = Infer<typeof jsonOutput>;
 
-export const json = coercion(jsonOutput, jsonParse);
+export const json = coerce(jsonOutput, jsonParse);
 
 export function jsonParse(value: string): ParseResult<json> {
   try {
     return pass(JSON.parse(value));
-  } catch (err) {    
+  } catch (err) {
     return fail();
   }
 }

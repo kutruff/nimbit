@@ -8,6 +8,7 @@
 import {
   fail,
   nul,
+  pass,
   undef,
   union,
   type Constructor,
@@ -36,6 +37,7 @@ export interface Type<TKind = unknown, T = unknown> {
   //TODO: Should the name be an array and support namespaces?
   name?: string;
 }
+
 export interface Shape {
   [key: string]: Type<unknown, unknown>;
 }
@@ -100,8 +102,8 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
     return clone;
   }
 
-  as(converter: TypeConverter<T, T>): typeof this {
-    return this.to(this, converter);
+  tweak(transformer: (value: T) => T): typeof this {
+    return this.to(this, x => pass(transformer(x)));
   }
 
   to<TDestination extends Typ<unknown, unknown, unknown>>(
@@ -136,7 +138,7 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
   }
 }
 
-export function coercion<TDestination extends Typ<unknown, unknown, unknown>, TSourceInput>(
+export function coerce<TDestination extends Typ<unknown, unknown, unknown>, TSourceInput>(
   destination: TDestination,
   converter: TypeConverter<TSourceInput, TsType<TDestination>>
 ): TDestination & Parser<TSourceInput, TsType<TDestination>> {
