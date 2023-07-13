@@ -7,7 +7,7 @@ describe('obj()', () => {
   it('compiles with round trips between definition and TypeScript types', () => {
     const Person = t.obj({
       name: t.string,
-      age: t.number.opt(),
+      age: t.number.opt,
       isActive: t.boolean
     });
     type PersonTwo = t.Infer<typeof Person>;
@@ -24,7 +24,7 @@ describe('obj()', () => {
       kind: 'object',
       shape: {
         name: t.string,
-        age: t.number.opt(),
+        age: t.number.opt,
         isActive: t.boolean
       },
       k: {
@@ -129,7 +129,7 @@ describe('obj()', () => {
       name: t.string,
       age: t.number,
       isActive: t.boolean,
-      optProp: t.string.opt()
+      optProp: t.string.opt
     });
 
     const Address = t.obj({
@@ -170,7 +170,7 @@ describe('obj()', () => {
 
   it('allows self recursion', () => {
     class ADef {
-      self? = t.obj(ADef).opt();
+      self? = t.obj(ADef).opt;
     }
 
     const A = t.obj(ADef);
@@ -202,7 +202,7 @@ describe('obj()', () => {
 
   it('allows mutual recursion', () => {
     class ADef {
-      b? = t.obj(BDef).opt();
+      b? = t.obj(BDef).opt;
       strProp = t.string;
     }
 
@@ -230,8 +230,8 @@ describe('obj()', () => {
 
   it('supports self references with arrays', () => {
     class ADef {
-      children? = t.array(t.obj(ADef)).opt();
-      self? = t.obj(ADef).opt();
+      children? = t.array(t.obj(ADef)).opt;
+      self? = t.obj(ADef).opt;
     }
 
     const A = t.obj(ADef);
@@ -248,8 +248,8 @@ describe('obj()', () => {
 
   it('supports self references with tuples', () => {
     class ADef {
-      children? = t.tuple([t.obj(ADef), t.obj(ADef)]).opt();
-      self? = t.obj(ADef).opt();
+      children? = t.tuple([t.obj(ADef), t.obj(ADef)]).opt;
+      self? = t.obj(ADef).opt;
     }
 
     const A = t.obj(ADef);
@@ -268,7 +268,7 @@ describe('obj()', () => {
 
   describe('property modifiers', () => {
     it('makes optional property defintions into optional TS properties', () => {
-      const target = t.obj({ prop: t.string.opt() });
+      const target = t.obj({ prop: t.string.opt });
 
       type Target = t.Infer<typeof target>;
 
@@ -308,16 +308,14 @@ describe('obj()', () => {
   describe('fluent interface', () => {
     it('optN()', () => {
       const target = t.obj({
-        propOpt: t.string.opt(),
-        propOptN: t.string.optNul(),
-        propNullish: t.string.nullish(),
-        propNullishOpt: t.string.nullish().opt(),
-        propComplicatedOpt: t.union(t.string).nullish().opt()
+        propOpt: t.string.opt,
+        propNullish: t.string.nullish,
+        propNullishOpt: t.string.nullish.opt,
+        propComplicatedOpt: t.union(t.string).nullish.opt
       });
       type Target = t.Infer<typeof target>;
       const ExpectedResult = t.obj({
         propOpt: t.union(t.string, t.undef),
-        propOptN: t.union(t.string, t.undef, t.nul),
         propNullish: t.union(t.string, t.undef, t.nul),
         propNullishOpt: t.union(t.string, t.undef, t.nul),
         propComplicatedOpt: t.union(t.string, t.undef, t.nul)
@@ -332,11 +330,9 @@ describe('obj()', () => {
     it('handles optional property hierarchies', () => {
       const ObjA = t.obj({
         name: t.string,
-        child: t
-          .obj({
-            childProp: t.string.opt()
-          })
-          .opt()
+        child: t.obj({
+          childProp: t.string.opt
+        }).opt
       });
 
       type A = t.Infer<typeof ObjA>;
@@ -388,7 +384,7 @@ describe('obj()', () => {
         propNumberLiteral = t.literal(1);
         propUnion = t.union(t.number, t.bigint, C, B);
         propB = B;
-        propC? = C.opt();
+        propC? = C.opt;
       }
       const A = t.obj(ADef);
       type A = t.Infer<typeof A>;

@@ -41,7 +41,7 @@ describe('Type equality', () => {
       [t.tuple([t.number, t.string]), t.tuple([t.number, t.string]), true],
       [t.tuple([t.string, t.number]), t.tuple([t.number, t.string]), false],
       [t.tuple([t.obj({ a: t.number }), t.number]), t.tuple([t.obj({ a: t.number }), t.number]), true],
-      [t.obj({ p0: t.string }), t.obj({ p0: t.string.opt() }), false],
+      [t.obj({ p0: t.string }), t.obj({ p0: t.string.opt }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.string }), true],
       [t.obj({ p0: t.string }), t.obj({ p1: t.string }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.boolean }), false],

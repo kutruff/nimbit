@@ -321,7 +321,7 @@ describe('TypeConverter', () => {
 
     const singleStringUnion = t.union(t.string, t.number);
 
-    const opted = singleStringUnion.opt();
+    const opted = singleStringUnion.opt;
 
     const stringToUnion = t.string.to(singleStringUnion);
     type stringToUnion = t.Infer<typeof stringToUnion>;
@@ -347,7 +347,7 @@ describe('TypeConverter', () => {
 
   it('to() stress test', () => {
     class ADef {
-      self? = t.obj(ADef).opt();
+      self? = t.obj(ADef).opt;
       literalProp = t.literal('hello').to(t.literal('world'), x => pass('world' as const));
       tupleProp = t
         .tuple([t.string, t.string])
@@ -381,7 +381,7 @@ describe('TypeConverter', () => {
 
   it('to() allows self recursion', () => {
     class ADef {
-      self? = t.obj(ADef).opt();
+      self? = t.obj(ADef).opt;
     }
 
     const A = t.obj(ADef);
@@ -420,10 +420,7 @@ describe('TypeConverter', () => {
   it('where() works with recursive types', () => {
     class ADef {
       prop = t.string;
-      self? = t
-        .obj(ADef)
-        .where(x => x.prop !== '')
-        .opt();
+      self? = t.obj(ADef).where(x => x.prop !== '').opt;
     }
 
     const A = t.obj(ADef, 'A');

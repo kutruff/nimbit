@@ -19,7 +19,7 @@ describe('experiments', () => {
   //   interface Type2StandardOperations<T>{
   //     parse(value: unknown): t.ParseResult<T>;
 
-  //     nullable() : Type2StandardOperations<unknown, unknown> | null;
+  //     nullable : Type2StandardOperations<unknown, unknown> | null;
   //   }
 
   //   interface TypeParser{
@@ -31,8 +31,8 @@ describe('experiments', () => {
   //     parser: TypeParser;
   //     opt(value: unknown): Type2<TKind, T>;
 
-  //     // opt(): ;
-  //     // nullable() : Type2StandardOperations<unknown, unknown> | null;
+  //     // opt: ;
+  //     // nullable : Type2StandardOperations<unknown, unknown> | null;
   //   }
 
   //   const shape = new Symbol['shape'];
@@ -51,7 +51,7 @@ describe('experiments', () => {
 
   //   const source = t.obj({ prop0: t.number, prop1: t.string, prop3: t.date });
   //   const source3 = t.obj({
-  //     prop0: t.number.opt().with(x => x.where(x => x > 10).from(t.union(t.number, t.string, t.date)));
+  //     prop0: t.number.opt.with(x => x.where(x => x > 10).from(t.union(t.number, t.string, t.date)));
   //     prop1: t.number.with(x => x.from(t.string).where(),
   //     prop3: t.date
   //   });
@@ -61,21 +61,21 @@ describe('experiments', () => {
   //   //input and partialInput are the same, except partialInput allows for optional properties.
   //   //input just enforces that the subset of property names match. There's nothing about types in there.
   //   const input = t.input(source, {
-  //     prop0: t.date.opt().where(x > 10).parsedFrom(t.string.opt().where(x => x.length > 0)),
+  //     prop0: t.date.opt.where(x > 10).parsedFrom(t.string.opt.where(x => x.length > 0)),
   //     prop1: t.string
   //   });
 
-  //   // t.opt() -> returns Definition. t.obj collapses it to a property at the end when finally constructing the obj.
-  //   // t.opt().where() -> returns Definition. (parser)
+  //   // t.opt -> returns Definition. t.obj collapses it to a property at the end when finally constructing the obj.
+  //   // t.opt.where() -> returns Definition. (parser)
   //   // ObjType contains a separate parser field for all the validation and parsing instructions.
 
   //   const mapped = source.map(({prop0, prop1, ...rest}) => ({
-  //     prop0: prop0.where(x > 10).from(t.string.opt().where(x => x.length > 0)),
+  //     prop0: prop0.where(x > 10).from(t.string.opt.where(x => x.length > 0)),
   //     prop1: prop1.from(t.string)
   //   }));
 
   //   const Person, PersonParser = t.obj({
-  //     name: t.string.nullable(),
+  //     name: t.string.nullable,
   //     age: t.opt(t.number)
   //   });
 
@@ -154,7 +154,7 @@ describe('experiments', () => {
       );
 
       // const DatabaseParser = t.parser(Tables, {
-      //   is_insertable_into: YesNo.nullable(),
+      //   is_insertable_into: YesNo.nullable,
       // });
 
       const timpestamptz = new Typ<'date', Date>('date', 'timestampz');

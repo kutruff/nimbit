@@ -67,20 +67,16 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
   static defaultOpts: ParseOptions = {};
 
   constructor(public kind: TKind, public name?: string) {}
-  opt() {
-    //TODO: switch optional to be a union of undefined and the type
+  
+  get opt() {
     return union(this, undef);
   }
 
-  optNul() {
-    return union(this, undef, nul);
-  }
-
-  nullable() {
+  get nullable() {
     return union(this, nul);
   }
 
-  nullish() {
+  get nullish() {
     return union(this, undef, nul);
   }
 
