@@ -26,4 +26,8 @@ export type Writeable<T> = {
 };
 
 //simplifies a type.
-export type Resolve<T> = T extends object ? {} & { [P in keyof T]: Resolve<T[P]> } : T;
+export type Resolve<T> = T extends Map<unknown, unknown> | Set<unknown> | Date
+  ? T
+  : T extends object
+  ? {} & { [P in keyof T]: Resolve<T[P]> }
+  : T;

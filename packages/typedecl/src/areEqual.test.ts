@@ -7,15 +7,11 @@ describe('Type equality', () => {
       [t.string, t.boolean, false],
       [t.string, { kind: 'string' } as t.Type<'string'>, true],
       [t.string, { kind: 'boolean' } as t.Type<'boolean'>, false],
-      [
-        t.array(t.bigint),
-        { kind: 'array', elementType: { kind: 'bigint' } } as t.ArrayType<typeof t.bigint, bigint>,
-        true
-      ],
+      [t.array(t.bigint), { kind: 'array', value: { kind: 'bigint' } } as t.ArrayType<typeof t.bigint, bigint>, true],
       [t.array(t.number), t.array(t.string), false],
       [
         t.array(t.literal('fooLiteral')),
-        { kind: 'array', elementType: { kind: 'literal', literal: 'fooLiteral' } } as t.ArrayType<
+        { kind: 'array', value: { kind: 'literal', literal: 'fooLiteral' } } as t.ArrayType<
           t.LiteralType<'fooLiteral'>,
           'foo'
         >,

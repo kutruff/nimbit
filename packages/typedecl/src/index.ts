@@ -12,3 +12,5 @@ export * from './enum';
 export * from './tuple';
 export * from './parsing';
 export * from './json';
+export * from './map';
+export * from './set';

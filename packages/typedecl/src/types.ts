@@ -67,7 +67,7 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
   static defaultOpts: ParseOptions = {};
 
   constructor(public kind: TKind, public name?: string) {}
-  
+
   get opt() {
     return union(this, undef);
   }
@@ -151,11 +151,4 @@ function cloneObject<T>(obj: T) {
   return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) as T;
 }
 
-export type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
-  infer U,
-  ...infer TRest
-]
-  ? U extends Type<unknown, unknown>
-    ? InferTupleKeys<TRest, [...Acc, TsType<U>]>
-    : Acc
-  : Acc;
+

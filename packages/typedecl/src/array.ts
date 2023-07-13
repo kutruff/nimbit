@@ -4,12 +4,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { fail, pass, Typ, type ParseResult, type TsType, type Type } from '.';
 
-export function array<TElement extends Type<unknown, unknown>>(element: TElement) {
-  return new ArrayType<TElement, Array<TsType<TElement>>, Array<TsType<TElement>>>(element);
+export function array<TValue extends Type<unknown, unknown>>(value: TValue) {
+  return new ArrayType<TValue, Array<TsType<TValue>>, Array<TsType<TValue>>>(value);
 }
 
 export class ArrayType<TElement, T, TInput = T> extends Typ<'array', T, TInput> {
-  constructor(public elementType: TElement, public name?: string) {
+  constructor(public value: TElement, public name?: string) {
     super('array', name);
   }
 
@@ -20,7 +20,7 @@ export class ArrayType<TElement, T, TInput = T> extends Typ<'array', T, TInput> 
     const valueAsArray = value as unknown[];
     const parsedArray = [];
     for (const element of valueAsArray) {
-      const result = (this.elementType as any).parse(element, opts);
+      const result = (this.value as any).parse(element, opts);
       if (!result.success) {
         return fail();
       }

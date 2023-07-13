@@ -2,7 +2,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { fail, pass, Typ, type InferTupleKeys, type ParseResult, type Type } from '.';
+import { fail, pass, Typ, type ParseResult, type TsType, type Type } from '.';
+
+export type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
+  infer U,
+  ...infer TRest
+]
+  ? U extends Type<unknown, unknown>
+    ? InferTupleKeys<TRest, [...Acc, TsType<U>]>
+    : Acc
+  : Acc;
 
 export class TupleType<
   TElements extends [Type<unknown, unknown>, ...Type<unknown, unknown>[]],

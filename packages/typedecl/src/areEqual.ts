@@ -9,6 +9,7 @@ import {
   type UnionType
 } from '.';
 
+//TODO: make these members of each type.
 export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type, boolean>>): boolean => {
   if (a === b) return true;
 
@@ -45,7 +46,7 @@ export const areEqual = (a: Type, b: Type, comparisonCache?: Map<Type, Map<Type,
     case 'array': {
       const aTyped = a as ArrayType<Type<unknown, unknown>, unknown>;
       const bTyped = b as typeof aTyped;
-      result = areEqual(aTyped.elementType, bTyped.elementType, comparisonCache);
+      result = areEqual(aTyped.value, bTyped.value, comparisonCache);
       break;
     }
     case 'union': {
