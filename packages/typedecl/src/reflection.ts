@@ -17,3 +17,6 @@ export function createMapOfTupleKeys<TTuple extends readonly [TValue, ...TValue[
 ): MapOfTupleKeys<TTuple> {
   return tuple.reduce((acc, cur) => ({ ...acc, [cur]: cur }), {} as MapOfTupleKeys<TTuple>);
 }
+
+//unfortunately typescript tuples with as const always end up readonly which isn't always what we want.
+export const asTuple = <T extends unknown[]>(...args: T): T => args;

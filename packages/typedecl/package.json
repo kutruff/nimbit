@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
-    "build": "tsup ./index.ts --format esm,cjs --dts --clean --minify --sourcemap && tar -czf dist.tar.gz dist/index.js",
+    "build": "tsup ./index.ts --format esm,cjs --dts --clean --minify --sourcemap",
     "build:tar": "tar -czf dist.tar.gz dist/index.js",
+    "build:size": "pnpm build && pnpm build:tar && echo zipped bytes: $(stat --printf=\"%s\" dist.tar.gz) && rm dist.tar.gz",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit",

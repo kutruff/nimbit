@@ -4,10 +4,6 @@ export class LiteralType<TLiteralValue, TInput = TLiteralValue> extends Typ<'lit
   constructor(public literal: TLiteralValue, public name?: string) {
     super('literal', name);
   }
-  _withInput<TNewInput>(): LiteralType<TLiteralValue, TNewInput> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
-    return undefined as any;
-  }
 
   parse(value: TInput): ParseResult<TLiteralValue> {
     //does not handle new String() on purpose.

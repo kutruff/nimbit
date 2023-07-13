@@ -11,53 +11,28 @@ import {
   type _type,
   type Constructor,
   type ObjectKeyMap,
+  type ParseOptions,
   type ParseResult,
   type ShapeDefinition,
   type ShapeDefinitionToObjType,
-  type Type} from '.';
+  type Type
+} from '.';
 
 export class ObjType<TShape, T, TInput = T> extends Typ<'object', T, TInput> {
-  constructor(public shape: TShape, public k: ObjectKeyMap<TShape>, public name?: string) {
+  constructor(public shape: TShape, public k: ObjectKeyMap<TShape>, public name?: string, public strict?: boolean) {
     super('object', name);
   }
 
-  _withInput<TNewInput>(): ObjType<TShape, T, TNewInput> {
-    return undefined as any;
-  }
-
-  parseString(value: string): ParseResult<T> {
-    if (typeof value !== 'string') {
+  parse(value: TInput, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
+    if (typeof value !== 'object' || Array.isArray(value) || value === null) {
       return fail();
     }
-    try {
-      value = JSON.parse(value);
-    } catch (err) {
-      return fail();
-    }
-
-    const result: any = {};
-    const shape = this.shape as any;
-    for (const key of getKeys(shape)) {
-      const prop = shape[key];
-      const propResult = prop.parse((value as any)[key]);
-
-      if (!propResult.success) {
-        return fail();
-      }
-      result[key] = propResult.value;
-    }
-    return pass(result);
-  }
-
-  parse(value: TInput): ParseResult<T> {
-    if (typeof value !== 'object' || value === null) {
-      return fail();
-    }
-    const result: any = {};
+    const isStrict = this.strict === undefined ? opts.strict : this.strict;
+    const result: any = isStrict ? {} : { ...value };
 
     const shape = this.shape as any;
     for (const key of getKeys(shape)) {
-      const propResult = shape[key].parse((value as any)[key]);
+      const propResult = shape[key].parse((value as any)[key], opts);
 
       if (!propResult.success) {
         return fail();
@@ -73,10 +48,11 @@ const constructorsToObj = new WeakMap();
 //Note: Having the option to set a name is important here for recursive objects.
 export function obj<TShapeDefinition extends ShapeDefinition>(
   shapeDefinition: TShapeDefinition,
-  name?: string
+  name?: string,
+  strict?: boolean
 ): ShapeDefinitionToObjType<TShapeDefinition> {
-  const resultObj = new ObjType({}, {}, name) as any;
-  const shape = resultObj.shape;
+  const resultObj = new ObjType({}, {}, name, strict) as any;
+
   if (typeof shapeDefinition === 'function') {
     const constructor = shapeDefinition;
     const existingObj = constructorsToObj.get(constructor) as ShapeDefinitionToObjType<TShapeDefinition> | undefined;
@@ -86,15 +62,7 @@ export function obj<TShapeDefinition extends ShapeDefinition>(
     constructorsToObj.set(constructor, resultObj);
     shapeDefinition = new (constructor as Constructor)() as any;
   }
-
-  for (const key of getKeys(shapeDefinition)) {
-    if (typeof shapeDefinition[key] === 'function') {
-      shape[key] = obj(shapeDefinition[key] as Constructor);
-    } else {
-      shape[key] = shapeDefinition[key] as Type;
-    }
-  }
-
-  resultObj.k = keyMap(shape);
+  resultObj.shape = { ...shapeDefinition };
+  resultObj.k = keyMap(resultObj.shape);
   return resultObj as ShapeDefinitionToObjType<TShapeDefinition>;
 }

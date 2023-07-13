@@ -29,11 +29,6 @@ export class EnumType<
     this.enum = enumMap;
   }
 
-  _withInput<TNewInput>(): EnumType<TEnumValues, TMapOfEnumKeyToValue, TNewInput> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return undefined as any;
-  }
-
   parse(value: TInput): ParseResult<TupleKeysToUnion<TEnumValues>> {
     for (const element of this.values) {
       if (value === element) {

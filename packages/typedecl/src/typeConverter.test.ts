@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import * as t from '.';
 import { pass } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
@@ -18,6 +21,75 @@ describe('TypeConverter', () => {
     if (result.success) {
       expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
     }
+  });
+
+  describe('strict parsing', () => {
+    it('parses objects strict when told to', () => {
+      const Person = t.obj(
+        {
+          name: t.string,
+          age: t.number,
+          isActive: t.boolean
+        },
+        'Person',
+        true
+      );
+
+      const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+
+      expect(result.success).toEqual(true);
+
+      if (result.success) {
+        expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+        expect((result.value as any).extraProperty).toEqual(undefined);
+      }
+    });
+
+    it('parses objects strict', () => {
+      const Person = t.obj({
+        name: t.string,
+        age: t.number,
+        isActive: t.boolean
+      });
+
+      const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any, {
+        strict: true
+      });
+
+      expect(result.success).toEqual(true);
+
+      if (result.success) {
+        expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+        expect((result.value as any).extraProperty).toEqual(undefined);
+      }
+    });
+
+    it('parses objects strict when default set', () => {
+      const originalOptions = t.Typ.defaultOpts;
+      try {
+        t.Typ.defaultOpts = { strict: true };
+
+        const Person = t.obj(
+          {
+            name: t.string,
+            age: t.number,
+            isActive: t.boolean
+          },
+          'Person'
+        );
+
+        const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+
+        expect(result.success).toEqual(true);
+
+        if (result.success) {
+          expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+          expect((result.value as any).extraProperty).toEqual(undefined);
+        }
+      } finally {
+        t.Typ.defaultOpts = originalOptions;
+      }
+    });
   });
 
   it('supports where', () => {
@@ -220,11 +292,52 @@ describe('TypeConverter', () => {
     const enumToString = EnumTest.to(t.string, x => t.pass(x));
     type enumToString = t.Infer<typeof enumToString>;
 
+    const stringResult = t.string.parse('hello');
+
     const ArrayTest = t.array(t.number);
     type ArrayTest = t.Infer<typeof ArrayTest>;
+    const arrayResult = ArrayTest.parse([1, 2, 3]);
+
     const arrayToString = ArrayTest.to(t.string, x => t.pass(x.join(',')));
     type arrayToString = t.Infer<typeof arrayToString>;
     const arrayToStringResult = arrayToString.parse([1, 2, 3]);
+
+    const stringToArray = t.string.to(ArrayTest, x => t.pass([Number(x)]));
+    type stringToArray = t.Infer<typeof stringToArray>;
+    const stringToArrayResult = stringToArray.parse('1,2,3');
+
+    const stringToNumber = t.string.to(t.number, x => t.pass(Number(x)));
+    stringToNumber.parse('123');
+    // type ArrayTestWithInput = ReturnType<typeof ArrayTest._withInput<string>>;
+    // type ArrayTestParseType = ArrayTestWithInput['parse'];
+
+    const unionTest = t.union(t.string, t.number);
+    type unionTest = t.Infer<typeof unionTest>;
+    const unionTestResult = unionTest.parse('123');
+
+    const unionToString = unionTest.to(t.string, x => t.pass(x as string));
+    type unionToString = t.Infer<typeof unionToString>;
+    const unionToStringResult = unionToString.parse('123');
+
+    const singleStringUnion = t.union(t.string, t.number);
+
+    const opted = singleStringUnion.opt();
+
+    const stringToUnion = t.string.to(singleStringUnion);
+    type stringToUnion = t.Infer<typeof stringToUnion>;
+    const stringToUnionResult = stringToUnion.parse('123');
+
+    const unionedAgain = t.union(stringToUnion, t.number);
+
+    type isUnion = (typeof unionedAgain)['memberTypes'];
+
+    const tupleTest = t
+      .tuple([t.string, t.string])
+      .to(t.tuple([t.string, t.number]), x => pass(t.asTuple(x[0], Number(x[1]))));
+    const resultTuple = tupleTest.parse(['hello', '123']);
+    if (resultTuple.success) {
+      resultTuple.value;
+    }
 
     expect(result.success).toEqual(true);
     if (result.success) {
@@ -238,15 +351,7 @@ describe('TypeConverter', () => {
       literalProp = t.literal('hello').to(t.literal('world'), x => pass('world' as const));
       tupleProp = t
         .tuple([t.string, t.string])
-        .to(t.tuple([t.string, t.number]), x => pass([x[0], Number(x[1])] as const));
-    }
-
-    const tupleTest = t
-      .tuple([t.string, t.string])
-      .to(t.tuple([t.string, t.number]), x => pass([x[0], Number(x[1])] as const));
-    const resultTuple = tupleTest.parse(['hello', '123']);
-    if (resultTuple.success) {
-      resultTuple.value;
+        .to(t.tuple([t.string, t.number]), x => pass(t.asTuple(x[0], Number(x[1]))));
     }
 
     const literalTest = t.literal('hello').to(t.literal('world'), x => pass('world' as const));
@@ -299,7 +404,7 @@ describe('TypeConverter', () => {
 
   it('feed() allows coercions', () => {
     const AnotherDateLike = t.unknown.to(t.date); //, x => coerceToDate(x as any));
-    const DateLike = t.coerce(coerceToDate, t.date);
+    const DateLike = t.coercion(t.date, coerceToDate);
 
     // const DateLike = t.date.from(t.union(t.number, t.string, t.date), coerceToDate);
     // const DateLike2 = t.date.from(DateLike);

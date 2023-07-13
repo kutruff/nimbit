@@ -81,7 +81,13 @@ export type NotAUnion<T, U = T> = U extends any ? ([T] extends [boolean] ? T : [
 
 // How to prevent conditional from being distributed
 //https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
-//type NoDistribute<T> = [T] extends [T] ? T : never;
+type NoDistribute<T> = [T] extends [any] ? T : never;
+
+type NoDistributeTest = NoDistribute<ToArray<string | number>>;
+
+type ToArray<Type> = Type extends any ? Type[] : never;
+ 
+type StrArrOrNumArr = ToArray<string | number>;
 
 // type GetChars<S> = GetCharsHelper<S, never>;
 // type GetCharsHelper<S, Acc> = S extends `${infer Char}${infer Rest}` ? GetCharsHelper<Rest, Char | Acc> : Acc;

@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-
 import {
   fail,
   nul,
@@ -15,6 +17,13 @@ import {
   type Resolve,
   type TypeConverter
 } from '.';
+
+export interface Parser<TInput, TOutput> {
+  parse(value: TInput, opts?: ParseOptions): ParseResult<TOutput>;
+}
+export interface ParseOptions {
+  strict?: boolean;
+}
 
 //Need this symbol / property definition so that type inference will actual use the T parameter during type inference
 //https://github.com/Microsoft/TypeScript/issues/29657#issuecomment-460728148
@@ -50,8 +59,10 @@ export type ShapeDefinitionToObjType<T> = T extends Constructor
 export type TsType<T extends Type<unknown, unknown>> = T[typeof _type];
 export type Infer<T extends Type<unknown, unknown>> = Resolve<T[typeof _type]>;
 
-export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type<TKind, T> {
+export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind, T> {
   [_type]!: T;
+
+  static defaultOpts: ParseOptions = {};
 
   constructor(public kind: TKind, public name?: string) {}
   opt() {
@@ -72,15 +83,15 @@ export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  parse(value: TInput): ParseResult<T> {
+  parse(value: TInput, opts = Typ.defaultOpts): ParseResult<T> {
     return fail();
   }
 
   where(predicate: (value: T) => boolean): typeof this {
     const clone = cloneObject(this);
     const originalParse = clone.parse.bind(clone);
-    clone.parse = function (value: TInput) {
-      const result = originalParse(value);
+    clone.parse = function (value: TInput, opts = Typ.defaultOpts) {
+      const result = originalParse(value, opts);
       if (result.success && predicate(result.value)) {
         return result;
       }
@@ -89,25 +100,24 @@ export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type
     return clone;
   }
 
-  _withInput<TNewInput>(): Typ<TKind, T, TNewInput> {
-    return undefined as any;
+  as(converter: TypeConverter<T, T>): typeof this {
+    return this.to(this, converter);
   }
 
-  //TODO: benchmark cloning vs using a deep prototype chain that calls super.parse instead
-  to<TDestKind, TDest>(
-    destination: Typ<TDestKind, TDest, unknown>,
-    converter?: TypeConverter<T, TDest>
-  ): ReturnType<typeof destination._withInput<TInput>> {
-    const clone = cloneObject(destination);
+  to<TDestination extends Typ<unknown, unknown, unknown>>(
+    destination: TDestination,
+    converter?: TypeConverter<T, TsType<TDestination>>
+  ): TDestination & Parser<TInput, TsType<TDestination>> {
+    const clone = cloneObject(destination) as any;
     const destinationParse = clone.parse.bind(clone);
     const source = this;
-    clone.parse = function (value: TInput) {
-      const sourceResult = source.parse(value);
+    clone.parse = function (value: TInput, opts: ParseOptions = Typ.defaultOpts) {
+      const sourceResult = source.parse(value, opts);
 
       if (sourceResult.success) {
         let value;
         if (converter) {
-          const convertedResult = converter(sourceResult.value);
+          const convertedResult = converter(sourceResult.value, opts);
           if (convertedResult.success) {
             value = convertedResult.value;
           } else {
@@ -117,27 +127,27 @@ export class Typ<TKind = unknown, T = unknown, TInput = unknown> implements Type
           value = sourceResult.value;
         }
 
-        return destinationParse(value);
+        return destinationParse(value, opts);
       }
       return fail();
     };
 
-    return clone as any;
+    return clone;
   }
 }
 
-export function coerce<TDestKind, TDest, TSourceInput>(
-  converter: TypeConverter<TSourceInput, TDest>,
-  destination: Typ<TDestKind, TDest, unknown>
-): ReturnType<typeof destination._withInput<TSourceInput>> {
+export function coercion<TDestination extends Typ<unknown, unknown, unknown>, TSourceInput>(
+  destination: TDestination,
+  converter: TypeConverter<TSourceInput, TsType<TDestination>>
+): TDestination & Parser<TSourceInput, TsType<TDestination>> {
   const clone = cloneObject(destination);
   const originalParse = clone.parse.bind(clone);
 
-  clone.parse = function (value: TSourceInput) {
-    const lastResult = converter(value);
+  clone.parse = function (value: TSourceInput, opts = Typ.defaultOpts) {
+    const lastResult = converter(value, opts);
 
     if (lastResult.success) {
-      return originalParse(lastResult.value);
+      return originalParse(lastResult.value, opts);
     }
     return fail();
   };
@@ -148,14 +158,6 @@ export function coerce<TDestKind, TDest, TSourceInput>(
 function cloneObject<T>(obj: T) {
   return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) as T;
 }
-
-
-//Required for type inference of the return type for the union() function
-export interface IUnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', unknown> {
-  memberTypes: TMembers[];
-}
-
-export type FlattenedUnion<T> = T extends IUnionType<infer K> ? FlattenedUnion<K> : T;
 
 export type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
   infer U,

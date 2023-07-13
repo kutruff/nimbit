@@ -1,4 +1,9 @@
-export type TypeConverter<TSource, TDestinationType> = (value: TSource) => ParseResult<TDestinationType>;
+import { type ParseOptions } from './types';
+
+export type TypeConverter<TSource, TDestinationType> = (
+  value: TSource,
+  opts?: ParseOptions
+) => ParseResult<TDestinationType>;
 
 export function pass<T>(value: T): ParseResult<T> {
   return { success: true as const, value };

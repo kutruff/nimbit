@@ -3,17 +3,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import {
-  fail,
-  Typ,
-  type _type,
-  type ElementType,
-  type FlattenedUnion,
-  type IUnionType,
-  type ParseResult,
-  type TsType,
-  type Type
-} from '.';
+import { fail, Typ, type _type, type ElementType, type ParseResult, type TsType, type Type } from '.';
+
+//Required for type inference of the return type for the union() function
+export interface IUnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', unknown> {
+  memberTypes: TMembers[];
+}
+
+export type FlattenedUnion<T> = T extends IUnionType<infer K> ? FlattenedUnion<K> : T;
 
 export class UnionType<TMembers extends Type<unknown, unknown>, T, TInput = T>
   extends Typ<'union', T, TInput>
@@ -23,13 +20,9 @@ export class UnionType<TMembers extends Type<unknown, unknown>, T, TInput = T>
     super('union', name);
   }
 
-  _withInput<TNewInput>(): UnionType<TMembers, T, TNewInput> {
-    return undefined as any;
-  }
-
-  parse(value: TInput): ParseResult<T> {
+  parse(value: TInput, opts = Typ.defaultOpts): ParseResult<T> {
     for (const member of this.memberTypes) {
-      const result = (member as any).parse(value);
+      const result = (member as any).parse(value, opts);
       if (result.success) {
         return result;
       }
@@ -65,9 +58,5 @@ export function union<T extends Type<unknown, unknown>[]>(
   ...args: T
 ): UnionType<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>, TsType<ElementType<T>>> {
   const flattenedMembers = flattenUnionMembers(args);
-  return new UnionType(flattenedMembers) as UnionType<
-    FlattenedUnion<ElementType<T>>,
-    TsType<ElementType<T>>,
-    TsType<ElementType<T>>
-  >;
+  return new UnionType(flattenedMembers) as any;
 }
