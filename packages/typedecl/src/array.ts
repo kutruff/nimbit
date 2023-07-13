@@ -5,13 +5,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { pass, Typ, type ParseResult, type TsType, type Type } from '.';
 
-export function array<TElement extends Type<unknown, unknown>>(
-  element: TElement
-): ArrayType<TElement, Array<TsType<TElement>>, Array<TsType<TElement>>> {
+export function array<TElement extends Type<unknown, unknown>>(element: TElement) {
   return new ArrayType<TElement, Array<TsType<TElement>>, Array<TsType<TElement>>>(element);
 }
 
-export class ArrayType<TElement, T, TInput = unknown> extends Typ<'array', T, TInput> {
+export class ArrayType<TElement, T, TInput = T> extends Typ<'array', T, TInput> {
   constructor(public elementType: TElement, public name?: string) {
     super('array', name);
   }

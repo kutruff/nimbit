@@ -299,7 +299,7 @@ describe('Type operations', () => {
       const target = t.obj({ prop: t.string });
       const result = t.partial(target);
 
-      const ExpectedResult = t.obj({ prop: t.opt(t.string) });
+      const ExpectedResult = t.obj({ prop: t.string.opt() });
       type ExpectedResult = t.Infer<typeof ExpectedResult>;
       type ExpectedDefinitionType = typeof ExpectedResult;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
@@ -319,12 +319,12 @@ describe('Type operations', () => {
       const result = t.partial(target);
 
       const ExpectedResult = t.obj({
-        prop: t.opt(t.string),
-        nested: t.opt(
-          t.obj({
+        prop: t.string.opt(),
+        nested: t
+          .obj({
             prop: t.bigint
           })
-        )
+          .opt()
       });
 
       type ExpectedDefinitionType = typeof ExpectedResult;
@@ -342,7 +342,7 @@ describe('Type operations', () => {
 
   describe('required()', () => {
     it('makes optional properites into required properties', () => {
-      const target = t.obj({ optProp: t.opt(t.string), normalProp: t.number });
+      const target = t.obj({ optProp: t.string.opt(), normalProp: t.number });
       const result = t.required(target);
       type result = t.Resolve<typeof result>;
 
@@ -360,15 +360,15 @@ describe('Type operations', () => {
     });
 
     it('is shallow', () => {
-      const nestedObj = t.obj({ prop: t.opt(t.bigint) });
-      const target = t.obj({ prop: t.opt(t.string), nested: t.opt(nestedObj) });
+      const nestedObj = t.obj({ prop: t.bigint.opt() });
+      const target = t.obj({ prop: t.string.opt(), nested: nestedObj.opt() });
       const result = t.required(target);
 
       const ExpectedResult = t.obj({
         prop: t.union(t.string),
         nested: t.union(
           t.obj({
-            prop: t.opt(t.bigint)
+            prop: t.bigint.opt()
           })
         )
       });
@@ -502,7 +502,7 @@ describe('Type operations', () => {
         propNumberLiteral = t.literal(1);
         propUnion = t.union(t.number, t.bigint, C, B);
         propB = B;
-        propC = t.opt(C);
+        propC = C.opt();
         self = t.obj(ADef);
         dRef = t.obj(DDef);
       }
@@ -518,7 +518,7 @@ describe('Type operations', () => {
         propNumberLiteral = t.literal(1);
         propUnion = t.union(t.number, t.bigint, C, B);
         propB = B;
-        propC = t.opt(C);
+        propC = C.opt();
         self = t.obj(DDef);
         aRef = t.obj(ADef);
       }

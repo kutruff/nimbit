@@ -5,26 +5,26 @@ import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('obj()', () => {
   it('compiles with round trips between definition and TypeScript types', () => {
-    const PersonTwo = t.obj({
+    const Person = t.obj({
       name: t.string,
-      age: t.opt(t.number),
+      age: t.number.opt(),
       isActive: t.boolean
     });
-    type PersonTwo = t.Infer<typeof PersonTwo>;
+    type PersonTwo = t.Infer<typeof Person>;
     const shapeDefintion = {
       name: t.string,
       // age: t.opt(t.number),
       isActive: t.boolean
     };
 
-    const result = PersonTwo.shape.age;
-    const name = PersonTwo.shape.age;
+    const result = Person.shape.age;
+    const name = Person.shape.age;
 
     const roundTrippedInstance = {
       kind: 'object',
       shape: {
         name: t.string,
-        age: t.opt(t.number),
+        age: t.number.opt(),
         isActive: t.boolean
       },
       k: {
@@ -34,7 +34,7 @@ describe('obj()', () => {
       }
     };
 
-    expect(PersonTwo).toEqual(roundTrippedInstance);
+    expect(Person).toEqual(roundTrippedInstance);
   });
 
   it('compiles and supports nested objects', () => {
@@ -268,7 +268,7 @@ describe('obj()', () => {
 
   describe('property modifiers', () => {
     it('makes optional property defintions into optional TS properties', () => {
-      const target = t.obj({ prop: t.opt(t.string) });
+      const target = t.obj({ prop: t.string.opt() });
 
       type Target = t.Infer<typeof target>;
 
@@ -368,7 +368,7 @@ describe('obj()', () => {
         propNumberLiteral = t.literal(1);
         propUnion = t.union(t.number, t.bigint, C, B);
         propB = B;
-        propC? = t.opt(C);
+        propC? = C.opt();
       }
       const A = t.obj(ADef);
       type A = t.Infer<typeof A>;
