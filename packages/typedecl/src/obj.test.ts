@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from '.';
-import { type _type, type AnyObject, type Resolve } from '.';
+import { type _type, type Resolve } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('obj()', () => {

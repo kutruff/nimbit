@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createType, fail, pass, Typ } from '.';
+import { fail, pass, Typ } from '.';
 
 //TODO: using this will avoid the need for passing kind twice
 // export class Primitive<TKind extends string, TType> extends Typ<TKind, TType> {
@@ -40,7 +40,7 @@ export class UnknownType extends Typ<'unknown', unknown> {
 
 export const unknown = new UnknownType('unknown', 'unknown');
 
-export const never = createType<'never', never>('never', 'never');
+export const never = new Typ<'never', never>('never', 'never');
 
 export class StringType extends Typ<'string', string> {
   parse(value: string) {

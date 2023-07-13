@@ -149,8 +149,6 @@ function cloneObject<T>(obj: T) {
   return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) as T;
 }
 
-//TODO: remove
-export const createType = <TKind, T>(kind: TKind, name: string) => new Typ<TKind, T>(kind, name);
 
 //Required for type inference of the return type for the union() function
 export interface IUnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', unknown> {

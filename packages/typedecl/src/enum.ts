@@ -30,6 +30,7 @@ export class EnumType<
   }
 
   _withInput<TNewInput>(): EnumType<TEnumValues, TMapOfEnumKeyToValue, TNewInput> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return undefined as any;
   }
 

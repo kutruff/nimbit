@@ -5,6 +5,7 @@ export class LiteralType<TLiteralValue, TInput = TLiteralValue> extends Typ<'lit
     super('literal', name);
   }
   _withInput<TNewInput>(): LiteralType<TLiteralValue, TNewInput> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
     return undefined as any;
   }
 

@@ -1,4 +1,5 @@
 import * as t from '.';
+import { Typ } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('experiments', () => {
@@ -127,7 +128,6 @@ describe('experiments', () => {
   //   }
   // });
 
-
   describe('tuple()', () => {
     it('supports instantiated const arrays', () => {
       // export const YesNo = t.union(t.literal('YES'), t.literal('NO'));
@@ -157,7 +157,7 @@ describe('experiments', () => {
       //   is_insertable_into: YesNo.nullable(),
       // });
 
-      const timpestamptz = t.createType<'date', Date>('date', 'timestamptz');
+      const timpestamptz = new Typ<'date', Date>('date', 'timestampz');
 
       // const stringToDate = t.createConverter(t.string, t.date, value => new Date(value));
       // const dateToString = t.createConverter(t.date, t.string, value => value.toISOString());
