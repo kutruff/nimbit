@@ -57,7 +57,7 @@ export type ToTsTypes<T> = T extends Type<unknown, unknown>
 
 export type ShapeDefinitionToObjType<T> = T extends Constructor
   ? ObjType<Required<InstanceType<T>>, ToTsTypes<InstanceType<T>>>
-  : ObjType<T, MakeUndefinedOptional<ToTsTypes<T>>>;
+  : ObjType<T, Resolve<MakeUndefinedOptional<ToTsTypes<T>>>>;
 
 export type TsType<T extends Type<unknown, unknown>> = T[typeof _type];
 export type Infer<T extends Type<unknown, unknown>> = Resolve<T[typeof _type]>;
