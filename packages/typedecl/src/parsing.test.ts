@@ -266,15 +266,21 @@ describe('TypeConverter', () => {
 
   it('to() makes datelike easy', () => {
     const DateLike = t.union(t.number, t.string, t.date).to(t.date, coerceToDate);
-    
+
     type DateLikeType = t.Resolve<typeof DateLike>;
 
+    
     type DateLike = t.Infer<typeof DateLike>;
 
+    
+    const asD = t.string.to(DateLike);
+    
+    asD.parse('hello')
     const asIsoString = DateLike.to(t.string, x => t.pass(x.toISOString()));
+    asIsoString.parse(new Date());
     const assigned: DateLike = new Date();
     const result = DateLike.parse(1232131);
-    
+
     if (result.success) {
       expect(result.value).toEqual(new Date(1232131));
     }

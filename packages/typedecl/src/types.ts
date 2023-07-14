@@ -115,30 +115,31 @@ export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
     return this.to(this, x => pass(transformer(x))) as typeof this;
   }
 
-  to<TDestination extends Typ<unknown, unknown>>(
-    destination: TDestination,
-    converter?: TypeConverter<T, TsType<TDestination>>
-  ): Merge<TDestination, Parser<T, TsType<TDestination>>> {
-    const clone = cloneObject(destination) as any;
-    const destinationParse = clone.parse.bind(clone);
-    const source = this;
-    clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
-      const sourceResult = source.parse(value, opts);
-      if (!sourceResult.success) {
-        return sourceResult;
-      }
+  // prettier-ignore
+  to<TDestination extends Merge<Typ<unknown, unknown>, Parser<T, unknown>>>(destination: TDestination): Merge<TDestination, Parser<T, TsType<TDestination>>>;
+  // prettier-ignore
+  to<TDestination extends Typ<unknown, unknown>>(destination: TDestination, converter: TypeConverter<T, TsType<TDestination>> ): Merge<TDestination, Parser<T, TsType<TDestination>>>;
+  // prettier-ignore
+  to<TDestination extends Typ<unknown, unknown>>(destination: TDestination, converter?: TypeConverter<T, TsType<TDestination>> ): Merge<TDestination, Parser<T, TsType<TDestination>>> {
+  const clone = cloneObject(destination) as any;
+  const destinationParse = clone.parse.bind(clone);
+  const source = this;
+  clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
+    const sourceResult = source.parse(value, opts);
+    if (!sourceResult.success) {
+      return sourceResult;
+    }
 
-      if (converter) {
-        const convertedResult = converter(sourceResult.value, opts);
-        return convertedResult.success ? destinationParse(convertedResult.value, opts) : convertedResult;
-      }
-      return destinationParse(sourceResult.value, opts);
-    };
+    if (converter) {
+      const convertedResult = converter(sourceResult.value, opts);
+      return convertedResult.success ? destinationParse(convertedResult.value, opts) : convertedResult;
+    }
+    return destinationParse(sourceResult.value, opts);
+  };
 
-    return clone;
-  }
+  return clone;
 }
-
+}
 export function coerce<TDestination extends Typ<unknown, unknown>, TSourceInput>(
   destination: TDestination,
   converter: TypeConverter<TSourceInput, TsType<TDestination>>
