@@ -5,15 +5,15 @@
 import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
 
 export function array<TValue extends Type<unknown, unknown>>(value: TValue) {
-  return new ArrayType<TValue, Array<TsType<TValue>>, Array<TsType<TValue>>>(value);
+  return new ArrayType<TValue, Array<TsType<TValue>>>(value);
 }
 
-export class ArrayType<TValue, T, TInput = T> extends Typ<'array', T, TInput> {
+export class ArrayType<TValue, T> extends Typ<'array', T> {
   constructor(public value: TValue, name?: string) {
     super('array', name);
   }
 
-  parse(value: TInput, opts = Typ.defaultOpts): ParseResult<T> {
+  parse(value: T, opts = Typ.defaultOpts): ParseResult<T> {
     if (!Array.isArray(value)) {
       return fail();
     }

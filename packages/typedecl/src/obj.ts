@@ -21,12 +21,12 @@ import {
   type Type
 } from '.';
 
-export class ObjType<TShape, T, TInput = T> extends Typ<'object', T, TInput> {
+export class ObjType<TShape, T> extends Typ<'object', T> {
   constructor(public shape: TShape, public k: ObjectKeyMap<TShape>, name?: string, public strict?: boolean) {
     super('object', name);
   }
 
-  parse(value: TInput, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
+  parse(value: T, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
     if (typeof value !== 'object' || Array.isArray(value) || value === null) {
       return fail();
     }

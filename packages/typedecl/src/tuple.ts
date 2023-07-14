@@ -13,15 +13,15 @@ export type InferTupleKeys<T extends readonly unknown[], Acc extends readonly un
     : Acc
   : Acc;
 
-export class TupleType<
-  TElements extends [Type<unknown, unknown>, ...Type<unknown, unknown>[]],
-  TInput = InferTupleKeys<TElements>
-> extends Typ<'tuple', InferTupleKeys<TElements>, TInput> {
+export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknown, unknown>[]]> extends Typ<
+  'tuple',
+  InferTupleKeys<TElements>
+> {
   constructor(public elementTypes: TElements, name?: string) {
     super('tuple', name);
   }
 
-  parse(value: TInput, opts = Typ.defaultOpts): ParseResult<InferTupleKeys<TElements>> {
+  parse(value: InferTupleKeys<TElements>, opts = Typ.defaultOpts): ParseResult<InferTupleKeys<TElements>> {
     if (!Array.isArray(value) || value.length !== this.elementTypes.length) {
       return fail();
     }

@@ -267,7 +267,7 @@ describe('obj()', () => {
   });
 
   describe('property modifiers', () => {
-    it('makes optional property defintions into optional TS properties', () => {
+    it('makes optional property definitions into optional TS properties', () => {
       const target = t.obj({ prop: t.string.opt });
 
       type Target = t.Infer<typeof target>;

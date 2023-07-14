@@ -14,6 +14,7 @@ import {
   type ComparisonCache,
   type Constructor,
   type MakeUndefinedOptional,
+  type Merge,
   type ObjType,
   type ParseResult,
   type Resolve,
@@ -62,7 +63,7 @@ export type ShapeDefinitionToObjType<T> = T extends Constructor
 export type TsType<T extends Type<unknown, unknown>> = T[typeof _type];
 export type Infer<T extends Type<unknown, unknown>> = Resolve<T[typeof _type]>;
 
-export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind, T> {
+export class Typ<TKind = unknown, T = unknown> implements Type<TKind, T> {
   [_type]!: T;
 
   static defaultOpts: ParseOptions = {};
@@ -87,14 +88,14 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  parse(value: TInput, opts = Typ.defaultOpts): ParseResult<T> {
+  parse(value: T, opts = Typ.defaultOpts): ParseResult<T> {
     return fail();
   }
 
-  default(defaultValue: T): typeof this & Parser<TInput | undefined, T> {
+  default(defaultValue: T): Merge<typeof this, Parser<T | undefined, T>> {
     const clone = cloneObject(this);
     const originalParse = clone.parse.bind(clone);
-    clone.parse = function (value: TInput | undefined, opts = Typ.defaultOpts) {
+    clone.parse = function (value: T | undefined, opts = Typ.defaultOpts) {
       return value === undefined ? pass(defaultValue as any) : originalParse(value, opts);
     };
     return clone;
@@ -103,7 +104,7 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
   where(predicate: (value: T) => boolean): typeof this {
     const clone = cloneObject(this);
     const originalParse = clone.parse.bind(clone);
-    clone.parse = function (value: TInput, opts = Typ.defaultOpts) {
+    clone.parse = function (value: T, opts = Typ.defaultOpts) {
       const result = originalParse(value, opts);
       return result.success && predicate(result.value) ? result : fail();
     };
@@ -111,17 +112,17 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
   }
 
   tweak(transformer: (value: T) => T): typeof this {
-    return this.to(this, x => pass(transformer(x)));
+    return this.to(this, x => pass(transformer(x))) as typeof this;
   }
 
-  to<TDestination extends Typ<unknown, unknown, unknown>>(
+  to<TDestination extends Typ<unknown, unknown>>(
     destination: TDestination,
     converter?: TypeConverter<T, TsType<TDestination>>
-  ): TDestination & Parser<TInput, TsType<TDestination>> {
+  ): Merge<TDestination, Parser<T, TsType<TDestination>>> {
     const clone = cloneObject(destination) as any;
     const destinationParse = clone.parse.bind(clone);
     const source = this;
-    clone.parse = function (value: TInput, opts: ParseOptions = Typ.defaultOpts) {
+    clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
       const sourceResult = source.parse(value, opts);
       if (!sourceResult.success) {
         return sourceResult;
@@ -138,10 +139,10 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
   }
 }
 
-export function coerce<TDestination extends Typ<unknown, unknown, unknown>, TSourceInput>(
+export function coerce<TDestination extends Typ<unknown, unknown>, TSourceInput>(
   destination: TDestination,
   converter: TypeConverter<TSourceInput, TsType<TDestination>>
-): TDestination & Parser<TSourceInput, TsType<TDestination>> {
+): Merge<TDestination, Parser<TSourceInput, TsType<TDestination>>> {
   const clone = cloneObject(destination);
   const originalParse = clone.parse.bind(clone);
 
