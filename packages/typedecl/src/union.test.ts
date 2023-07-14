@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 

@@ -1,4 +1,5 @@
-import { Literal, type MakeUndefinedOptional } from '.';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { type Literal, type MakeUndefinedOptional } from '.';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type AnyFunc = (...args: unknown[]) => unknown;
@@ -86,7 +87,7 @@ type NoDistribute<T> = [T] extends [any] ? T : never;
 type NoDistributeTest = NoDistribute<ToArray<string | number>>;
 
 type ToArray<Type> = Type extends any ? Type[] : never;
- 
+
 type StrArrOrNumArr = ToArray<string | number>;
 
 // type GetChars<S> = GetCharsHelper<S, never>;
@@ -104,5 +105,7 @@ type StrArrOrNumArr = ToArray<string | number>;
 //   : never;
 
 describe('generics.old', () => {
-  it('is only for keeping in tree', () => {});
+  it('is only for keeping in tree', () => {
+    expect(true).toEqual(true);
+  });
 });

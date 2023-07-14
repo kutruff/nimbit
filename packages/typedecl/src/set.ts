@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { fail, pass, Typ, type ParseResult, type TsType, type Type } from '.';
+import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
 
 export function set<TValue extends Type<unknown, unknown>>(value: TValue) {
   return new SetType<TValue, Set<TsType<TValue>>, Set<TsType<TValue>>>(value);
@@ -27,5 +27,13 @@ export class SetType<TValue, T, TInput = T> extends Typ<'set', T, TInput> {
       parsed.add(result.value);
     }
     return pass(parsed as T);
+  }
+
+  areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
+    return areEqual(
+      this.value as Type<unknown, unknown>,
+      (other as SetType<unknown, unknown, unknown>).value as Type<unknown, unknown>,
+      cache
+    );
   }
 }

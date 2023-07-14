@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { fail, pass, Typ, type ParseResult, type TsType, type Type } from '.';
+import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
 
 export function map<TKey extends Type<unknown, unknown>, TValue extends Type<unknown, unknown>>(
   key: TKey,
@@ -20,7 +20,7 @@ export class MapType<TKey, TValue, T, TInput = T> extends Typ<'map', T, TInput> 
     if (!(value instanceof Map)) {
       return fail();
     }
-    
+
     const valueAsMap = value as Map<unknown, unknown>;
     const parsedMap = new Map();
     for (const [key, value] of valueAsMap) {
@@ -35,5 +35,13 @@ export class MapType<TKey, TValue, T, TInput = T> extends Typ<'map', T, TInput> 
       parsedMap.set(keyResult.value, valueResult.value);
     }
     return pass(parsedMap as T);
+  }
+
+  areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
+    const otherMap = other as MapType<unknown, unknown, unknown, unknown>;
+    return (
+      areEqual(this.value as Type<unknown, unknown>, otherMap.value as Type<unknown, unknown>, cache) &&
+      areEqual(this.key as Type<unknown, unknown>, otherMap.key as Type<unknown, unknown>, cache)
+    );
   }
 }

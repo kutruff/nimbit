@@ -7,27 +7,15 @@ describe('Type equality', () => {
       [t.string, t.boolean, false],
       [t.string, { kind: 'string' } as t.Type<'string'>, true],
       [t.string, { kind: 'boolean' } as t.Type<'boolean'>, false],
-      [t.array(t.bigint), { kind: 'array', value: { kind: 'bigint' } } as t.ArrayType<typeof t.bigint, bigint>, true],
+      [t.array(t.bigint), t.array(t.bigint), true],
       [t.array(t.number), t.array(t.string), false],
-      [
-        t.array(t.literal('fooLiteral')),
-        { kind: 'array', value: { kind: 'literal', literal: 'fooLiteral' } } as t.ArrayType<
-          t.LiteralType<'fooLiteral'>,
-          'foo'
-        >,
-        true
-      ],
+      [t.array(t.literal('fooLiteral')), t.array(t.literal('fooLiteral')), true],
       [
         t.array(t.union(t.literal('fooLiteral'), t.literal('barLiteral'))),
         t.array(t.union(t.literal('barLiteral'), t.literal('fooLiteral'))),
         true
       ],
       [t.union(t.string, t.boolean), t.union(t.boolean, t.string), true],
-      [
-        t.union(t.string, t.boolean),
-        t.union({ kind: 'boolean' } as t.Type<'boolean'>, { kind: 'string' } as t.Type<'string'>),
-        true
-      ],
       [t.union(t.string, t.boolean, t.bigint), t.union(t.boolean, t.string), false],
       [t.union(t.string, t.boolean), t.union(t.union(t.boolean, t.string), t.union(t.boolean, t.string)), true],
       [t.enumm('test', ['a', 'b', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
@@ -37,6 +25,13 @@ describe('Type equality', () => {
       [t.tuple([t.number, t.string]), t.tuple([t.number, t.string]), true],
       [t.tuple([t.string, t.number]), t.tuple([t.number, t.string]), false],
       [t.tuple([t.obj({ a: t.number }), t.number]), t.tuple([t.obj({ a: t.number }), t.number]), true],
+      [t.map(t.number, t.string), t.map(t.number, t.string), true],
+      [t.map(t.string, t.bigint), t.map(t.number, t.bigint), false],
+      [t.map(t.string, t.bigint), t.map(t.string, t.number), false],
+      [t.set(t.string), t.set(t.string), true],
+      [t.set(t.string), t.set(t.number), false],
+      [t.set(t.array(t.string)), t.set(t.array(t.string)), true],
+      [t.set(t.array(t.string)), t.set(t.array(t.number)), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.string.opt }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.string }), true],
       [t.obj({ p0: t.string }), t.obj({ p1: t.string }), false],
@@ -50,11 +45,11 @@ describe('Type equality', () => {
     describe('recursive types', () => {
       it('self recursive are equal', () => {
         class ADef {
-          child = ADef;
+          child = t.obj(ADef);
         }
 
         class BDef {
-          child = BDef;
+          child = t.obj(BDef);
         }
 
         const A = t.obj(ADef);
@@ -69,12 +64,12 @@ describe('Type equality', () => {
 
       it('self recursive with matching shape are equal', () => {
         class ADef {
-          child = ADef;
+          child = t.obj(ADef);
           prop = t.bigint;
         }
 
         class BDef {
-          child = BDef;
+          child = t.obj(BDef);
           prop = t.bigint;
         }
 
@@ -98,12 +93,12 @@ describe('Type equality', () => {
 
       it('diverging self recursive are not equal', () => {
         class ADef {
-          b = BDef;
+          b = t.obj(BDef);
           prop = t.string;
         }
 
         class BDef {
-          a = ADef;
+          a = t.obj(ADef);
         }
 
         const A = t.obj(ADef);
@@ -129,11 +124,11 @@ describe('Type equality', () => {
 
       it('mutally recursive are not equal', () => {
         class ADef {
-          b = BDef;
+          b = t.obj(BDef);
         }
 
         class BDef {
-          a = ADef;
+          a = t.obj(ADef);
         }
 
         const A = t.obj(ADef);

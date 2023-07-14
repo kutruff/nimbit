@@ -11,6 +11,7 @@ import {
   pass,
   undef,
   union,
+  type ComparisonCache,
   type Constructor,
   type MakeUndefinedOptional,
   type ObjType,
@@ -78,6 +79,11 @@ export class Typ<TKind = unknown, T = unknown, TInput = T> implements Type<TKind
 
   get nullish() {
     return union(this, undef, nul);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
+    return this.kind === other.kind;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -150,5 +156,3 @@ export function coerce<TDestination extends Typ<unknown, unknown, unknown>, TSou
 function cloneObject<T>(obj: T) {
   return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) as T;
 }
-
-

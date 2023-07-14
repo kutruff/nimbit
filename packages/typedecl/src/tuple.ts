@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { fail, pass, Typ, type ParseResult, type TsType, type Type } from '.';
+import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
 
 export type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
   infer U,
@@ -30,7 +30,7 @@ export class TupleType<
     parsedTuple.length = this.elementTypes.length;
 
     for (let i = 0; i < this.elementTypes.length; i++) {
-      const result = (this.elementTypes[i] as any).parse(valueAsArray[i]);
+      const result = (this.elementTypes[i] as any).parse(valueAsArray[i], opts);
 
       if (!result.success) {
         return fail();
@@ -39,6 +39,23 @@ export class TupleType<
     }
 
     return pass(parsedTuple as any);
+  }
+
+  areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
+    const elements = this.elementTypes as unknown as Typ<unknown, unknown>[];
+    const otherElements = (other as typeof this).elementTypes;
+
+    if (elements.length !== otherElements.length) {
+      return false;
+    }
+
+    for (let i = 0; i < elements.length; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (!areEqual(elements[i]!, otherElements[i]!, cache)) {
+        return false;
+      }
+    }
+    return true;
   }
 }
 

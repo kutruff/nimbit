@@ -3,7 +3,17 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { fail, Typ, type _type, type ElementType, type ParseResult, type TsType, type Type } from '.';
+import {
+  areEqual,
+  fail,
+  Typ,
+  type _type,
+  type ComparisonCache,
+  type ElementType,
+  type ParseResult,
+  type TsType,
+  type Type
+} from '.';
 
 //Required for type inference of the return type for the union() function
 export interface IUnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', unknown> {
@@ -20,6 +30,29 @@ export class UnionType<TMembers extends Type<unknown, unknown>, T, TInput = T>
     super('union', name);
   }
 
+  areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
+    const otherT = other as typeof this;
+
+    if (this.memberTypes.length !== otherT.memberTypes.length) {
+      return false;
+    }
+
+    for (const memberA of this.memberTypes) {
+      let didFindMatchingMember = false;
+      for (const memberB of otherT.memberTypes) {
+        if (areEqual(memberA, memberB, cache)) {
+          // if ((memberA as unknown as Typ<unknown, unknown>).areEqual(memberB)) {
+          didFindMatchingMember = true;
+          break;
+        }
+      }
+      if (!didFindMatchingMember) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   parse(value: TInput, opts = Typ.defaultOpts): ParseResult<T> {
     for (const member of this.memberTypes) {
       const result = (member as any).parse(value, opts);
@@ -34,7 +67,7 @@ export class UnionType<TMembers extends Type<unknown, unknown>, T, TInput = T>
 
 function flattenUnionMembers<T extends Type<unknown, unknown>[]>(members: T) {
   const flattened: Array<Type<unknown, unknown>> = [];
-  const visited = new Set<Type>();
+  const visited = new WeakSet<Type>();
 
   function visit(currentType: Type<unknown, unknown>) {
     if (visited.has(currentType)) {

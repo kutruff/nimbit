@@ -7,6 +7,7 @@ import {
   type MapOfTupleKeys,
   type ParseResult,
   type TupleKeysToUnion,
+  type Type,
   type Writeable
 } from '.';
 
@@ -36,5 +37,30 @@ export class EnumType<
       }
     }
     return fail();
+  }
+
+  areEqual(other: Type<unknown, unknown>): boolean {
+    const otherT = other as typeof this;
+
+    const values = this.values;
+    const otherValues = otherT.values;
+
+    if (this.name !== otherT.name || values.length !== otherValues.length) {
+      return false;
+    }
+    //TODO: is O(n^2) the best we can do here since the set of values *should* be small?
+    for (const value of values) {
+      let result = false;
+      for (const otherValue of otherValues) {
+        if (value === otherValue) {
+          result = true;
+          break;
+        }
+      }
+      if (!result) {
+        return false;
+      }
+    }
+    return true;
   }
 }

@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from '.';
 import { Typ } from '.';
-import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('experiments', () => {
-  it('does nothing', () => {});
+  it('does nothing', () => {
+    expect(true).toEqual(true);
+  });
 
   // it('parses', () => {
 

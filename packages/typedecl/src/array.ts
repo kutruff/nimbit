@@ -2,14 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { fail, pass, Typ, type ParseResult, type TsType, type Type } from '.';
+import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
 
 export function array<TValue extends Type<unknown, unknown>>(value: TValue) {
   return new ArrayType<TValue, Array<TsType<TValue>>, Array<TsType<TValue>>>(value);
 }
 
-export class ArrayType<TElement, T, TInput = T> extends Typ<'array', T, TInput> {
-  constructor(public value: TElement, public name?: string) {
+export class ArrayType<TValue, T, TInput = T> extends Typ<'array', T, TInput> {
+  constructor(public value: TValue, public name?: string) {
     super('array', name);
   }
 
@@ -27,5 +27,13 @@ export class ArrayType<TElement, T, TInput = T> extends Typ<'array', T, TInput> 
       parsedArray.push(result.value);
     }
     return pass(parsedArray as T);
+  }
+
+  areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
+    return areEqual(
+      this.value as Type<unknown, unknown>,
+      (other as ArrayType<unknown, unknown>).value as Type<unknown, unknown>,
+      cache
+    );
   }
 }
