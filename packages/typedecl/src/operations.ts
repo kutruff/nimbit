@@ -75,6 +75,31 @@ export function intersection<TShapeA, TsTypeA, TShapeB, TsTypeB>(
   return obj(merged) as unknown as ObjIntersection<typeof objectTypeA, typeof objectTypeB>;
 }
 
+export type Merge<TA, TB> = Omit<TA, keyof TB> & TB;
+
+export type ObjMerge<TObjA extends ObjType<unknown, unknown>, TObjB extends ObjType<unknown, unknown>> = ObjType<
+  Merge<TObjA['shape'], TObjB['shape']>,
+  Merge<TObjA[typeof _type], TObjB[typeof _type]>
+>;
+
+export function merge<TShapeA, TsTypeA, TShapeB, TsTypeB>(
+  objectTypeA: ObjType<TShapeA, TsTypeA>,
+  objectTypeB: ObjType<TShapeB, TsTypeB>
+): ObjMerge<typeof objectTypeA, typeof objectTypeB> {
+  const merged = {} as Shape;
+
+  const shapeA = objectTypeA.shape as Shape;
+  const shapeB = objectTypeB.shape as Shape;
+
+  const allKeysInAB = [...new Set(Object.keys(shapeA).concat(Object.keys(shapeB)))];
+
+  for (const key of allKeysInAB) {
+    merged[key] = shapeB[key] || (shapeA[key] as Type<unknown, unknown>);
+  }
+
+  return obj(merged) as unknown as ObjMerge<typeof objectTypeA, typeof objectTypeB>;
+}
+
 export type PartialType<T> = {
   [P in keyof T]: T[P] extends Type<unknown, unknown>
     ? UnionType<FlattenedUnion<T[P] | typeof undef>, TsType<T[P] | typeof undef>>

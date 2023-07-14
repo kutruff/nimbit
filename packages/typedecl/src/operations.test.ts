@@ -294,6 +294,55 @@ describe('Type operations', () => {
     });
   });
 
+  describe('merge()', () => {
+    it('merges distinct properties', () => {
+      const objA = t.obj({ propA: t.string });
+      const objB = t.obj({ propB: t.number });
+      const result = t.merge(objA, objB);
+      type result = t.Resolve<typeof result>;
+      type resultInference = t.Infer<typeof result>;
+      const ExpectedDefinitionType = t.obj({
+        propA: t.string,
+        propB: t.number
+      });
+
+      type ExpectedDefinitionType = typeof ExpectedDefinitionType;
+      expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
+      expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
+
+      type ResultShape = t.Infer<typeof result>;
+      type ExpectedResultShape = { propA: string; propB: number };
+      expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
+      expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
+
+      expect(result).toEqual(ExpectedDefinitionType);
+    });
+
+    it('merges conflicting properties from B over A', () => {
+      const objA = t.obj({ prop: t.number, propA: t.string });
+      const objB = t.obj({ prop: t.string, propB: t.number });
+      const result = t.merge(objA, objB);
+      type result = t.Resolve<typeof result>;
+
+      const ExpectedDefinitionType = t.obj({
+        propA: t.string,
+        propB: t.number,
+        prop: t.string
+      });
+
+      type ExpectedDefinitionType = typeof ExpectedDefinitionType;
+      expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
+      expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
+
+      type ResultShape = t.Infer<typeof result>;
+      type ExpectedResultShape = { propA: string; propB: number; prop: string };
+      expectTypesSupportAssignment<ExpectedResultShape, ResultShape>();
+      expectTypesSupportAssignment<ResultShape, ExpectedResultShape>();
+
+      expect(result).toEqual(ExpectedDefinitionType);
+    });
+  });
+
   describe('partial()', () => {
     it('makes required properites into optionals', () => {
       const target = t.obj({ prop: t.string });
