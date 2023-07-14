@@ -4,12 +4,12 @@ import { fail, pass, Typ, type ParseResult } from '.';
 export const nul = createType('null', (value: null) => (value === null ? pass(value) : fail()));
 export const undef = createType('undefined', (value: undefined) => (value === null ? pass(value) : fail()));
 export const any = createType('any', (value: any) => pass(value));
-export const unknown = createType('unknown', (value: any) => pass(value));
-export const string = createType('string', (value: any) => (typeof value === 'string' ? pass(value) : fail()));
-export const number = createType('number', (value: any) => (typeof value === 'number' ? pass(value) : fail()));
-export const boolean = createType('boolean', (value: any) => (typeof value === 'boolean' ? pass(value) : fail()));
-export const bigint = createType('bigint', (value: any) => (typeof value === 'bigint' ? pass(value) : fail()));
-export const date = createType('date', (value: any) =>
+export const unknown = createType('unknown', (value: unknown) => pass(value));
+export const string = createType('string', (value: string) => (typeof value === 'string' ? pass(value) : fail()));
+export const number = createType('number', (value: number) => (typeof value === 'number' ? pass(value) : fail()));
+export const boolean = createType('boolean', (value: boolean) => (typeof value === 'boolean' ? pass(value) : fail()));
+export const bigint = createType('bigint', (value: bigint) => (typeof value === 'bigint' ? pass(value) : fail()));
+export const date = createType('date', (value: Date) =>
   value instanceof Date && !isNaN(value.getTime()) ? pass(value) : fail()
 );
 
