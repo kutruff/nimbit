@@ -267,15 +267,12 @@ describe('TypeConverter', () => {
   it('to() makes datelike easy', () => {
     const DateLike = t.union(t.number, t.string, t.date).to(t.date, coerceToDate);
 
-    type foo = (typeof DateLike)['kind'];
     type DateLike = t.Infer<typeof DateLike>;
     const assigned: DateLike = new Date();
     const result = DateLike.parse(1232131);
     if (result.success) {
       expect(result.value).toEqual(new Date(1232131));
     }
-    type adfdaf = Date extends object ? true : false;
-    type adfdaf2 = Int16Array extends object ? true : false;
 
     expect(result.success).toEqual(true);
     if (result.success) {

@@ -8,7 +8,7 @@ describe('Unions of types', () => {
       const Target = t.union(t.string, t.boolean);
       type Target = t.Infer<typeof Target>;
 
-      type ExpectedDefinitionType = t.UnionType<typeof t.string | t.BooleanType, string | boolean>;
+      type ExpectedDefinitionType = t.UnionType<typeof t.string | typeof t.boolean, string | boolean>;
       expectTypesSupportAssignment<ExpectedDefinitionType, typeof Target>();
       expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
 
@@ -24,7 +24,7 @@ describe('Unions of types', () => {
         type Target = t.Infer<typeof Target>;
 
         type ExpectedDefinitionType = t.UnionType<
-          typeof t.string | t.BooleanType | t.NumberType | t.BigIntType,
+          typeof t.string | typeof t.boolean | typeof t.number | typeof t.bigint,
           string | number | boolean | bigint
         >;
 
@@ -45,7 +45,7 @@ describe('Unions of types', () => {
           type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
-            typeof t.string | t.BooleanType | t.BigIntType,
+            typeof t.string | typeof t.boolean | typeof t.bigint,
             string | boolean | bigint
           >;
 
@@ -64,7 +64,7 @@ describe('Unions of types', () => {
           type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
-            typeof t.string | t.BooleanType | t.NumberType | t.BigIntType,
+            typeof t.string | typeof t.boolean | typeof t.number | typeof t.bigint,
             string | boolean | number | bigint
           >;
 
