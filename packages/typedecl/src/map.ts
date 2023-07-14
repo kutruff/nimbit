@@ -12,7 +12,7 @@ export function map<TKey extends Type<unknown, unknown>, TValue extends Type<unk
 }
 
 export class MapType<TKey, TValue, T, TInput = T> extends Typ<'map', T, TInput> {
-  constructor(public key: TKey, public value: TValue, public name?: string) {
+  constructor(public key: TKey, public value: TValue, name?: string) {
     super('map', name);
   }
 

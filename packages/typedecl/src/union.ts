@@ -26,8 +26,19 @@ export class UnionType<TMembers extends Type<unknown, unknown>, T, TInput = T>
   extends Typ<'union', T, TInput>
   implements IUnionType<TMembers>
 {
-  constructor(public memberTypes: TMembers[], public name?: string) {
+  constructor(public memberTypes: TMembers[], name?: string) {
     super('union', name);
+  }
+
+  parse(value: TInput, opts = Typ.defaultOpts): ParseResult<T> {
+    for (const member of this.memberTypes) {
+      const result = (member as any).parse(value, opts);
+      if (result.success) {
+        return result;
+      }
+      // failedResults.push(result);
+    }
+    return fail();
   }
 
   areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
@@ -51,17 +62,6 @@ export class UnionType<TMembers extends Type<unknown, unknown>, T, TInput = T>
       }
     }
     return true;
-  }
-
-  parse(value: TInput, opts = Typ.defaultOpts): ParseResult<T> {
-    for (const member of this.memberTypes) {
-      const result = (member as any).parse(value, opts);
-      if (result.success) {
-        return result;
-      }
-      // failedResults.push(result);
-    }
-    return fail();
   }
 }
 

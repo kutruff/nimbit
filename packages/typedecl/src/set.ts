@@ -9,7 +9,7 @@ export function set<TValue extends Type<unknown, unknown>>(value: TValue) {
 }
 
 export class SetType<TValue, T, TInput = T> extends Typ<'set', T, TInput> {
-  constructor(public value: TValue, public name?: string) {
+  constructor(public value: TValue, name?: string) {
     super('set', name);
   }
 

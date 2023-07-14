@@ -33,7 +33,7 @@ export function intersection<TShapeA, TsTypeA, TShapeB, TsTypeB>(
   const shapeA = objectTypeA.shape as Shape;
   const shapeB = objectTypeB.shape as Shape;
 
-  const allKeysInAB = [...new Set(Object.keys(shapeA).concat(Object.keys(shapeB)))];
+  const allKeysInAB = new Set(Object.keys(shapeA).concat(Object.keys(shapeB)));
 
   for (const key of allKeysInAB) {
     const propertyA = shapeA[key];
@@ -91,7 +91,7 @@ export function merge<TShapeA, TsTypeA, TShapeB, TsTypeB>(
   const shapeA = objectTypeA.shape as Shape;
   const shapeB = objectTypeB.shape as Shape;
 
-  const allKeysInAB = [...new Set(Object.keys(shapeA).concat(Object.keys(shapeB)))];
+  const allKeysInAB = new Set(Object.keys(shapeA).concat(Object.keys(shapeB)));
 
   for (const key of allKeysInAB) {
     merged[key] = shapeB[key] || (shapeA[key] as Type<unknown, unknown>);

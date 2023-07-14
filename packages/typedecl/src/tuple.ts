@@ -17,7 +17,7 @@ export class TupleType<
   TElements extends [Type<unknown, unknown>, ...Type<unknown, unknown>[]],
   TInput = InferTupleKeys<TElements>
 > extends Typ<'tuple', InferTupleKeys<TElements>, TInput> {
-  constructor(public elementTypes: TElements, public name?: string) {
+  constructor(public elementTypes: TElements, name?: string) {
     super('tuple', name);
   }
 

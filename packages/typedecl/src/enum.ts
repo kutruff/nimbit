@@ -25,7 +25,7 @@ export class EnumType<
 > extends Typ<'enum', TupleKeysToUnion<TEnumValues>, TInput> {
   enum: TMapOfEnumKeyToValue;
   //TODO: may want to turn array into a Set for efficiency?
-  constructor(public values: TEnumValues, enumMap: TMapOfEnumKeyToValue, public name?: string) {
+  constructor(public values: TEnumValues, enumMap: TMapOfEnumKeyToValue, name?: string) {
     super('enum', name);
     this.enum = enumMap;
   }

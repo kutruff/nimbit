@@ -9,7 +9,7 @@ export function array<TValue extends Type<unknown, unknown>>(value: TValue) {
 }
 
 export class ArrayType<TValue, T, TInput = T> extends Typ<'array', T, TInput> {
-  constructor(public value: TValue, public name?: string) {
+  constructor(public value: TValue, name?: string) {
     super('array', name);
   }
 
