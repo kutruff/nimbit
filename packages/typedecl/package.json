@@ -27,6 +27,6 @@
     "jest-presets": "workspace:^",
     "tsup": "^7.1.0",
     "tsx": "^3.12.7",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.6"
   }
 }
