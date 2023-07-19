@@ -5,8 +5,14 @@ describe('Type equality', () => {
     it.each([
       [t.string, t.string, true],
       [t.string, t.boolean, false],
-      [t.string, { kind: 'string' } as t.Type<'string'>, true],
-      [t.string, { kind: 'boolean' } as t.Type<'boolean'>, false],
+      [t.union(t.string, t.boolean), t.union(t.boolean, t.string), true],
+      [t.union(t.string, t.boolean, t.bigint), t.union(t.boolean, t.string), false],
+      [t.union(t.string, t.boolean), t.union(t.union(t.boolean, t.string), t.union(t.boolean, t.string)), true],
+      [
+        t.union(t.literal('fooLiteral'), t.literal('barLiteral')),
+        t.union(t.literal('barLiteral'), t.literal('fooLiteral')),
+        true
+      ],
       [t.array(t.bigint), t.array(t.bigint), true],
       [t.array(t.number), t.array(t.string), false],
       [t.array(t.literal('fooLiteral')), t.array(t.literal('fooLiteral')), true],
@@ -15,9 +21,6 @@ describe('Type equality', () => {
         t.array(t.union(t.literal('barLiteral'), t.literal('fooLiteral'))),
         true
       ],
-      [t.union(t.string, t.boolean), t.union(t.boolean, t.string), true],
-      [t.union(t.string, t.boolean, t.bigint), t.union(t.boolean, t.string), false],
-      [t.union(t.string, t.boolean), t.union(t.union(t.boolean, t.string), t.union(t.boolean, t.string)), true],
       [t.enumm('test', ['a', 'b', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
       [t.enumm('test', ['b', 'a', 'c']), t.enumm('test', ['a', 'b', 'c']), true],
       [t.enumm('test', ['a', 'b', 'c']), t.enumm('differentName', ['a', 'b', 'c']), false],
@@ -32,13 +35,13 @@ describe('Type equality', () => {
       [t.set(t.string), t.set(t.number), false],
       [t.set(t.array(t.string)), t.set(t.array(t.string)), true],
       [t.set(t.array(t.string)), t.set(t.array(t.number)), false],
-      [t.obj({ p0: t.string }), t.obj({ p0: t.string.opt }), false],
+      [t.obj({ p0: t.string }), t.obj({ p0: t.string.opt() }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.string }), true],
       [t.obj({ p0: t.string }), t.obj({ p1: t.string }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.boolean }), false],
       [t.obj({ p0: t.string }), t.obj({ p0: t.string, p1: t.undef }), false], // Interesting case.  An object with an undefined property is wider than the other type
       [t.obj({ p0: t.string, p1: t.obj({ n: t.number }) }), t.obj({ p0: t.string, p1: t.obj({ n: t.number }) }), true]
-    ])('areEqual(%s, %s)', (a: t.Type, b: t.Type, expected: boolean) => {
+    ])('areEqual(%s, %s)', (a: t.Typ, b: t.Typ, expected: boolean) => {
       expect(t.areEqual(a, b)).toEqual(expected);
     });
 

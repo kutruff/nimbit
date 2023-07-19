@@ -19,15 +19,38 @@ export type NotAUnion<T> = [T] extends [boolean] ? boolean : [T] extends [UnionT
 //ahejlsberg FTW: https://github.com/microsoft/TypeScript/issues/42644#issuecomment-774315112
 export type Literal<T, LiteralValue> = LiteralValue extends T ? (T extends LiteralValue ? never : LiteralValue) : never;
 
+//TODO: is the constraint needed?
 export type ElementType<T extends Array<unknown>> = T extends Array<infer TElement> ? TElement : never;
 
 export type Writeable<T> = {
   -readonly [P in keyof T]: Writeable<T[P]>;
 };
 
-//simplifies a type.
-export type Resolve<T> = T extends Map<unknown, unknown> | Set<unknown> | Date
+//This and other things taken from Zod.
+export type Identity<T> = T;
+export type Resolve<T> = T extends
+  | Map<unknown, unknown>
+  | Set<unknown>
+  | Date
+  | Array<unknown>
+  | string
+  | number
+  | bigint
+  | boolean
   ? T
-  : T extends object
-  ? {} & { [P in keyof T]: Resolve<T[P]> }
-  : T;
+  : { [K in keyof T]: T[K] };
+
+// //simplifies a type.  All the primitives are added to avoid intersection types like {a: number} & string
+// export type Resolve<T> = T extends
+//   | Map<unknown, unknown>
+//   | Set<unknown>
+//   | Date
+//   | Array<unknown>
+//   | string
+//   | number
+//   | bigint
+//   | boolean
+//   ? T
+//   : T extends object
+//   ? {} & { [P in keyof T]: Resolve<T[P]> }
+//   : T;

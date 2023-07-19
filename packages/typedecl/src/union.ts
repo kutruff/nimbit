@@ -7,6 +7,7 @@ import {
   areEqual,
   fail,
   Typ,
+  TypOrig,
   type _type,
   type ComparisonCache,
   type ElementType,
@@ -16,16 +17,13 @@ import {
 } from '.';
 
 //Required for type inference of the return type for the union() function
-export interface IUnionType<TMembers extends Type<unknown, unknown>> extends Type<'union', unknown> {
+export interface IUnionType<TMembers> extends Type<'union', unknown> {
   memberTypes: TMembers[];
 }
 
 export type FlattenedUnion<T> = T extends IUnionType<infer K> ? FlattenedUnion<K> : T;
 
-export class UnionType<TMembers extends Type<unknown, unknown>, T>
-  extends Typ<'union', T>
-  implements IUnionType<TMembers>
-{
+export class UnionTypeOrig<TMembers, T> extends TypOrig<'union', T> implements IUnionType<TMembers> {
   constructor(public memberTypes: TMembers[], name?: string) {
     super('union', name);
   }
@@ -51,7 +49,7 @@ export class UnionType<TMembers extends Type<unknown, unknown>, T>
     for (const memberA of this.memberTypes) {
       let didFindMatchingMember = false;
       for (const memberB of otherT.memberTypes) {
-        if (areEqual(memberA, memberB, cache)) {
+        if (areEqual(memberA as any, memberB as any, cache)) {
           // if ((memberA as unknown as Typ<unknown, unknown>).areEqual(memberB)) {
           didFindMatchingMember = true;
           break;
@@ -76,7 +74,7 @@ function flattenUnionMembers<T extends Type<unknown, unknown>[]>(members: T) {
     visited.add(currentType);
 
     if (currentType.kind === 'union') {
-      const union = currentType as UnionType<Type<unknown, unknown>, unknown>;
+      const union = currentType as UnionTypeOrig<Type<unknown, unknown>, unknown>;
       union.memberTypes.forEach(visit);
     } else {
       flattened.push(currentType);
@@ -87,9 +85,77 @@ function flattenUnionMembers<T extends Type<unknown, unknown>[]>(members: T) {
   return flattened;
 }
 
-export function union<T extends Type<unknown, unknown>[]>(
+export function unionOrig<T extends Type<unknown, unknown>[]>(
   ...args: T
-): UnionType<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>> {
+): UnionTypeOrig<FlattenedUnion<ElementType<T>>, TsType<ElementType<T>>> {
   const flattenedMembers = flattenUnionMembers(args);
   return new UnionType(flattenedMembers) as any;
+}
+
+export class UnionType<TKind, TShape, T> extends Typ<TKind, TShape, T> {
+  constructor(shape: TShape[], name?: string) {
+    super(shape.map(x => (x as any).kind) as TKind, shape as TShape, name);
+    this.unionTypes = shape as any;
+  }
+
+  parse(value: T, opts = Typ.defaultOpts): ParseResult<T> {
+    for (const member of this.shape as Array<unknown>) {
+      const result = (member as any).parse(value, opts);
+      if (result.success) {
+        return result;
+      }
+      // failedResults.push(result);
+    }
+    return fail();
+  }
+
+  // areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
+  //   const otherT = other;
+
+  //   const thisShape = this.unionTypes;
+  //   const otherUnion = otherT.unionTypes;
+
+  //   if (thisShape.length !== otherUnion.length) {
+  //     return false;
+  //   }
+
+  //   for (const memberA of thisShape) {
+  //     let didFindMatchingMember = false;
+  //     if (memberA.kind === 'union') {
+  //       areEqual(memberA, other, cache);
+  //     }
+
+  //     for (const memberB of otherUnion) {
+  //       if (areEqual(memberA, memberB, cache)) {
+  //         // if ((memberA as unknown as Typ<unknown, unknown>).areEqual(memberB)) {
+  //         didFindMatchingMember = true;
+  //         break;
+  //       }
+  //     }
+  //     if (!didFindMatchingMember) {
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // }
+}
+
+export function* flattenUnionGen(type: Typ): IterableIterator<Typ> {
+  if (type.isUnion()) {
+    for (const member of type.unionTypes) {
+      yield* flattenUnionGen(member);
+    }
+  } else {
+    yield type;
+  }
+}
+
+type ElementType2<T> = T extends Array<infer TElement> ? TElement : never;
+export function union<T extends Typ<unknown, unknown>[]>(
+  ...args: T
+): // : ElementType2<T> {
+Typ<ElementType2<T>['kind'], ElementType2<T>['shape'], TsType<ElementType2<T>>> {
+  // const flattenedMembers = flattenUnionMembers(args);
+  // return new UnionType2([...new Set(flattenedMembers.map(x => x.kind))]) as any;
+  return new UnionType(args) as any;
 }

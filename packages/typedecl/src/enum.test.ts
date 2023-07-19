@@ -15,8 +15,8 @@ describe('Enums', () => {
 
       expect(Target.kind).toEqual('enum');
       expect(Target.name).toEqual('Target');
-      expect(Target.values.length).toEqual(3);
-      expect(Target.values).toEqual(['a', 'b', 'c']);
+      expect(Target.shape.length).toEqual(3);
+      expect(Target.shape).toEqual(['a', 'b', 'c']);
     });
   });
 
@@ -31,7 +31,7 @@ describe('Enums', () => {
 
     expect(Target.kind).toEqual('enum');
     expect(Target.name).toEqual('Target');
-    expect(Target.values.length).toEqual(3);
-    expect(Target.values).toEqual(['a', 'b', 'c']);
+    expect(Target.shape.length).toEqual(3);
+    expect(Target.shape).toEqual(['a', 'b', 'c']);
   });
 });

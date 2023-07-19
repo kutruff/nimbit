@@ -268,7 +268,6 @@ describe('TypeConverter', () => {
     const DateLike = t.union(t.number, t.string, t.date).to(t.date, coerceToDate);
 
     type DateLikeType = t.Resolve<typeof DateLike>;
-
     
     type DateLike = t.Infer<typeof DateLike>;
 
@@ -330,7 +329,7 @@ describe('TypeConverter', () => {
 
     const singleStringUnion = t.union(t.string, t.number);
 
-    const opted = singleStringUnion.opt;
+    const opted = singleStringUnion.opt();
 
     const stringToUnion = t.string.to(singleStringUnion);
     type stringToUnion = t.Infer<typeof stringToUnion>;
@@ -338,7 +337,7 @@ describe('TypeConverter', () => {
 
     const unionedAgain = t.union(stringToUnion, t.number);
 
-    type isUnion = (typeof unionedAgain)['memberTypes'];
+    type isUnion = (typeof unionedAgain)['unionTypes'];
 
     const tupleTest = t
       .tuple([t.string, t.string])
@@ -356,7 +355,7 @@ describe('TypeConverter', () => {
 
   it('to() stress test', () => {
     class ADef {
-      self? = t.obj(ADef).opt;
+      self? = t.obj(ADef).opt();
       literalProp = t.literal('hello').to(t.literal('world'), x => pass('world' as const));
       tupleProp = t
         .tuple([t.string, t.string])
@@ -385,12 +384,12 @@ describe('TypeConverter', () => {
     }
     // const a: A = { self: {literalProp: 'world', } } } };
 
-    expect(A.shape.self.memberTypes[0]).toEqual(A);
+    expect(A.shape.self?.unionTypes[0]).toEqual(A);        
   });
 
   it('to() allows self recursion', () => {
     class ADef {
-      self? = t.obj(ADef).opt;
+      self? = t.obj(ADef).opt();
     }
 
     const A = t.obj(ADef);
@@ -404,7 +403,7 @@ describe('TypeConverter', () => {
     }
     const a: A = { self: { self: { self: { self: {} } } } };
 
-    expect(A.shape.self.memberTypes[0]).toEqual(A);
+    expect(A.shape.self.unionTypes[0]).toEqual(A);
 
     type ExpectedAShape = { self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();
@@ -429,13 +428,13 @@ describe('TypeConverter', () => {
   it('where() works with recursive types', () => {
     class ADef {
       prop = t.string;
-      self? = t.obj(ADef).where(x => x.prop !== '').opt;
+      self? = t.obj(ADef).where(x => x.prop !== '').opt();
     }
 
     const A = t.obj(ADef, 'A');
     type A = t.Infer<typeof A>;
 
-    expect(A.shape.self.memberTypes[0]?.name).toEqual('A');
+    expect(A.shape.self.unionTypes[0]?.name).toEqual('A');
 
     type ExpectedAShape = { prop: string; self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();

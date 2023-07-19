@@ -8,7 +8,7 @@ describe('Type declaration', () => {
       type ArrayOfNumbers = t.Infer<typeof ArrayOfNumbers>;
       const instance: ArrayOfNumbers = [1, 2];
       expect(ArrayOfNumbers.kind).toEqual('array');
-      expect(ArrayOfNumbers.value).toEqual(t.number);
+      expect(ArrayOfNumbers.shape).toEqual(t.number);
     });
 
     it('allows arrays as members', () => {
@@ -20,7 +20,7 @@ describe('Type declaration', () => {
         anArrayProp: ['foo', 'bar']
       };
       expect(ObjectWithArray.shape.anArrayProp.kind).toEqual('array');
-      expect(ObjectWithArray.shape.anArrayProp.value).toEqual(t.string);
+      expect(ObjectWithArray.shape.anArrayProp.shape).toEqual(t.string);
     });
 
     it('allows arrays of objects', () => {
@@ -37,7 +37,7 @@ describe('Type declaration', () => {
         anArrayProp: [{ someProp: 'foo' }, { someProp: 'bar' }]
       };
 
-      expect(ObjectWithArray.shape.anArrayProp.value).toEqual(
+      expect(ObjectWithArray.shape.anArrayProp.shape).toEqual(
         t.obj({
           someProp: t.string
         })

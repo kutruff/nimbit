@@ -8,9 +8,9 @@ export function set<TValue extends Type<unknown, unknown>>(value: TValue) {
   return new SetType<TValue, Set<TsType<TValue>>>(value);
 }
 
-export class SetType<TValue, T> extends Typ<'set', T> {
+export class SetType<TValue, T> extends Typ<'set', TValue, T> {
   constructor(public value: TValue, name?: string) {
-    super('set', name);
+    super('set', value, name);
   }
 
   parse(value: T, opts = Typ.defaultOpts): ParseResult<T> {
@@ -29,11 +29,7 @@ export class SetType<TValue, T> extends Typ<'set', T> {
     return pass(parsed as T);
   }
 
-  areEqual(other: Type<unknown, unknown>, cache: ComparisonCache): boolean {
-    return areEqual(
-      this.value as Type<unknown, unknown>,
-      (other as SetType<unknown, unknown>).value as Type<unknown, unknown>,
-      cache
-    );
+  areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
+    return areEqual(this.value as Typ, (other as SetType<unknown, unknown>).value as Typ, cache);
   }
 }
