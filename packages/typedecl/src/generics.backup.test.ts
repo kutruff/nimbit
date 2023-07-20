@@ -90,6 +90,11 @@ type ToArray<Type> = Type extends any ? Type[] : never;
 
 type StrArrOrNumArr = ToArray<string | number>;
 
+// https://stackoverflow.com/a/71642979
+type FlattenDeep<T, A extends readonly unknown[] = []> = [T] extends [[infer F, ...infer R]]
+  ? FlattenDeep<R, [F] extends [readonly unknown[]] ? [...A, ...FlattenDeep<F>] : [...A, F]>
+  : A;
+
 // type GetChars<S> = GetCharsHelper<S, never>;
 // type GetCharsHelper<S, Acc> = S extends `${infer Char}${infer Rest}` ? GetCharsHelper<Rest, Char | Acc> : Acc;
 

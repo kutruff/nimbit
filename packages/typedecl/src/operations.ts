@@ -8,7 +8,7 @@
 
 import {
   areEqual,
-  flattenUnionGen,
+  flatIterateUnion,
   never,
   obj,
   undef,
@@ -17,10 +17,12 @@ import {
   type _type,
   type ComparisonCache,
   type ElementType,
+  type FlattenUnionMembers,
   type ObjType,
   type Resolve,
   type Shape,
-  type Typ
+  type Typ,
+  type UnionType
 } from '.';
 
 // type NeverToUndefined<T> = [T] extends [never] ? undefined : T;
@@ -95,8 +97,8 @@ export function intersection<TA extends Typ<unknown, unknown, unknown>, TB exten
   }
 
   if (typeA.isUnion() || typeB.isUnion()) {
-    const aMembers = [...flattenUnionGen(typeA)];
-    const bMembers = [...flattenUnionGen(typeB)];
+    const aMembers = [...flatIterateUnion(typeA)];
+    const bMembers = [...flatIterateUnion(typeB)];
 
     const equalTypes = new Set<Typ<unknown, unknown>>();
     for (const aMember of aMembers) {
@@ -186,20 +188,63 @@ export function omit<TShape, K extends keyof TShape & keyof T, T>(
   return obj(result as any) as any;
 }
 
+// export function exclude<T extends Typ, U extends Typ[]>(
+//   typesT: T,
+//   ...typesU: U
+// ): Exclude<T['kind'], ElementType<U>['kind']> extends never
+//   ? typeof never
+//   : Typ<
+//       Exclude<T['kind'], ElementType<U>['kind']>,
+//       Exclude<T['shape'], ElementType<U>['shape']>,
+//       Exclude<T[typeof _type], ElementType<U>[typeof _type]>
+//     > {
+//   const notExcluded = [];
+//   for (const typeT of flattenUnionGen(typesT)) {
+//     let didFindMatchingMember = false;
+//     for (const typeU of typesU.flatMap(x => [...flattenUnionGen(x)])) {
+//       if (areEqual(typeT, typeU)) {
+//         didFindMatchingMember = true;
+//         break;
+//       }
+//     }
+//     if (!didFindMatchingMember) {
+//       notExcluded.push(typeT);
+//     }
+//   }
+//   return unionIfNeeded(notExcluded) as any;
+// }
+
+type TupleExclude<T, TExclude, Acc extends any[] = []> = T extends [infer Head, ...infer Tail]
+  ? Exclude<Head, TExclude> extends never
+    ? TupleExclude<Tail, TExclude, Acc>
+    : TupleExclude<Tail, TExclude, [...Acc, Head]>
+  : Acc;
+
+type aldflakfd = Exclude<string | number, string> extends never ? true : 'still exists';
+type Test2 = TupleExclude<[string, bigint, number, string], string>;
+type Test4 = TupleExclude<[string, number], bigint | number>;
+
 export function exclude<T extends Typ, U extends Typ[]>(
   typesT: T,
   ...typesU: U
 ): Exclude<T['kind'], ElementType<U>['kind']> extends never
   ? typeof never
+  : T extends UnionType<infer TKind, infer TShape, infer TType, infer TMembers>
+  ? UnionType<
+      Exclude<T['kind'], ElementType<U>['kind']>,
+      Exclude<T['shape'], ElementType<U>['shape']>,
+      Exclude<T[typeof _type], ElementType<U>[typeof _type]>,
+      TupleExclude<FlattenUnionMembers<T>, ElementType<FlattenUnionMembers<U>>>
+    >
   : Typ<
       Exclude<T['kind'], ElementType<U>['kind']>,
       Exclude<T['shape'], ElementType<U>['shape']>,
       Exclude<T[typeof _type], ElementType<U>[typeof _type]>
     > {
   const notExcluded = [];
-  for (const typeT of flattenUnionGen(typesT)) {
+  for (const typeT of flatIterateUnion(typesT)) {
     let didFindMatchingMember = false;
-    for (const typeU of typesU.flatMap(x => [...flattenUnionGen(x)])) {
+    for (const typeU of typesU.flatMap(x => [...flatIterateUnion(x)])) {
       if (areEqual(typeT, typeU)) {
         didFindMatchingMember = true;
         break;
@@ -209,7 +254,8 @@ export function exclude<T extends Typ, U extends Typ[]>(
       notExcluded.push(typeT);
     }
   }
-  return unionIfNeeded(notExcluded) as any;
+  // return unionIfNeeded(notExcluded) as any;
+  return (notExcluded.length > 0 ? union(...notExcluded) : never) as any;
 }
 
 export function extract<T extends Typ, U extends Typ[]>(
@@ -223,8 +269,8 @@ export function extract<T extends Typ, U extends Typ[]>(
       Extract<T[typeof _type], ElementType<U>[typeof _type]>
     > {
   const foundMembers = [];
-  for (const typeT of flattenUnionGen(typesT)) {
-    for (const typeU of typesU.flatMap(x => [...flattenUnionGen(x)])) {
+  for (const typeT of flatIterateUnion(typesT)) {
+    for (const typeU of typesU.flatMap(x => [...flatIterateUnion(x)])) {
       if (areEqual(typeT, typeU)) {
         foundMembers.push(typeT);
         break;

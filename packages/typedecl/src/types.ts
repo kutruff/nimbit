@@ -5,6 +5,7 @@
 import {
   exclude,
   fail,
+  keyMap,
   nul,
   pass,
   undef,
@@ -13,10 +14,12 @@ import {
   type Constructor,
   type Extend,
   type MakeUndefinedOptional,
+  type ObjectKeyMap,
   type ObjType,
   type ParseResult,
   type Resolve,
-  type TypeConverter
+  type TypeConverter,
+  type UnionType
 } from '.';
 
 export interface Parser<TInput, TOutput> {
@@ -85,19 +88,28 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   //   return this.unionTypes.length === 1 ? this.unionTypes[0]!.s : this.shape;
   // }
 
+  errorMessageOnFail(value: T, opts: ParseOptions): string | undefined {
+    return undefined;
+  }
+
   isUnion(): boolean {
     return this.unionTypes.length > 0;
   }
 
-  opt(): Typ<TKind | 'undefined', TShape | undefined, T | undefined> {
+  // opt(): Typ<TKind | 'undefined', TShape | undefined, T | undefined> {
+  //   return union(this, undef) as any;
+  // }
+  opt(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof undef]> {
     return union(this, undef) as any;
   }
 
-  nullable(): Typ<TKind | 'null', TShape | null, T | null> {
+  // nullable(): Typ<TKind | 'null', TShape | null, T | null> {
+  nullable(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof nul]> {
     return union(this, nul) as any;
   }
 
-  nullish(): Typ<TKind | 'undefined' | 'null', TShape | undefined | null, T | undefined | null> {
+  // nullish(): Typ<TKind | 'undefined' | 'null', TShape | undefined | null, T | undefined | null> {
+  nullish(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof nul]> {
     return union(this, undef, nul) as any;
   }
 
@@ -126,11 +138,11 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return clone;
   }
 
-  where(predicate: (value: T) => boolean): typeof this {
+  where(predicate: (value: T) => boolean, errorMessage?: string): typeof this {
     const [clone, originalParse] = overrideParse(this);
     clone.parse = function (value: T, opts = Typ.defaultOpts) {
       const result = originalParse(value, opts);
-      return result.success && predicate(result.value) ? result : fail();
+      return result.success && predicate(result.value) ? result : fail(errorMessage);
     };
     return clone;
   }
@@ -139,15 +151,17 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return this.to(this, x => pass(transformer(x))) as any as typeof this;
   }
 
+  check(converter: TypeConverter<T, T>): typeof this {
+    return this.to(this, converter) as any as typeof this;
+  }
+
   to<TDestination extends Extend<Typ<unknown, unknown>, Parser<T, unknown>>>(
     destination: TDestination
   ): Extend<TDestination, Parser<T, TsType<TDestination>>>;
-
   to<TDestination extends Typ<unknown, unknown>>(
     destination: TDestination,
     converter: TypeConverter<T, TsType<TDestination>>
   ): Extend<TDestination, Parser<T, TsType<TDestination>>>;
-
   to<TDestination extends Typ<unknown, unknown>>(
     destination: TDestination,
     converter?: TypeConverter<T, TsType<TDestination>>
@@ -194,4 +208,8 @@ export function overrideParse<TType extends Typ<unknown, unknown, unknown>>(
 //TODO: audit for any form of of prototype poisoning.
 export function cloneObject<T>(obj: T) {
   return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) as T;
+}
+
+export function objKeys<T extends Typ<'object', object, unknown>>(type: T): ObjectKeyMap<T['shape']> {
+  return keyMap(type.shape as any);
 }

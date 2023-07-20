@@ -46,10 +46,9 @@ describe('obj2', () => {
       t.obj({ prop: t.string })
     );
     type res = typeof UnionPropIntersection.shape.prop.shape;
-    console.log(InterComplexRes1.shape.u.shape);
   });
 
-  it.only('merges nested objects in unions', () => {
+  it('merges nested objects in unions', () => {
     interface C {
       prop: string;
       // propC: boolean;
@@ -162,7 +161,7 @@ describe('obj2', () => {
     }
 
     class BDef {
-      a? = t.obj(ADef);
+      a? = t.obj(ADef).opt();
     }
 
     const A = t.obj(ADef);
@@ -171,8 +170,8 @@ describe('obj2', () => {
     const B = t.obj(BDef);
     type B = t.Infer<typeof B>;
 
-    expect(A.shape.b.shape).toEqual(B);
-    expect(B.shape.a).toEqual(A);
+    expect(A.shape.b).toEqual(t.obj(BDef).opt());
+    expect(B.shape.a).toEqual(t.obj(ADef).opt());
 
     type ExpectedAShape = { b?: B; strProp: string };
     expectType<TypeEqual<A, ExpectedAShape>>(true);

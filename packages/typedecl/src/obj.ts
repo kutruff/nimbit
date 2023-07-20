@@ -20,8 +20,6 @@ import {
   type ShapeDefinitionToObjType
 } from '.';
 
-const constructorsToObj = new WeakMap();
-
 export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   constructor(shape: TShape, name?: string, public strict?: boolean) {
     super('object', shape, name);
@@ -72,6 +70,8 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     return true;
   }
 }
+
+const constructorsToObj = new WeakMap();
 
 //TODO: check if this may want to return Typ or ObjType?
 //Note: Having the option to set a name is important here for recursive objects.

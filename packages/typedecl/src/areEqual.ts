@@ -1,4 +1,4 @@
-import { flattenUnionGen, type Typ, type Type } from '.';
+import { flatIterateUnion, type Typ, type Type } from '.';
 
 export type ComparisonCache = WeakMap<Type, WeakMap<Type, boolean>>;
 
@@ -31,9 +31,9 @@ export const areEqual = (a: Typ, b: Typ, cache?: ComparisonCache): boolean => {
 
   let result = true;
   if (a.isUnion() && b.isUnion()) {
-    for (const memberA of flattenUnionGen(a)) {
+    for (const memberA of flatIterateUnion(a)) {
       let foundMatchingMember = false;
-      for (const memberB of flattenUnionGen(b)) {
+      for (const memberB of flatIterateUnion(b)) {
         if (areEqual(memberA, memberB, cache)) {
           foundMatchingMember = true;
           break;
@@ -45,14 +45,14 @@ export const areEqual = (a: Typ, b: Typ, cache?: ComparisonCache): boolean => {
       }
     }
   } else if (a.isUnion()) {
-    for (const member of flattenUnionGen(a)) {
+    for (const member of flatIterateUnion(a)) {
       if (!areEqual(member, b, cache)) {
         result = false;
         break;
       }
     }
   } else if (b.isUnion()) {
-    for (const member of flattenUnionGen(b)) {
+    for (const member of flatIterateUnion(b)) {
       if (!areEqual(a, member, cache)) {
         result = false;
         break;

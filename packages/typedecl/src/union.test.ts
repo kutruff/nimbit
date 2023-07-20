@@ -8,7 +8,12 @@ describe('Unions of types', () => {
       const Target = t.union(t.string, t.boolean);
       type Target = t.Infer<typeof Target>;
 
-      type ExpectedDefinitionType = t.UnionType<'string' | 'boolean', string | boolean, string | boolean>;
+      type ExpectedDefinitionType = t.UnionType<
+        'string' | 'boolean',
+        string | boolean,
+        string | boolean,
+        [typeof t.string, typeof t.boolean]
+      >;
       expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
       expect(Target.kind).toEqual(['string', 'boolean']);
@@ -19,13 +24,16 @@ describe('Unions of types', () => {
 
     describe('union of unions', () => {
       it('combines peer unions', () => {
-        const Target = t.union(t.union(t.string, t.number), t.union(t.boolean, t.bigint));
+        const peer0 = t.union(t.string, t.number);
+        const peer1 = t.union(t.boolean, t.bigint);
+        const Target = t.union(peer0, peer1);
         type Target = t.Infer<typeof Target>;
 
         type ExpectedDefinitionType = t.UnionType<
           'string' | 'boolean' | 'number' | 'bigint',
           string | number | boolean | bigint,
-          string | number | boolean | bigint
+          string | number | boolean | bigint,
+          [typeof peer0, typeof peer1]
         >;
         expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
@@ -41,14 +49,17 @@ describe('Unions of types', () => {
 
       describe('nested unions', () => {
         it('combines depth 1 unions', () => {
-          const Target = t.union(t.string, t.union(t.boolean, t.bigint));
+          const subUnion = t.union(t.boolean, t.bigint);
+          const Target = t.union(t.string, subUnion);
           type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
             'string' | 'boolean' | 'bigint',
             string | boolean | bigint,
-            string | boolean | bigint
+            string | boolean | bigint,
+            [typeof t.string, typeof subUnion]
           >;
+
           expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
           expect(Target.kind).toEqual(['string', ['boolean', 'bigint']]);
@@ -58,13 +69,16 @@ describe('Unions of types', () => {
         });
 
         it('combines depth 3 unions', () => {
-          const Target = t.union(t.string, t.union(t.boolean, t.union(t.number, t.bigint)));
+          const union0 = t.union(t.number, t.bigint);
+          const union1 = t.union(t.boolean, union0);
+          const Target = t.union(t.string, union1);
           type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
             'string' | 'boolean' | 'number' | 'bigint',
             string | number | boolean | bigint,
-            string | number | boolean | bigint
+            string | number | boolean | bigint,
+            [typeof t.string, typeof union1]
           >;
           expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
@@ -74,6 +88,29 @@ describe('Unions of types', () => {
           expect(Target.unionTypes).toContainEqual(t.union(t.boolean, t.union(t.number, t.bigint)));
         });
       });
+    });
+  });
+
+  describe('flatten', () => {
+    it('works', () => {
+      const Target = t.union(t.union(t.union(t.number, t.bigint)), t.number, t.union(t.number, t.bigint));
+      // type Unpacked1 = t.UnpackUnion<typeof Union1>;
+      type Flattened = t.FlattenUnionMembers<typeof Target>;
+      const Result = t.flattenUnion(Target);
+      type Result = t.Infer<typeof Result>;
+
+      type ExpectedDefinitionType = t.UnionType<
+        'number' | 'bigint',
+        number | bigint,
+        number | bigint,
+        [typeof t.number, typeof t.bigint, typeof t.number, typeof t.number, typeof t.bigint]
+      >;
+
+      expectType<TypeEqual<ExpectedDefinitionType, typeof Result>>(true);
+      expectType<TypeEqual<Result, number | bigint>>(true);
+
+      const expected = t.union(t.number, t.bigint, t.number, t.number, t.bigint);
+      expect(Result.members.map(t => t.kind)).toEqual(expected.members.map(t => t.kind));
     });
   });
 
