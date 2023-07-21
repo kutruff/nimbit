@@ -1,19 +1,45 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { fail, pass, Typ, type ParseResult } from '.';
 
-export const nul = createType('null', (value: null) => (value === null ? pass(value) : fail()));
+export type NullT = Typ<'null', null, null>;
+export const nul: NullT = createType('null', (value: null) => (value === null ? pass(value) : fail()));
+
+export type UndefinedT = Typ<'undefined', undefined, undefined>;
 export const undef = createType('undefined', (value: undefined) => (value === undefined ? pass(value) : fail()));
-export const any = createType('any', (value: any) => pass(value));
-export const unknown = createType('unknown', (value: unknown) => pass(value));
-export const string = createType('string', (value: string) => (typeof value === 'string' ? pass(value) : fail()));
-export const number = createType('number', (value: number) => (typeof value === 'number' ? pass(value) : fail()));
-export const boolean = createType('boolean', (value: boolean) => (typeof value === 'boolean' ? pass(value) : fail()));
-export const bigint = createType('bigint', (value: bigint) => (typeof value === 'bigint' ? pass(value) : fail()));
-export const date = createType('date', (value: Date) =>
+
+export type AnyT = Typ<'any', any, any>;
+export const any: AnyT = createType('any', (value: any) => pass(value));
+
+export type UnknownT = Typ<'unknown', unknown, unknown>;
+export const unknown: UnknownT = createType('unknown', (value: unknown) => pass(value));
+
+export type StringT = Typ<'string', string, string>;
+export const string: StringT = createType('string', (value: string) =>
+  typeof value === 'string' ? pass(value) : fail()
+);
+
+export type NumberT = Typ<'number', number, number>;
+export const number: NumberT = createType('number', (value: number) =>
+  typeof value === 'number' ? pass(value) : fail()
+);
+
+export type BooleanT = Typ<'boolean', boolean, boolean>;
+export const boolean: BooleanT = createType('boolean', (value: boolean) =>
+  typeof value === 'boolean' ? pass(value) : fail()
+);
+
+export type BigIntT = Typ<'bigint', bigint, bigint>;
+export const bigint: BigIntT = createType('bigint', (value: bigint) =>
+  typeof value === 'bigint' ? pass(value) : fail()
+);
+
+export type DateT = Typ<'date', Date, Date>;
+export const date: DateT = createType('date', (value: Date) =>
   value instanceof Date && !isNaN(value.getTime()) ? pass(value) : fail()
 );
 
-export const never = new Typ<'never', never, never>('never', undefined as never, 'never');
+export type NeverT = Typ<'never', never, never>;
+export const never: NeverT = new Typ<'never', never, never>('never', undefined as never, 'never');
 
 export function createType<TKind extends string, TType>(
   kind: TKind,
