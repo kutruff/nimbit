@@ -15,12 +15,11 @@ import {
 } from '.';
 
 const anyObject = obj({}, undefined, false);
-const jsonOutput = union(anyObject, array(unknown), string, number, boolean, nul);
-export type json = Infer<typeof jsonOutput>;
 
-export const json = coerce(jsonOutput, jsonParse);
+export const json = coerce(union(anyObject, array(unknown), string, number, boolean, nul), jsonParse);
+export type json = Infer<typeof json>;
 
-export function jsonParse(value: string): ParseResult<json> {
+export function jsonParse(value: string): ParseResult<string | number | boolean | unknown[] | object | null> {
   try {
     return pass(JSON.parse(value));
   } catch (err) {
