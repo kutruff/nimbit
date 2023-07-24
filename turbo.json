@@ -1,35 +1,7 @@
 {
   "$schema": "https://turborepo.org/schema.json",
   "globalDependencies": ["**/.env"],
-  "pipeline": {
-    "db:generate": {
-      "inputs": ["prisma/schema.prisma"],
-      "cache": false
-    },
-    "db:push": {
-      "inputs": ["prisma/schema.prisma"],
-      "cache": false
-    },
-    "db:push-reset": {
-      "inputs": ["prisma/schema.prisma"],
-      "cache": false
-    },
-    "db:migrate-dev": {
-      "inputs": ["prisma/schema.prisma"],
-      "cache": false
-    },
-    "db:migrate": {
-      "inputs": ["prisma/schema.prisma"],
-      "cache": false
-    },
-    "db:seed": {
-      "inputs": ["prisma/schema.prisma"],
-      "cache": false
-    },
-    "db:reset": {
-      "inputs": ["prisma/schema.prisma"],
-      "cache": false
-    },
+  "pipeline": {   
     "dev": {
       "persistent": true,
       "cache": false
@@ -55,20 +27,6 @@
     }
   },
   "globalEnv": [
-    "CI",
-    "DATABASE_URL",
-    "PGDBNAME",
-    "PGHOST",
-    "PGUSER",
-    "PGPASSWORD",
-    "DISCORD_CLIENT_ID",
-    "DISCORD_CLIENT_SECRET",
-    "EXPO_ROUTER_APP_ROOT",
-    "NEXTAUTH_SECRET",
-    "NEXTAUTH_URL",
-    "NODE_ENV",
-    "SKIP_ENV_VALIDATION",
-    "VERCEL",
-    "VERCEL_URL"
+    "CI"
   ]
 }
