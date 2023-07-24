@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { type Literal, type MakeUndefinedOptional } from '.';
+import { type ElementType, type Literal, type MakeUndefinedOptional, type TupleKeysToUnion, type Writeable } from '.';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type AnyFunc = (...args: unknown[]) => unknown;
@@ -94,6 +94,22 @@ type StrArrOrNumArr = ToArray<string | number>;
 type FlattenDeep<T, A extends readonly unknown[] = []> = [T] extends [[infer F, ...infer R]]
   ? FlattenDeep<R, [F] extends [readonly unknown[]] ? [...A, ...FlattenDeep<F>] : [...A, F]>
   : A;
+
+type TupleToObject<Type extends readonly any[]> = {
+  [Key in Type[number]]: Key;
+};
+
+export type TupOrArrayElements<T extends readonly unknown[]> = TupleKeysToUnion<T> extends never
+  ? ElementType<Writeable<T>>
+  : TupleKeysToUnion<T>;
+
+// type TupleToObject2<T> = { [K in keyof T as Exclude<K, keyof any[]>]: T[K] };
+
+// type TupleToObject3<T extends any[]> = Omit<T, keyof any[]>;
+
+// type res = TupleToObject<['hello', 'hello', Typ]>;
+// type resa = TupleToObject2<['hello', 'hello', Typ]>;
+// type redsa = TupleToObject3<['hello', 'hello', Typ]>;
 
 // type GetChars<S> = GetCharsHelper<S, never>;
 // type GetCharsHelper<S, Acc> = S extends `${infer Char}${infer Rest}` ? GetCharsHelper<Rest, Char | Acc> : Acc;

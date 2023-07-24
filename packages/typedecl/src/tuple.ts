@@ -22,7 +22,7 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
     super('tuple', elementTypes, name);
   }
 
-  parse(value: InferTupleKeys<TElements>, opts = Typ.defaultOpts): ParseResult<InferTupleKeys<TElements>> {
+  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<InferTupleKeys<TElements>> {
     if (!Array.isArray(value) || value.length !== this.elementTypes.length) {
       return fail();
     }

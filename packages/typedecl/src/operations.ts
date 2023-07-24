@@ -1,124 +1,30 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
   areEqual,
   flatIterateUnion,
-  never,
   obj,
   undef,
   union,
   unionIfNeeded,
   type _type,
-  type ComparisonCache,
-  type ElementType,
   type FlattenUnionMembers,
+  type IUnionType,
+  type never,
   type ObjType,
   type Resolve,
   type Shape,
+  type ToUnionMemberList,
+  type TupleKeysToUnion,
   type Typ,
+  type UndefinedT,
+  type UnionFlattenedOrSingle,
+  type UnionOrSingle,
   type UnionType
 } from '.';
-
-// type NeverToUndefined<T> = [T] extends [never] ? undefined : T;
-
-// export type IntersectOriginallyWorking<A, B> = A extends Typ<unknown, unknown, unknown>
-//   ? B extends Typ<unknown, unknown, unknown>
-//     ? A extends Typ<'object', unknown, unknown>
-//       ? B extends Typ<'object', unknown, unknown>
-//         ? Typ<
-//             'object',
-//             Omit<A['shape'] & B['shape'], keyof A['shape'] & keyof B['shape']> & {
-//               [P in keyof A['shape'] & keyof B['shape']]: Intersect<A['shape'][P], B['shape'][P]>;
-//             },
-//             A[typeof _type] & B[typeof _type]
-//           >
-//         : Typ<A['kind'] & B['kind'], A['shape'] & B['shape'], A[typeof _type] & B[typeof _type]>
-//       : Typ<A['kind'] & B['kind'], A['shape'] & B['shape'], A[typeof _type] & B[typeof _type]>
-//     : A & B
-//   : A & B;
-
-export type Intersect<A, B> = A extends Typ<unknown, unknown, unknown>
-  ? B extends Typ<unknown, unknown, unknown>
-    ? A['kind'] & B['kind'] extends 'object'
-      ? Typ<
-          'object',
-          Omit<A['shape'] & B['shape'], keyof A['shape'] & keyof B['shape']> & {
-            [P in keyof A['shape'] & keyof B['shape']]: Intersect<A['shape'][P], B['shape'][P]>;
-          },
-          A[typeof _type] & B[typeof _type]
-        >
-      : Typ<A['kind'] & B['kind'], A['shape'] & B['shape'], A[typeof _type] & B[typeof _type]>
-    : A & B
-  : A & B;
-
-export function intersection<TA extends Typ<unknown, unknown, unknown>, TB extends Typ<unknown, unknown, unknown>>(
-  typeA: TA,
-  typeB: TB,
-  cache?: ComparisonCache
-): Intersect<TA, TB> {
-  if ((typeA as any) === (typeB as any)) {
-    return typeB as any;
-  }
-  if (typeA.kind === 'any') {
-    return typeA as any;
-  }
-  if (typeB.kind === 'any') {
-    return typeB as any;
-  }
-
-  if (typeA.kind === 'object' && typeB.kind === 'object') {
-    const merged = {} as Shape;
-
-    const shapeA = typeA.shape as Shape;
-    const shapeB = typeB.shape as Shape;
-    const allKeysInAB = new Set(Object.keys(shapeA).concat(Object.keys(shapeB)));
-
-    for (const key of allKeysInAB) {
-      const propertyA = shapeA[key];
-      const propertyB = shapeB[key];
-
-      if (propertyA != null && propertyB != null) {
-        const result = intersection(propertyA as any, propertyB as any, cache);
-        if (result.kind === 'never') {
-          return never as any;
-        }
-        merged[key] = result;
-      } else {
-        merged[key] = (propertyA || propertyB)!;
-      }
-    }
-    return obj(merged) as any;
-  }
-
-  if (typeA.isUnion() || typeB.isUnion()) {
-    const aMembers = [...flatIterateUnion(typeA)];
-    const bMembers = [...flatIterateUnion(typeB)];
-
-    const equalTypes = new Set<Typ<unknown, unknown>>();
-    for (const aMember of aMembers) {
-      for (const bMember of bMembers) {
-        //TODO: Need a better way to handle this.  Recursive types could break.
-        const intersected = intersection(aMember, bMember, cache);
-        if (intersected.kind !== 'never') {
-          // console.log('intersected', intersected);
-          equalTypes.add(intersected);
-        }
-      }
-    }
-
-    const results = [...equalTypes.values()];
-
-    return unionIfNeeded(results) as any;
-  }
-
-  return (areEqual(typeA as any, typeB as any, cache) ? typeB : never) as any;
-}
 
 export type Extend<TA, TB> = Omit<TA, keyof TB> & TB;
 
@@ -132,7 +38,12 @@ export function extend<TObjA extends ObjType<unknown, unknown>, TObjB extends Ob
 
 export type PartialType<T> = {
   [P in keyof T]: T[P] extends Typ<unknown, unknown>
-    ? Typ<T[P]['kind'] | 'undefined', T[P]['shape'] | undefined, T[P][typeof _type] | undefined>
+    ? UnionType<
+        T[P]['kind'] | 'undefined',
+        T[P]['shape'] | undefined,
+        T[P][typeof _type] | undefined,
+        [T[P], UndefinedT]
+      >
     : never;
 };
 
@@ -147,16 +58,14 @@ export function partial<TShape, T>(objType: ObjType<TShape, T>): ObjType<Partial
 }
 
 export type RequiredType<T> = {
-  [P in keyof T]: T[P] extends Typ<unknown, unknown>
-    ? Typ<Exclude<T[P]['kind'], 'undefined'>, Exclude<T[P]['shape'], undefined>, Exclude<T[P][typeof _type], undefined>>
-    : never;
+  [P in keyof T]: T[P] extends Typ<unknown, unknown> ? ExcludeFlattenedType<T[P], [UndefinedT]> : never;
 };
 
 export function required<TShape, T>(objType: ObjType<TShape, T>): ObjType<RequiredType<TShape>, Required<T>> {
   const result = {} as Shape;
   const shape = objType.shape as Shape;
   for (const key of Object.keys(shape)) {
-    result[key] = exclude(shape[key] as any, undef);
+    result[key] = flatExclude(shape[key] as any, undef);
   }
   return obj(result) as any;
 }
@@ -188,88 +97,101 @@ export function omit<TShape, K extends keyof TShape & keyof T, T>(
   return obj(result as any) as any;
 }
 
-// export function exclude<T extends Typ, U extends Typ[]>(
-//   typesT: T,
-//   ...typesU: U
-// ): Exclude<T['kind'], ElementType<U>['kind']> extends never
-//   ? typeof never
-//   : Typ<
-//       Exclude<T['kind'], ElementType<U>['kind']>,
-//       Exclude<T['shape'], ElementType<U>['shape']>,
-//       Exclude<T[typeof _type], ElementType<U>[typeof _type]>
-//     > {
-//   const notExcluded = [];
-//   for (const typeT of flattenUnionGen(typesT)) {
-//     let didFindMatchingMember = false;
-//     for (const typeU of typesU.flatMap(x => [...flattenUnionGen(x)])) {
-//       if (areEqual(typeT, typeU)) {
-//         didFindMatchingMember = true;
-//         break;
-//       }
-//     }
-//     if (!didFindMatchingMember) {
-//       notExcluded.push(typeT);
-//     }
-//   }
-//   return unionIfNeeded(notExcluded) as any;
-// }
-
-type TupleExclude<T, TExclude, Acc extends any[] = []> = T extends [infer Head, ...infer Tail]
+export type TupleExclude<T, TExclude, Acc extends any[] = []> = T extends [infer Head, ...infer Tail]
   ? Exclude<Head, TExclude> extends never
     ? TupleExclude<Tail, TExclude, Acc>
     : TupleExclude<Tail, TExclude, [...Acc, Head]>
   : Acc;
 
-type aldflakfd = Exclude<string | number, string> extends never ? true : 'still exists';
-type Test2 = TupleExclude<[string, bigint, number, string], string>;
-type Test4 = TupleExclude<[string, number], bigint | number>;
+export type TupleExtract<T, TExtract, Acc extends any[] = []> = T extends [infer Head, ...infer Tail]
+  ? Extract<Head, TExtract> extends never
+    ? TupleExtract<Tail, TExtract, Acc>
+    : TupleExtract<Tail, TExtract, [...Acc, Head]>
+  : Acc;
 
-export function exclude<T extends Typ, U extends Typ[]>(
-  typesT: T,
-  ...typesU: U
-): Exclude<T['kind'], ElementType<U>['kind']> extends never
+type ExcludeFlattenedUnionMembers<T, U extends Typ[]> = TupleExclude<
+  FlattenUnionMembers<[T]>,
+  TupleKeysToUnion<FlattenUnionMembers<U>>
+>;
+
+export type ExcludeFlattenedType<
+  T,
+  U extends Typ[],
+  TUnionExcluded = ExcludeFlattenedUnionMembers<T, U>
+> = TUnionExcluded extends [] ? typeof never : UnionFlattenedOrSingle<TUnionExcluded>;
+
+type ExcludeUnionMembers<T, U extends Typ[]> = TupleExclude<
+  ToUnionMemberList<T>,
+  TupleKeysToUnion<FlattenUnionMembers<U>>
+>;
+
+export type ExcludeType<T, U extends Typ[], TUnionExcluded = ExcludeUnionMembers<T, U>> = TUnionExcluded extends []
   ? typeof never
-  : T extends UnionType<infer TKind, infer TShape, infer TType, infer TMembers>
-  ? UnionType<
-      Exclude<T['kind'], ElementType<U>['kind']>,
-      Exclude<T['shape'], ElementType<U>['shape']>,
-      Exclude<T[typeof _type], ElementType<U>[typeof _type]>,
-      TupleExclude<FlattenUnionMembers<T>, ElementType<FlattenUnionMembers<U>>>
-    >
-  : Typ<
-      Exclude<T['kind'], ElementType<U>['kind']>,
-      Exclude<T['shape'], ElementType<U>['shape']>,
-      Exclude<T[typeof _type], ElementType<U>[typeof _type]>
-    > {
+  : UnionOrSingle<TUnionExcluded>;
+
+export function flatExclude<T extends Typ, U extends Typ[]>(typesT: T, ...typesU: U): ExcludeFlattenedType<T, U> {
+  return excludeTypesFromTypes([...flatIterateUnion(typesT)], typesU);
+}
+
+export function exclude<T extends Typ, U extends Typ[]>(typeT: T, ...typesU: U): ExcludeType<T, U> {
+  const typesT = typeT.isUnion() ? (typeT as unknown as IUnionType<any>).members : [typeT];
+
+  return excludeTypesFromTypes(typesT, typesU);
+}
+
+function excludeTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, typesU: U) {
   const notExcluded = [];
-  for (const typeT of flatIterateUnion(typesT)) {
+  for (const elementT of typesT) {
     let didFindMatchingMember = false;
     for (const typeU of typesU.flatMap(x => [...flatIterateUnion(x)])) {
-      if (areEqual(typeT, typeU)) {
+      if (areEqual(elementT, typeU)) {
         didFindMatchingMember = true;
         break;
       }
     }
     if (!didFindMatchingMember) {
-      notExcluded.push(typeT);
+      notExcluded.push(elementT);
     }
   }
-  // return unionIfNeeded(notExcluded) as any;
-  return (notExcluded.length > 0 ? union(...notExcluded) : never) as any;
+  return unionIfNeeded(notExcluded);
 }
 
-export function extract<T extends Typ, U extends Typ[]>(
-  typesT: T,
-  ...typesU: U
-): Extract<T['kind'], ElementType<U>['kind']> extends never
+type ExtractFlattenedUnionMembers<T, U extends Typ[]> = TupleExtract<
+  FlattenUnionMembers<[T]>,
+  TupleKeysToUnion<FlattenUnionMembers<U>>
+>;
+
+export type ExtractFlattenedType<
+  T,
+  U extends Typ[],
+  TUnionExtracted = ExtractFlattenedUnionMembers<T, U>
+> = TUnionExtracted extends [] ? typeof never : UnionFlattenedOrSingle<TUnionExtracted>;
+
+export type ExtractUnionMembers<T, U extends Typ[]> = TupleExtract<
+  ToUnionMemberList<T>,
+  TupleKeysToUnion<FlattenUnionMembers<U>>
+>;
+
+export type ExtractType<T, U extends Typ[], TUnionExtracted = ExtractUnionMembers<T, U>> = TUnionExtracted extends []
   ? typeof never
-  : Typ<
-      Extract<T['kind'], ElementType<U>['kind']>,
-      Extract<T['shape'], ElementType<U>['shape']>,
-      Extract<T[typeof _type], ElementType<U>[typeof _type]>
-    > {
+  : UnionOrSingle<TUnionExtracted>;
+
+export function flatExtract<T extends Typ, U extends Typ[]>(typesT: T, ...typesU: U): ExtractFlattenedType<T, U> {
+  return extractTypesFromTypes([...flatIterateUnion(typesT)], typesU);
+}
+
+export function extract<T extends Typ, U extends Typ[]>(typeT: T, ...typesU: U): ExtractType<T, U> {
+  const typesT = typeT.isUnion() ? (typeT as unknown as IUnionType<any>).members : [typeT];
+
+  return extractTypesFromTypes(
+    typesT,
+    typesU.flatMap(x => [...flatIterateUnion(x)])
+  );
+}
+
+function extractTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, typesU: U) {
   const foundMembers = [];
-  for (const typeT of flatIterateUnion(typesT)) {
+  for (const typeT of typesT) {
     for (const typeU of typesU.flatMap(x => [...flatIterateUnion(x)])) {
       if (areEqual(typeT, typeU)) {
         foundMembers.push(typeT);
@@ -277,13 +199,9 @@ export function extract<T extends Typ, U extends Typ[]>(
       }
     }
   }
-  return unionIfNeeded(foundMembers) as any;
+
+  return unionIfNeeded(foundMembers);
 }
-
-// export type ReadonlyType<T> = {
-//   [P in keyof T]: T[P] extends Prop<infer T, infer O, unknown> ? Prop<T, O, true> : never;
-// };
-
 // export function readonly<TShape extends Shape, T>(
 //   objType: ObjType<TShape, T>
 // ): ObjType<ReadonlyType<TShape>, Readonly<T>> {

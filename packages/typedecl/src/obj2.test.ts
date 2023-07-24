@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from '.';
+import { intersection } from './intersection';
 import { expectType, expectTypesSupportAssignment, type TypeEqual } from './test/utilities';
 
 describe('obj2', () => {
@@ -34,14 +35,14 @@ describe('obj2', () => {
     const ComplexB = t.obj({ prop: t.string, a: A, u: U, arr: Arr, tup: Tup });
     type ComplexB = t.Infer<typeof ComplexB>;
 
-    const int1Res = t.intersection(t.number, t.string);
-    const int2Res = t.intersection(t.number, U);
+    const int1Res = intersection(t.number, t.string);
+    const int2Res = intersection(t.number, U);
     type adfadfadga = (typeof U)['shape'] & undefined extends never ? true : false;
 
-    const InterComplexRes1 = t.intersection(ComplexA, ComplexB);
+    const InterComplexRes1 = intersection(ComplexA, ComplexB);
     type InterComplexRes1 = t.Infer<typeof InterComplexRes1>;
 
-    const UnionPropIntersection = t.intersection(
+    const UnionPropIntersection = intersection(
       t.obj({ prop: t.union(t.string, t.number) }),
       t.obj({ prop: t.string })
     );
@@ -88,7 +89,7 @@ describe('obj2', () => {
     type ObjBT = t.Resolve<typeof ObjB>;
     type ObjB = t.Infer<typeof ObjB>;
 
-    const ObjAB = t.intersection(ObjA, ObjB);
+    const ObjAB = intersection(ObjA, ObjB);
     type ObjAB = t.Infer<typeof ObjAB>;
     type ObjABShape = t.Resolve<(typeof ObjAB)['shape']>;
     type ObjABShapeX = t.Resolve<(typeof ObjAB)['shape']>['x'];
@@ -115,7 +116,7 @@ describe('obj2', () => {
     type ObjCDT = t.Resolve<typeof ObjCD>['shape'];
     type ObjCD = t.Infer<typeof ObjCD>;
 
-    const ObjCDI = t.intersection(ObjC, ObjD);
+    const ObjCDI = intersection(ObjC, ObjD);
     type ObjCDIT = (typeof ObjCDI)['shape']['prop'];
     type ObjCDI = t.Infer<typeof ObjCDI>;
 
@@ -140,12 +141,12 @@ describe('obj2', () => {
     //   })
     // );
 
-    const ArrayTest = t.intersection(t.array(t.union(t.number, t.string)), t.array(t.number));
+    const ArrayTest = intersection(t.array(t.union(t.number, t.string)), t.array(t.number));
     type ArrayTestT = (typeof ArrayTest)['shape'];
     // const aadshgah : ArrayTestT = t.string2;
     type ArrayTestI = t.Infer<typeof ArrayTest>;
 
-    // const ArrayTest = t.intersection(t.map2(t.union(t.number2, t.string2)), t.array(t.number2));
+    // const ArrayTest = intersection(t.map2(t.union(t.number2, t.string2)), t.array(t.number2));
     // type ArrayTestT = (typeof ArrayTest)['shape']
     // // const aadshgah : ArrayTestT = t.string2;
     // type ArrayTestI = t.Infer<typeof ArrayTest>;
@@ -277,15 +278,15 @@ describe('obj2', () => {
     type ExcludedC1 = t.Infer<typeof ExcludedC1>;
 
     const afdafdadf = C.kind;
-    // const IntersectedC = t.intersection(C, t.union(t.string2));
-    // const IntersectedC = t.intersection(C, t.union(t.string2));
-    const IntersectedCUnion0 = t.intersection(C, t.union(t.string));
+    // const IntersectedC = intersection(C, t.union(t.string2));
+    // const IntersectedC = intersection(C, t.union(t.string2));
+    const IntersectedCUnion0 = intersection(C, t.union(t.string));
     type IntersectedCUnion0 = t.Infer<typeof IntersectedCUnion0>;
 
-    const IntersectedCUnion1 = t.intersection(C, t.string);
+    const IntersectedCUnion1 = intersection(C, t.string);
     type IntersectedCUnion1 = t.Infer<typeof IntersectedCUnion1>;
 
-    const IntersectedCUnion2 = t.intersection(C, t.union(t.string, t.number));
+    const IntersectedCUnion2 = intersection(C, t.union(t.string, t.number));
     type IntersectedCUnion2 = t.Infer<typeof IntersectedCUnion2>;
 
     const afdafdafdadf = IntersectedCUnion0.unionTypes[0]!;

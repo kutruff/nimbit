@@ -18,7 +18,7 @@ describe('obj()', () => {
     type PersonTwo = t.Infer<typeof Person>;
     const shapeDefintion = {
       name: t.string,
-      // age: t.opt()(t.number),
+      age: t.number.opt(),
       isActive: t.boolean
     };
 
@@ -36,15 +36,15 @@ describe('obj()', () => {
         age: t.number.opt(),
         isActive: t.boolean
       }
-      // k: {
-      //   name: 'name',
-      //   age: 'age',
-      //   isActive: 'isActive'
-      // }
     };
 
     //expect(Person).toEqual(Person);
     expect(Person).toEqual(roundTrippedInstance);
+    expect(Person.k).toEqual({
+      name: 'name',
+      age: 'age',
+      isActive: 'isActive'
+    });
   });
 
   it('compiles and supports nested objects', () => {
@@ -283,7 +283,7 @@ describe('obj()', () => {
       type Target = t.Infer<typeof target>;
 
       const res = t.objKeys(target);
-      
+
       const ExpectedResult = t.obj({
         prop: t.union(t.string, t.undef)
       });

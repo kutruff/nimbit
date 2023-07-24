@@ -8,11 +8,13 @@ import {
   areEqual,
   fail,
   getKeys,
+  keyMap,
   pass,
   Typ,
   type _type,
   type ComparisonCache,
   type Constructor,
+  type ObjectKeyMap,
   type ParseOptions,
   type ParseResult,
   type Shape,
@@ -21,11 +23,17 @@ import {
 } from '.';
 
 export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
+  _k?: ObjectKeyMap<TShape>;
+  get k(): ObjectKeyMap<TShape> {
+    if (!this._k) this._k = keyMap(this.shape as any);
+    return this._k;
+  }
+
   constructor(shape: TShape, name?: string, public strict?: boolean) {
     super('object', shape, name);
   }
 
-  parse(value: T, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
+  parse(value: unknown, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
     //TODO: turn this into a global that users can add to to add their own custom types.
     if (typeof value !== 'object' || Array.isArray(value) || value === null) {
       return fail();
@@ -92,6 +100,5 @@ export function obj<TShapeDefinition extends ShapeDefinition>(
     shapeDefinition = new (constructor as Constructor)() as any;
   }
   resultObj.shape = { ...shapeDefinition };
-
   return resultObj;
 }

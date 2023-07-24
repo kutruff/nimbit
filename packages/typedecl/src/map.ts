@@ -17,7 +17,7 @@ export class MapType<TKey, TValue, T> extends Typ<'map', [TKey, TValue], T> {
     super('map', [key, value], name);
   }
 
-  parse(value: T, opts = Typ.defaultOpts): ParseResult<T> {
+  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     if (!(value instanceof Map)) {
       return fail();
     }

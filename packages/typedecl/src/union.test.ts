@@ -114,6 +114,43 @@ describe('Unions of types', () => {
     });
   });
 
+  describe('unwrap', () => {
+    it('returns single when only undef and that value', () => {
+      const Target = t.union(t.string, t.undef);
+      const Result = Target.unwrap();
+      type Result = t.Infer<typeof Result>;
+
+      expect(Result).toEqual(t.string);
+
+      expectType<TypeEqual<typeof Result, typeof t.string>>(true);
+      expectType<TypeEqual<Result, string>>(true);
+    });
+
+    it('is shallow ', () => {
+      const Target = t.union(t.union(t.string), t.undef);
+      const Result = Target.unwrap();
+      type Result = t.Infer<typeof Result>;
+
+      const expected = t.union(t.string);
+      expect(Result).toEqual(expected);
+
+      expectType<TypeEqual<typeof Result, typeof expected>>(true);
+      expectType<TypeEqual<Result, string>>(true);
+    });
+
+    it('returns union when undef and others', () => {
+      const Target = t.union(t.string, t.nul, t.undef);
+      const Result = Target.unwrap();
+      type Result = t.Infer<typeof Result>;
+
+      const expected = t.union(t.string, t.nul);
+      expect(Result).toEqual(expected);
+
+      expectType<TypeEqual<typeof Result, typeof expected>>(true);
+      expectType<TypeEqual<Result, string | null>>(true);
+    });
+  });
+
   describe('type inference', () => {
     it('infers well with object hierarchies of unions', () => {
       const Target = t.obj({

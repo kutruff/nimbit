@@ -13,7 +13,7 @@ export class SetType<TValue, T> extends Typ<'set', TValue, T> {
     super('set', value, name);
   }
 
-  parse(value: T, opts = Typ.defaultOpts): ParseResult<T> {
+  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     if (!(value instanceof Set)) {
       return fail();
     }

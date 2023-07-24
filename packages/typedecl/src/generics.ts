@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { asTuple } from './reflection';
+
 export type Constructor = new (...args: unknown[]) => {};
 
 export type UndefinedProps<T extends object> = {
@@ -25,6 +27,19 @@ export type ElementType<T extends Array<unknown>> = T extends Array<infer TEleme
 export type Writeable<T> = {
   -readonly [P in keyof T]: Writeable<T[P]>;
 };
+
+export type IsLengthOneTuple<T> = T extends []
+  ? never
+  : T extends [infer _Head, infer _Tail, ...infer _Rest]
+  ? never
+  : T extends [infer Head]
+  ? Head
+  : never;
+
+export type TupleKeysToUnion<T extends readonly unknown[], Acc = never> = T extends readonly [infer U, ...infer TRest]
+  ? TupleKeysToUnion<TRest, Acc | U>
+  : Acc;
+
 
 //This and other things taken from Zod.
 export type Identity<T> = T;

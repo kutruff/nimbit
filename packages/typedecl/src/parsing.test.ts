@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 import * as t from '.';
 import { pass } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
@@ -268,13 +268,14 @@ describe('TypeConverter', () => {
     const DateLike = t.union(t.number, t.string, t.date).to(t.date, coerceToDate);
 
     type DateLikeType = t.Resolve<typeof DateLike>;
-    
+
     type DateLike = t.Infer<typeof DateLike>;
 
-    
     const asD = t.string.to(DateLike);
-    
-    asD.parse('hello')
+
+    const unsadf = asD.parse('hello');
+
+    asD.parse('hello');
     const asIsoString = DateLike.to(t.string, x => t.pass(x.toISOString()));
     asIsoString.parse(new Date());
     const assigned: DateLike = new Date();
@@ -344,7 +345,7 @@ describe('TypeConverter', () => {
       .to(t.tuple([t.string, t.number]), x => pass(t.asTuple(x[0], Number(x[1]))));
     const resultTuple = tupleTest.parse(['hello', '123']);
     if (resultTuple.success) {
-      resultTuple.value;
+      expect(resultTuple.value).toEqual(['hello', 123]);
     }
 
     expect(result.success).toEqual(true);
@@ -384,7 +385,7 @@ describe('TypeConverter', () => {
     }
     // const a: A = { self: {literalProp: 'world', } } } };
 
-    expect(A.shape.self?.unionTypes[0]).toEqual(A);        
+    expect(A.shape.self?.members[0]).toEqual(A);
   });
 
   it('to() allows self recursion', () => {
@@ -428,7 +429,10 @@ describe('TypeConverter', () => {
   it('where() works with recursive types', () => {
     class ADef {
       prop = t.string;
-      self? = t.obj(ADef).where(x => x.prop !== '').opt();
+      self? = t
+        .obj(ADef)
+        .where(x => x.prop !== '')
+        .opt();
     }
 
     const A = t.obj(ADef, 'A');

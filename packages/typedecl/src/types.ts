@@ -3,7 +3,6 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
-  exclude,
   fail,
   keyMap,
   nul,
@@ -70,15 +69,25 @@ export type Infer<T extends Type<unknown, unknown>> = Resolve<T[typeof _type]>;
 //   return type.unionTypes.flatMap(x => x.unionTypes) as Array<T>;
 // }
 
+//TODO: see if this simplification alias can be the output of opt() and not break inference
+// export type Optional<T extends Typ<unknown, unknown, unknown>> = UnionType<
+//   T['kind'] | 'undefined',
+//   T['shape'] | undefined,
+//   T[typeof _type],
+//   [T | typeof undef]
+// >;
+
 export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type<TKind, T> {
   static defaultOpts: ParseOptions = {};
 
   [_type]!: T;
+
+  //TODO: union types may not be needed anymore.
   unionTypes: Array<Typ<TKind, TShape, T>> = [];
 
   //TODO: potential optimization for dealing with union types. If nothing has modified the default parse() we can then flatten unions.
   // otherwise we may just be able to use strict object equality and use the instance
-  //hasBeenCustomized = false;
+  // hasBeenCustomized = false;
 
   constructor(public kind: TKind, public shape: TShape, public name?: string) {}
 
@@ -88,9 +97,9 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   //   return this.unionTypes.length === 1 ? this.unionTypes[0]!.s : this.shape;
   // }
 
-  errorMessageOnFail(value: T, opts: ParseOptions): string | undefined {
-    return undefined;
-  }
+  // errorMessageOnFail(value: T, opts: ParseOptions): string | undefined {
+  //   return undefined;
+  // }
 
   isUnion(): boolean {
     return this.unionTypes.length > 0;
@@ -99,6 +108,11 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   // opt(): Typ<TKind | 'undefined', TShape | undefined, T | undefined> {
   //   return union(this, undef) as any;
   // }
+  // opt(): Optional<typeof this> {
+  // opt(): TKind extends 'undefined'
+  //   ? typeof this
+  //   : UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof undef]> {
+
   opt(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof undef]> {
     return union(this, undef) as any;
   }
@@ -113,15 +127,8 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return union(this, undef, nul) as any;
   }
 
-  //TODO: test
-  unwrap(): Exclude<TKind, 'undefined'> extends never
-    ? Typ<'never', never, never>
-    : Typ<Exclude<TKind, 'undefined'>, Exclude<TShape, undefined>, Exclude<T, undefined>> {
-    return exclude(this, undef) as any;
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  parse(value: T, opts = Typ.defaultOpts): ParseResult<T> {
+  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     return fail();
   }
 
@@ -155,17 +162,10 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return this.to(this, converter) as any as typeof this;
   }
 
-  to<TDestination extends Extend<Typ<unknown, unknown>, Parser<T, unknown>>>(
-    destination: TDestination
-  ): Extend<TDestination, Parser<T, TsType<TDestination>>>;
-  to<TDestination extends Typ<unknown, unknown>>(
-    destination: TDestination,
-    converter: TypeConverter<T, TsType<TDestination>>
-  ): Extend<TDestination, Parser<T, TsType<TDestination>>>;
   to<TDestination extends Typ<unknown, unknown>>(
     destination: TDestination,
     converter?: TypeConverter<T, TsType<TDestination>>
-  ): Extend<TDestination, Parser<T, TsType<TDestination>>> {
+  ): TDestination {
     const [clone, destinationParse] = overrideParse(destination);
     const source = this;
     clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
@@ -183,12 +183,43 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
 
     return clone;
   }
+
+  // have Typ implement the Parser interface with T as default. Introduce a new property like _inputType to store the type for later inference
+
+  // to<TDestination extends Extend<Typ<unknown, unknown>, Parser<T, unknown>>>(
+  //   destination: TDestination
+  // ): Extend<TDestination, Parser<T, TsType<TDestination>>>;
+  // to<TDestination extends Typ<unknown, unknown>>(
+  //   destination: TDestination,
+  //   converter: TypeConverter<T, TsType<TDestination>>
+  // ): Extend<TDestination, Parser<T, TsType<TDestination>>>;
+  // to<TDestination extends Typ<unknown, unknown>>(
+  //   destination: TDestination,
+  //   converter?: TypeConverter<T, TsType<TDestination>>
+  // ): Extend<TDestination, Parser<T, TsType<TDestination>>> {
+  //   const [clone, destinationParse] = overrideParse(destination);
+  //   const source = this;
+  //   clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
+  //     const sourceResult = source.parse(value, opts);
+  //     if (!sourceResult.success) {
+  //       return sourceResult;
+  //     }
+
+  //     if (converter) {
+  //       const convertedResult = converter(sourceResult.value, opts);
+  //       return convertedResult.success ? destinationParse(convertedResult.value, opts) : convertedResult;
+  //     }
+  //     return destinationParse(sourceResult.value, opts);
+  //   };
+
+  //   return clone;
+  // }
 }
 
 export function coerce<TDestination extends Typ<unknown, unknown>, TSourceInput>(
   destination: TDestination,
   converter: TypeConverter<TSourceInput, TsType<TDestination>>
-): Extend<TDestination, Parser<TSourceInput, TsType<TDestination>>> {
+): TDestination {
   const [clone, originalParse] = overrideParse(destination);
 
   clone.parse = function (value: TSourceInput, opts = Typ.defaultOpts) {

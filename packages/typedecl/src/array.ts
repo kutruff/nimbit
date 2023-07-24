@@ -13,7 +13,7 @@ export class ArrayType<TValue, T> extends Typ<'array', TValue, T> {
     super('array', value, name);
   }
 
-  parse(value: T, opts = Typ.defaultOpts): ParseResult<T> {
+  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     if (!Array.isArray(value)) {
       return fail();
     }
