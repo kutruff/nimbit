@@ -3,6 +3,6 @@
   "compilerOptions": {    
     "incremental": false,    
   },
-  "include": ["index.ts", "src/**/*.ts"]
+  "include": ["index.ts", "src/**/*.ts"],
 }
   

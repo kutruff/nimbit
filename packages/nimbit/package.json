@@ -1,18 +1,30 @@
 {
   "name": "nimbit",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Reflective typing and validation for typescript",
   "homepage": "https://github.com/kutruff/nimbit",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kutruff/nimbit"
   },
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index",
+  "types": "./dist/index",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
-    "build": "tsup ./index.ts --format esm,cjs --dts --clean --minify --sourcemap",
+    "old-build": "tsup ./index.ts --format esm,cjs --dts --clean --minify --sourcemap",
+    "build": "tsup ",
     "build:nomin": "tsup ./index.ts --format esm,cjs --dts --clean --sourcemap",
     "build:tar": "tar -czf dist.tar.gz dist/index.js",
     "build:size": "pnpm build && pnpm build:tar && echo zipped bytes: $(stat --printf=\"%s\" dist.tar.gz) && rm dist.tar.gz",
@@ -34,5 +46,16 @@
     "tsup": "^7.1.0",
     "tsx": "^3.12.7",
     "typescript": "^5.1.6"
+  },
+  "tsup": {
+    "dts": true,
+    "treeshake": true,
+    "format": [
+      "esm",
+      "cjs"
+    ],
+    "entry": [
+      "index.ts"
+    ]
   }
 }
