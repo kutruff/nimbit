@@ -1,6 +1,6 @@
 {
   "name": "nimbit",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Reflective typing and validation for typescript",
   "homepage": "https://github.com/kutruff/nimbit",
   "repository": {
@@ -10,8 +10,8 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/index",
-  "types": "./dist/index",
+  "main": "./dist/index.js",
+  "types": "./dist/index.ts",
   "type": "module",
   "exports": {
     ".": {

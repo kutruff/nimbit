@@ -4,6 +4,8 @@
 
 # _Nimbit_
 
+[![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit)
+
 A very tiny Typescript type definition, validation, and and reflection library. It's the best parts of Zod and more but very tiny and less noise in your code.
 
 This is in alpha. Still working on validation.
@@ -15,14 +17,14 @@ npm install nimbit
 ### `nimbit`
 
 ✅ Type definitions
-✅ Validation 
+✅ Validation
 ✅ Mutually recursive types
 
 ## Library Comparison
 
 This comparison strives to be as accurate and as unbiased as possible. If you use any of these libraries and feel the information could be improved, feel free to suggest changes.
 
-NOTE: THIS IS PLACEHOLDER.  NEED TO VERIFY EACH CLAIM. 
+NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 
 |                          | [Nimbit](https://github.com/kutruff/nimbit)                                                                             | [Zod](https://github.com/colinhacks/zod)                                                                          |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
