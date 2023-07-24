@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { asTuple } from './reflection';
-
 export type Constructor = new (...args: unknown[]) => {};
 
 export type UndefinedProps<T extends object> = {
