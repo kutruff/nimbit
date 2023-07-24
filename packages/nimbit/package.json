@@ -1,6 +1,12 @@
 {
-  "name": "@kutruff-planner/nimbit",
+  "name": "nimbit",
   "version": "0.1.0",
+  "description": "Reflective typing and validation for typescript",
+  "homepage": "https://github.com/kutruff/nimbit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutruff/nimbit"
+  },
   "main": "./index.ts",
   "types": "./index.ts",
   "type": "module",
