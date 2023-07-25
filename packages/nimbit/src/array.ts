@@ -9,8 +9,8 @@ export function array<TValue extends Type<unknown, unknown>>(value: TValue) {
 }
 
 export class ArrayType<TValue, T> extends Typ<'array', TValue, T> {
-  constructor(value: TValue, name?: string) {
-    super('array', value, name);
+  constructor(public element: TValue, name?: string) {
+    super('array', element, name);
   }
 
   parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {

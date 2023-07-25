@@ -277,19 +277,41 @@ t.asBoolean.parse(null); // => false
 
 ### Custom coercion
 
-Writing your own coercion is extremely easy.  For example, here is how the `asNumber` coercion is implemented:
+Writing your own coercion is extremely easy. For example, here is how the `asNumber` coercion is implemented:
 
 ```ts
-const asNumber = coerce(t.number, (x: unknown) => {
+const asNumber = t.coerce(t.number, (x: unknown) => {
   const result = Number(x);
   return !isNaN(result) ? pass(result) : fail();
 });
+
+asNumber.parse('12'); // => 12
 ```
-The first argument is the output type of your coercion.  
 
-If the coercion succeeds you just need to return `pass(value)`. If the coercion fails, return `fail()`.  You can also return `fail(message)` to provide a custom error message.
+The first argument is the output type of your coercion. This paradigm is important to keep all types defined by Nimbit to be reflective.
 
-After that you can use `asNumber` any place you would use a `string`
+If the coercion succeeds you just need to return `pass(value)`. If the coercion fails, return `fail()`. You can also return `fail(message)` to provide a custom error message.
+
+After that you can use `asNumber` any place you would use a `string`.
+
+### Pipelining
+
+With Nimbit you use `.to()` through a series of other types to reuse logic and coercions.
+
+```ts
+const allowedQuantity = t.number.where(x => x > 100).;
+const labelContents = t.string.to(t.asNumber).to(minimumQuantity);
+
+labelContents.parse('12'); // => fail
+labelContents.parse('150'); // => 150
+labelContents.parse(150); // => fail  //expected a string on initial input!
+```
+
+`to()` also supports inline coercion while keeping your resulting type reflective.
+
+```ts
+const asIsoString = asDate.to(t.string, x => t.pass(x.toISOString()));
+```
 
 ## Literals
 
@@ -303,7 +325,7 @@ const twobig = t.literal(2n); // bigint literal
 const tru = t.literal(true);
 
 const terrificSymbol = Symbol('terrific');
-const terrific = z.literal(terrificSymbol);
+const terrific = t.literal(terrificSymbol);
 
 // retrieve literal value
 tuna.value; // "tuna"
@@ -550,28 +572,26 @@ console.log(dateSchema.safeParse('2023-13-10').success); // false
 console.log(dateSchema.safeParse('0000-00-00').success); // false
 ```
 
-For older zod versions, use [`z.preprocess`](#preprocess) like [described in this thread](https://github.com/colinhacks/zod/discussions/879#discussioncomment-2036276).
-
-## Zod enums
+## Enums
 
 ```ts
-const FishEnum = z.enum(['Salmon', 'Tuna', 'Trout']);
-type FishEnum = z.infer<typeof FishEnum>;
+const FishEnum = t.enumm(['Salmon', 'Tuna', 'Trout']);
+type FishEnum = t.Infer<typeof FishEnum>;
 // 'Salmon' | 'Tuna' | 'Trout'
 ```
 
-`z.enum` is a Zod-native way to declare a schema with a fixed set of allowable _string_ values. Pass the array of values directly into `z.enum()`. Alternatively, use `as const` to define your enum values as a tuple of strings. See the [const assertion docs](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions) for details.
+`t.enumm` is a way to declare a schema with a fixed set of allowable _string_ values. Pass the array of values directly into `t.enumm()`. Alternatively, use `as const` to define your enum values as a tuple of strings. See the [const assertion docs](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions) for details.
 
 ```ts
 const VALUES = ['Salmon', 'Tuna', 'Trout'] as const;
-const FishEnum = z.enum(VALUES);
+const FishEnum = t.enumm(VALUES);
 ```
 
-This is not allowed, since Zod isn't able to infer the exact values of each element.
+This is not allowed, since TypeScript isn't able to infer the exact values of each element.
 
 ```ts
 const fish = ['Salmon', 'Tuna', 'Trout'];
-const FishEnum = z.enum(fish);
+const FishEnum = t.enum(fish);
 ```
 
 **Autocompletion**
@@ -591,13 +611,13 @@ FishEnum.enum;
 */
 ```
 
-You can also retrieve the list of options as a tuple with the `.options` property:
+You can also retrieve the list of options as a tuple with the `.shape` property:
 
 ```ts
 FishEnum.options; // ["Salmon", "Tuna", "Trout"];
 ```
 
-## Native enums
+## (TODO) Native enums
 
 Zod enums are the recommended approach to defining and validating enums. But if you need to validate against an enum from a third-party library (or you don't want to rewrite your existing enums) you can use `z.nativeEnum()`.
 
@@ -667,68 +687,75 @@ FruitEnum.enum.Apple; // "apple"
 
 ## Optionals
 
-You can make any schema optional with `z.optional()`. This wraps the schema in a `ZodOptional` instance and returns the result.
+You can make any schema by calling `.opt()` on any type.
 
 ```ts
-const schema = z.optional(z.string());
+const stringOrUndefined = t.string.opt();
+type A = t.Infer<typeof stringOrUndefined>; // string | undefined;
 
-schema.parse(undefined); // => returns undefined
-type A = z.infer<typeof schema>; // string | undefined
-```
-
-For convenience, you can also call the `.optional()` method on an existing schema.
-
-```ts
-const user = z.object({
-  username: z.string().optional()
+const user = t.obj({
+  username: t.string.opt
 });
-type C = z.infer<typeof user>; // { username?: string | undefined };
+type C = t.Infer<typeof user>; // { username?: string | undefined };
 ```
 
-You can extract the wrapped schema from a `ZodOptional` instance with `.unwrap()`.
+`opt()` is simply a shorthand for creating a union of a type with the `undef` type and they are exactly equivalent.
 
 ```ts
-const stringSchema = z.string();
-const optionalString = stringSchema.optional();
+const stringOrUndefined = t.union(t.string, t.undef);
+type A = t.Infer<typeof stringOrUndefined>; // string | undefined;
+```
+
+You can remove `undef` from a an optiona/`union` by calling `unwrap()`.
+
+```ts
+const optionalString = t.string.opt();
 optionalString.unwrap() === stringSchema; // true
+```
+
+NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExclude()` if you wish to remove a type from all unions
+
+```ts
+const optionalString = t.string.opt().opt();
+optionalString.unwrap() === stringSchema; // false!
+optionalString.unwrap().unwrap() === stringSchema; // true!
+
+t.exclude(optionalString, t.undef) === stringSchema; // false!
+t.flatExclude(optionalString, t.undef) === stringSchema; // true!
 ```
 
 ## Nullables
 
-Similarly, you can create nullable types with `z.nullable()`.
+Similarly, you can create nullable types with `nullable()`. Again, this is a `union` of a type with `nul`
 
 ```ts
-const nullableString = z.nullable(z.string());
+const nullableString = t.string.nullable();
 nullableString.parse('asdf'); // => "asdf"
 nullableString.parse(null); // => null
 ```
 
-Or use the `.nullable()` method.
+## Nullish
+
+Similarly, you can create types that are both optional and nullable with `nullish()`. Again, this is a `union` of a type with `nul` and `undef`
 
 ```ts
-const E = z.string().nullable(); // equivalent to nullableString
-type E = z.infer<typeof E>; // string | null
-```
-
-Extract the inner schema with `.unwrap()`.
-
-```ts
-const stringSchema = z.string();
-const nullableString = stringSchema.nullable();
-nullableString.unwrap() === stringSchema; // true
+const nullishString = t.string.nullish();
+nullishString.parse('asdf'); // => "asdf"
+nullishString.parse('undefined'); // => "asdf"
+nullishString.parse(null); // => null
 ```
 
 ## Objects
 
 ```ts
 // all properties are required by default
-const Dog = z.object({
-  name: z.string(),
-  age: z.number(),
+const Dog = t.obj({
+  name: t.string,
+  age: t.number,
 });
 
 // extract the inferred type like this
-type Dog = z.infer<typeof Dog>;
+type Dog = t.Infer<typeof Dog>;
 
 // equivalent to:
 type Dog = {
@@ -746,13 +773,12 @@ Dog.shape.name; // => string schema
 Dog.shape.age; // => number schema
 ```
 
-### `.keyof`
+### `.k`
 
-Use `.keyof` to create a `ZodEnum` schema from the keys of an object schema.
+Use `.k` to get an autocompletable set of the shape's keys.
 
 ```ts
-const keySchema = Dog.keyof();
-keySchema; // ZodEnum<["name", "age"]>
+Dog.k; // => {name: "name", age: "age"]}
 ```
 
 ### `.extend`
@@ -761,7 +787,7 @@ You can add additional fields to an object schema with the `.extend` method.
 
 ```ts
 const DogWithBreed = Dog.extend({
-  breed: z.string()
+  breed: t.string
 });
 ```
 
@@ -772,54 +798,66 @@ You can use `.extend` to overwrite fields! Be careful with this power!
 Equivalent to `A.extend(B.shape)`.
 
 ```ts
-const BaseTeacher = z.object({ students: z.array(z.string()) });
-const HasID = z.object({ id: z.string() });
+const BaseTeacher = t.obj({ students: t.array(t.string) });
+const HasID = t.obj({ id: t.string });
 
 const Teacher = BaseTeacher.merge(HasID);
-type Teacher = z.infer<typeof Teacher>; // => { students: string[], id: string }
+type Teacher = t.Infer<typeof Teacher>; // => { students: string[], id: string }
 ```
 
 > If the two schemas share keys, the properties of B overrides the property of A. The returned schema also inherits the "unknownKeys" policy (strip/strict/passthrough) and the catchall schema of B.
 
 ### `.pick/.omit`
 
-Inspired by TypeScript's built-in `Pick` and `Omit` utility types, all Zod object schemas have `.pick` and `.omit` methods that return a modified version. Consider this Recipe schema:
+You may use `pick()` and `omit()` to get a modified version of an `object` schema. Consider this Recipe schema:
 
 ```ts
-const Recipe = z.object({
-  id: z.string(),
-  name: z.string(),
-  ingredients: z.array(z.string())
+const Recipe = t.obj({
+  id: t.string,
+  name: t.string,
+  ingredients: t.array(t.string)
 });
 ```
 
 To only keep certain keys, use `.pick` .
 
 ```ts
-const JustTheName = Recipe.pick({ name: true });
-type JustTheName = z.infer<typeof JustTheName>;
+const JustTheName = pick(Recipe, Recipe.k.name);
+type JustTheName = t.Infer<typeof JustTheName>;
 // => { name: string }
 ```
 
-To remove certain keys, use `.omit` .
+You could also just pass the property name directly.
 
 ```ts
-const NoIDRecipe = Recipe.omit({ id: true });
+const JustTheName = pick(Recipe, 'name');
+```
 
-type NoIDRecipe = z.infer<typeof NoIDRecipe>;
-// => { name: string, ingredients: string[] }
+There's also the `getKeys()` convenience method if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typeds.
+
+```ts
+const JustTheName = pick(Recipe, ...getKeys({ id: 1, name: 1 }));
+```
+
+To remove certain keys, use `.omit` in the same fashion as `pick()`
+
+```ts
+const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
+
+type JustRecipeName = t.Infer<typeof NoIDRecipe>;
+// => { name: string }
 ```
 
 ### `.partial`
 
-Inspired by the built-in TypeScript utility type [Partial](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype), the `.partial` method makes all properties optional.
+Jus like built-in TypeScript utility type [Partial](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype), the `.partial` method makes all properties optional.
 
 Starting from this object:
 
 ```ts
-const user = z.object({
-  email: z.string()
-  username: z.string(),
+const User = t.obj({
+  email: t.string
+  username: t.string,
 });
 // { email: string; username: string }
 ```
@@ -827,25 +865,28 @@ const user = z.object({
 We can create a partial version:
 
 ```ts
-const partialUser = user.partial();
+const partialUser = partial(User);
 // { email?: string | undefined; username?: string | undefined }
 ```
 
 You can also specify which properties to make optional:
 
 ```ts
-const optionalEmail = user.partial({
-  email: true
-});
+const optionalEmail = partial(User, User.k.email);
+
 /*
 {
   email?: string | undefined;
   username: string
 }
 */
+
+//alternative ways of picking propertis to the above
+const optionalEmail = partial(User, 'email');
+const optionalEmail = partial(User, ...getKeys({email: 1}));
 ```
 
-### `.deepPartial`
+### `.deepPartial` (TODO)
 
 The `.partial` method is shallow — it only applies one level deep. There is also a "deep" version:
 
@@ -882,32 +923,34 @@ Contrary to the `.partial` method, the `.required` method makes all properties r
 Starting from this object:
 
 ```ts
-const user = z.object({
-  email: z.string()
-  username: z.string(),
-}).partial();
+const User = partial(t.obj({
+  email: t.string
+  username: t.string,
+}));
 // { email?: string | undefined; username?: string | undefined }
 ```
 
 We can create a required version:
 
 ```ts
-const requiredUser = user.required();
+const requiredUser = required(User);
 // { email: string; username: string }
 ```
 
 You can also specify which properties to make required:
 
 ```ts
-const requiredEmail = user.required({
-  email: true
-});
+const requiredEmail = User.required(User.k.email);
 /*
 {
   email: string;
   username?: string | undefined;
 }
 */
+
+//alternative ways of picking propertis to the above
+const requiredEmail = required(User, 'email');
+const requiredEmail = required(User, ...getKeys({email: 1}));
 ```
 
 ### `.passthrough`
@@ -987,17 +1030,7 @@ Using `.catchall()` obviates `.passthrough()` , `.strip()` , or `.strict()`. All
 ## Arrays
 
 ```ts
-const stringArray = z.array(z.string());
-
-// equivalent
-const stringArray = z.string().array();
-```
-
-Be careful with the `.array()` method. It returns a new `ZodArray` instance. This means the _order_ in which you call methods matters. For instance:
-
-```ts
-z.string().optional().array(); // (string | undefined)[]
-z.string().array().optional(); // string[] | undefined
+const stringArray = array(t.string);
 ```
 
 ### `.element`
@@ -1045,15 +1078,15 @@ Unlike `.nonempty()` these methods do not change the inferred type.
 Unlike arrays, tuples have a fixed number of elements and each element can have a different type.
 
 ```ts
-const athleteSchema = z.tuple([
-  z.string(), // name
-  z.number(), // jersey number
-  z.object({
-    pointsScored: z.number()
+const athleteSchema = t.tuple([
+  t.string, // name
+  t.number, // jersey number
+  t.obj({
+    pointsScored: t.number
   }) // statistics
 ]);
 
-type Athlete = z.infer<typeof athleteSchema>;
+type Athlete = t.Infer<typeof athleteSchema>;
 // type Athlete = [string, number, { pointsScored: number }]
 ```
 
@@ -1067,22 +1100,16 @@ const result = variadicTuple.parse(['hello', 1, 2, 3]);
 
 ## Unions
 
-Zod includes a built-in `z.union` method for composing "OR" types.
+The `union()` method is for composing "OR" types. In Nimbit, unions are much richer than other libaries as they support reflection and the
 
 ```ts
-const stringOrNumber = z.union([z.string(), z.number()]);
+const stringOrNumber = t.union(t.string, t.number);
 
 stringOrNumber.parse('foo'); // passes
 stringOrNumber.parse(14); // passes
 ```
 
-Zod will test the input against each of the "options" in order and return the first value that validates successfully.
-
-For convenience, you can also use the [`.or` method](#or):
-
-```ts
-const stringOrNumber = z.string().or(z.number());
-```
+The lib will test the input against each of the "options" in order and return the first value that validates successfully.
 
 **Optional string validation:**
 
@@ -1091,16 +1118,28 @@ To validate an optional form input, you can union the desired string validation 
 This example validates an input that is optional but needs to contain a [valid URL](#strings):
 
 ```ts
-const optionalUrl = z.union([z.string().url().nullish(), z.literal('')]);
+const optionalUrl = t.union(t.string.where(isUrl).nullish(), t.literal(''));
 
-console.log(optionalUrl.safeParse(undefined).success); // true
-console.log(optionalUrl.safeParse(null).success); // true
-console.log(optionalUrl.safeParse('').success); // true
-console.log(optionalUrl.safeParse('https://zod.dev').success); // true
-console.log(optionalUrl.safeParse('not a valid url').success); // false
+optionalUrl.parse(undefined).success; // true
+optionalUrl.parse(null).success; // true
+optionalUrl.parse('').success; // true
+optionalUrl.parse('https://github.com').success; // true
+optionalUrl.parse('not a valid url').success; // false
 ```
 
-## Discriminated unions
+**Reflecting on a union:**
+
+Unions can be nested, so there is a `.members` property on `union` schemas that returns a strongly typed tuple of the union nesting hiearchy
+
+```ts
+const nestedUnions = t.union(t.string, t.union(t.number, t.undef));
+
+nestedUnions.members; // => [StringT, [UnionType<..., [NumberT, UndefinedT]>]
+nestedUnions.members[1].members; // => [NumberT, UndefinedT]
+nestedUnions.members[1].members[0].kind; // => 'number'
+```
+
+## Discriminated unions (Not applicable)
 
 A discriminated union is a union of object schemas that all share a particular key.
 
@@ -1125,12 +1164,12 @@ myUnion.parse({ status: 'success', data: 'yippie ki yay' });
 
 Record schemas are used to validate types such as `{ [k: string]: number }`.
 
-If you want to validate the _values_ of an object against some schema but don't care about the keys, use `z.record(valueType)`:
+If you want to validate the _values_ of an object against some schema but don't care about the keys, use `t.record(t.any, valueType)`:
 
 ```ts
-const NumberCache = z.record(z.number());
+const NumberCache = t.record(t.string, t.number);
 
-type NumberCache = z.infer<typeof NumberCache>;
+type NumberCache = t.Infer<typeof NumberCache>;
 // => { [k: string]: number }
 ```
 
@@ -1148,20 +1187,18 @@ userStore['77d2586b-9e8e-4ecf-8b21-ea7e0530eadd'] = {
 }; // TypeError
 ```
 
-### Record key type
-
-If you want to validate both the keys and the values, use
-`z.record(keyType, valueType)`:
+You can validate both the keys and the values
 
 ```ts
-const NoEmptyKeysSchema = z.record(z.string().min(1), z.number());
+const NoEmptyKeysSchema = z.record(
+  t.string.where(x => x.length >= 1),
+  t.number
+);
 NoEmptyKeysSchema.parse({ count: 1 }); // => { 'count': 1 }
 NoEmptyKeysSchema.parse({ '': 1 }); // fails
 ```
 
-_(Notice how when passing two arguments, `valueType` is the second argument)_
-
-**A note on numerical keys**
+**A note on numerical keys** (TODO)
 
 While `z.record(keyType, valueType)` is able to accept numerical key types and TypeScript's built-in Record type is `Record<KeyType, ValueType>`, it's hard to represent the TypeScript type `Record<number, any>` in Zod.
 
@@ -1183,17 +1220,17 @@ As you can see, JavaScript automatically casts all object keys to strings under 
 ## Maps
 
 ```ts
-const stringNumberMap = z.map(z.string(), z.number());
+const stringNumberMap = t.map(t.string, t.number);
 
-type StringNumberMap = z.infer<typeof stringNumberMap>;
+type StringNumberMap = t.Infer<typeof stringNumberMap>;
 // type StringNumberMap = Map<string, number>
 ```
 
 ## Sets
 
 ```ts
-const numberSet = z.set(z.number());
-type NumberSet = z.infer<typeof numberSet>;
+const numberSet = t.set(t.number);
+type NumberSet = t.Infer<typeof numberSet>;
 // type NumberSet = Set<number>
 ```
 
@@ -1208,32 +1245,17 @@ z.set(z.string()).size(5); // must contain 5 items exactly
 
 ## Intersections
 
-Intersections are useful for creating "logical AND" types. This is useful for intersecting two object types.
+Interesections are not in scope for Nimbit. They have limited use in the real world, and cause immense complications in implementing a type system. Even though they are present in other libraries like Zod, they end up being somewhat of a dead end as you lose the ability to use pick and omit.
 
-```ts
-const Person = z.object({
-  name: z.string(),
-});
+In general, use `merge` and `extend`.
 
-const Employee = z.object({
-  role: z.string(),
-});
+## Extract
 
-const EmployedPerson = z.intersection(Person, Employee);
+## FlatExtract
 
-// equivalent to:
-const EmployedPerson = Person.and(Employee);
-```
+## Exclude
 
-Though in many cases, it is recommended to use `A.merge(B)` to merge two objects. The `.merge` method returns a new `ZodObject` instance, whereas `A.and(B)` returns a less useful `ZodIntersection` instance that lacks common object methods like `pick` and `omit`.
-
-```ts
-const a = z.union([z.number(), z.string()]);
-const b = z.union([z.number(), z.boolean()]);
-const c = z.intersection(a, b);
-
-type c = z.infer<typeof c>; // => number
-```
+## FlatExclude
 
 <!-- Intersections in Zod are not smart. Whatever data you pass into `.parse()` gets passed into the two intersected schemas. Because Zod object schemas don't allow any unknown keys by default, there are some unintuitive behavior surrounding intersections of object schemas. -->
 
@@ -1256,22 +1278,17 @@ type Teacher = z.infer<typeof Teacher>;
 
 ## Recursive types
 
-You can define a recursive schema in Zod, but because of a limitation of TypeScript, their type can't be statically inferred. Instead you'll need to define the type definition manually, and provide it to Zod as a "type hint".
+One of the biggest advantages of Nimbit is a new approach to recursive types. In Nimbit, recursive types are defined as naturally as typical objects, but instead you first define your object's shape as a class before passing it to `t.obj()`.
 
 ```ts
-const baseCategorySchema = z.object({
-  name: z.string()
-});
+class CategoryDef {
+  name = t.string;
+  subcategories = t.array(t.obj(CategoryDef));
+}
+const Category = t.obj(CategoryDef);
+type Category = t.Infer<typeof Category>;
 
-type Category = z.infer<typeof baseCategorySchema> & {
-  subcategories: Category[];
-};
-
-const categorySchema: z.ZodType<Category> = baseCategorySchema.extend({
-  subcategories: z.lazy(() => categorySchema.array())
-});
-
-categorySchema.parse({
+Category.parse({
   name: 'People',
   subcategories: [
     {
@@ -1285,9 +1302,49 @@ categorySchema.parse({
     }
   ]
 }); // passes
+
+// after you've defnied Category with t.obj(), you no longer have to refer to the class definition. Magic!
+const categoryList = t.array(Category);
 ```
 
-Thanks to [crasite](https://github.com/crasite) for this example.
+Mutually recursive types are also allowed.
+
+```ts
+class PersonDef {
+  name = t.string;
+  addresses? = t.array(t.obj(AddressDef)).opt(); //notice that the class property is marked with '?'
+}
+
+class AddressDef {
+  resident? = t.obj(PersonDef).opt();
+  street = t.string;
+}
+
+const Person = t.obj(PersonDef);
+type Person = t.Infer<typeof Person>;
+
+const Address = t.obj(AddressDef);
+type Address = t.Infer<typeof Address>;
+
+Person.parse({
+  name: 'Bob',
+  addresses: [
+    {
+      resident: { name: 'Bob' },
+      street: '123 Main St.'
+    }
+  ]
+}); //passes
+
+Address.parse({
+  resident: { name: 'Bob' },
+  street: '123 Main St.'
+}); //passes
+```
+
+**Optional properties in class defintions**
+
+One caveat of using classes to define your object shemas is that you must mark the class properties with a `?` like above if you wish it to remain optional in your TypeScript definition. Calling `.opt()` alone won't do the trick. This is because of TypeScript.
 
 ### ZodType with ZodEffects
 
@@ -1320,11 +1377,13 @@ const schema: z.ZodType<Output, z.ZodTypeDef, Input> = baseSchema.extend({
 
 Thanks to [marcus13371337](https://github.com/marcus13371337) and [JoelBeeldi](https://github.com/JoelBeeldi) for this example.
 
-### JSON type
+### JSON type (TODO: verify if needs to be recursive)
 
 If you want to validate any JSON value, you can use the snippet below.
 
 ```ts
+t.json.parse('{"a":1}'); //passes and returns { a: 1 }
+
 const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 type Literal = z.infer<typeof literalSchema>;
 type Json = Literal | { [key: string]: Json } | Json[];
@@ -1333,141 +1392,17 @@ const jsonSchema: z.ZodType<Json> = z.lazy(() => z.union([literalSchema, z.array
 jsonSchema.parse(data);
 ```
 
-Thanks to [ggoodman](https://github.com/ggoodman) for suggesting this.
-
-### Cyclical objects
+### Cyclical objects (TODO: Add support in parsing context)
 
 Despite supporting recursive schemas, passing cyclical data into Zod will cause an infinite loop.
 
 ## Promises
 
-```ts
-const numberPromise = z.promise(z.number());
-```
-
-"Parsing" works a little differently with promise schemas. Validation happens in two parts:
-
-1. Zod synchronously checks that the input is an instance of Promise (i.e. an object with `.then` and `.catch` methods.).
-2. Zod uses `.then` to attach an additional validation step onto the existing Promise. You'll have to use `.catch` on the returned Promise to handle validation failures.
-
-```ts
-numberPromise.parse('tuna');
-// ZodError: Non-Promise type: string
-
-numberPromise.parse(Promise.resolve('tuna'));
-// => Promise<number>
-
-const test = async () => {
-  await numberPromise.parse(Promise.resolve('tuna'));
-  // ZodError: Non-number type: string
-
-  await numberPromise.parse(Promise.resolve(3.14));
-  // => 3.14
-};
-```
-
-<!-- #### Non-native promise implementations
-
-When "parsing" a promise, Zod checks that the passed value is an object with `.then` and `.catch` methods — that's it. So you should be able to pass non-native Promises (Bluebird, etc) into `z.promise(...).parse` with no trouble. One gotcha: the return type of the parse function will be a _native_ `Promise` , so if you have downstream logic that uses non-standard Promise methods, this won't work. -->
-
-## Instanceof
-
-You can use `z.instanceof` to check that the input is an instance of a class. This is useful to validate inputs against classes that are exported from third-party libraries.
-
-```ts
-class Test {
-  name: string;
-}
-
-const TestSchema = z.instanceof(Test);
-
-const blob: any = 'whatever';
-TestSchema.parse(new Test()); // passes
-TestSchema.parse('blob'); // throws
-```
+TBD whether to support
 
 ## Functions
 
-Zod also lets you define "function schemas". This makes it easy to validate the inputs and outputs of a function without intermixing your validation code and "business logic".
-
-You can create a function schema with `z.function(args, returnType)` .
-
-```ts
-const myFunction = z.function();
-
-type myFunction = z.infer<typeof myFunction>;
-// => ()=>unknown
-```
-
-Define inputs and outputs.
-
-```ts
-const myFunction = z
-  .function()
-  .args(z.string(), z.number()) // accepts an arbitrary number of arguments
-  .returns(z.boolean());
-
-type myFunction = z.infer<typeof myFunction>;
-// => (arg0: string, arg1: number)=>boolean
-```
-
-<!--
-
-``` ts
-const args = z.tuple([z.string()]);
-
-const returnType = z.number();
-
-const myFunction = z.function(args, returnType);
-type myFunction = z.infer<typeof myFunction>;
-// => (arg0: string)=>number
-``` -->
-
-Function schemas have an `.implement()` method which accepts a function and returns a new function that automatically validates its inputs and outputs.
-
-```ts
-const trimmedLength = z
-  .function()
-  .args(z.string()) // accepts an arbitrary number of arguments
-  .returns(z.number())
-  .implement(x => {
-    // TypeScript knows x is a string!
-    return x.trim().length;
-  });
-
-trimmedLength('sandwich'); // => 8
-trimmedLength(' asdf '); // => 4
-```
-
-If you only care about validating inputs, just don't call the `.returns()` method. The output type will be inferred from the implementation.
-
-> You can use the special `z.void()` option if your function doesn't return anything. This will let Zod properly infer the type of void-returning functions. (Void-returning functions actually return undefined.)
-
-```ts
-const myFunction = z
-  .function()
-  .args(z.string())
-  .implement(arg => {
-    return [arg.length];
-  });
-
-myFunction; // (arg: string)=>number[]
-```
-
-Extract the input and output schemas from a function schema.
-
-```ts
-myFunction.parameters();
-// => ZodTuple<[ZodString, ZodNumber]>
-
-myFunction.returnType();
-// => ZodBoolean
-```
-
-<!-- `z.function()` accepts two arguments:
-
-* `args: ZodTuple` The first argument is a tuple (created with `z.tuple([...])` and defines the schema of the arguments to your function. If the function doesn't accept arguments, you can pass an empty tuple (`z.tuple([])`).
-* `returnType: any Zod schema` The second argument is the function's return type. This can be any Zod schema. -->
+not supported
 
 ## Preprocess
 
@@ -2309,101 +2244,3 @@ Branded -->
 * Missing union & intersection schemas
 * Missing support for parsing cyclical data (maybe)
 * Missing error customization -->
-
-### Joi
-
-[https://github.com/hapijs/joi](https://github.com/hapijs/joi)
-
-Doesn't support static type inference 😕
-
-### Yup
-
-[https://github.com/jquense/yup](https://github.com/jquense/yup)
-
-Yup is a full-featured library that was implemented first in vanilla JS, and later rewritten in TypeScript.
-
-- Supports casting and transforms
-- All object fields are optional by default
-- Missing object methods: (partial, deepPartial)
-<!-- - Missing nonempty arrays with proper typing (`[T, ...T[]]`) -->
-- Missing promise schemas
-- Missing function schemas
-- Missing union & intersection schemas
-
-<!-- ¹Yup has a strange interpretation of the word `required`. Instead of meaning "not undefined", Yup uses it to mean "not empty". So `yup.string().required()` will not accept an empty string, and `yup.array(yup.string()).required()` will not accept an empty array. Instead, Yup us Zod arrays there is a dedicated `.nonempty()` method to indicate this, or you can implement it with a custom refinement. -->
-
-### io-ts
-
-[https://github.com/gcanti/io-ts](https://github.com/gcanti/io-ts)
-
-io-ts is an excellent library by gcanti. The API of io-ts heavily inspired the design of Zod.
-
-In our experience, io-ts prioritizes functional programming purity over developer experience in many cases. This is a valid and admirable design goal, but it makes io-ts particularly hard to integrate into an existing codebase with a more procedural or object-oriented bias. For instance, consider how to define an object with optional properties in io-ts:
-
-```ts
-import * as t from 'io-ts';
-
-const A = t.type({
-  foo: t.string
-});
-
-const B = t.partial({
-  bar: t.number
-});
-
-const C = t.intersection([A, B]);
-
-type C = t.TypeOf<typeof C>;
-// returns { foo: string; bar?: number | undefined }
-```
-
-You must define the required and optional props in separate object validators, pass the optionals through `t.partial` (which marks all properties as optional), then combine them with `t.intersection` .
-
-Consider the equivalent in Zod:
-
-```ts
-const C = z.object({
-  foo: z.string(),
-  bar: z.number().optional()
-});
-
-type C = z.infer<typeof C>;
-// returns { foo: string; bar?: number | undefined }
-```
-
-This more declarative API makes schema definitions vastly more concise.
-
-`io-ts` also requires the use of gcanti's functional programming library `fp-ts` to parse results and handle errors. This is another fantastic resource for developers looking to keep their codebase strictly functional. But depending on `fp-ts` necessarily comes with a lot of intellectual overhead; a developer has to be familiar with functional programming concepts and the `fp-ts` nomenclature to use the library.
-
-- Supports codecs with serialization & deserialization transforms
-- Supports branded types
-- Supports advanced functional programming, higher-kinded types, `fp-ts` compatibility
-- Missing object methods: (pick, omit, partial, deepPartial, merge, extend)
-- Missing nonempty arrays with proper typing (`[T, ...T[]]`)
-- Missing promise schemas
-- Missing function schemas
-
-### Runtypes
-
-[https://github.com/pelotom/runtypes](https://github.com/pelotom/runtypes)
-
-Good type inference support, but limited options for object type masking (no `.pick` , `.omit` , `.extend` , etc.). No support for `Record` s (their `Record` is equivalent to Zod's `object` ). They DO support readonly types, which Zod does not.
-
-- Supports "pattern matching": computed properties that distribute over unions
-- Supports readonly types
-- Missing object methods: (deepPartial, merge)
-- Missing nonempty arrays with proper typing (`[T, ...T[]]`)
-- Missing promise schemas
-- Missing error customization
-
-### Ow
-
-[https://github.com/sindresorhus/ow](https://github.com/sindresorhus/ow)
-
-Ow is focused on function input validation. It's a library that makes it easy to express complicated assert statements, but it doesn't let you parse untyped data. They support a much wider variety of types; Zod has a nearly one-to-one mapping with TypeScript's type system, whereas ow lets you validate several highly-specific types out of the box (e.g. `int32Array` , see full list in their README).
-
-If you want to validate function inputs, use function schemas in Zod! It's a much simpler approach that lets you reuse a function type declaration without repeating yourself (namely, copy-pasting a bunch of ow assertions at the beginning of every function). Also Zod lets you validate your return types as well, so you can be sure there won't be any unexpected data passed downstream.
-
-## Changelog
-
-View the changelog at [CHANGELOG.md](CHANGELOG.md)

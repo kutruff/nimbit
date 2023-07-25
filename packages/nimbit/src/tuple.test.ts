@@ -30,6 +30,22 @@ describe('Tuples', () => {
       }
     });
 
+    it('parses a value with an object', () => {
+      const Target = t.tuple([
+        t.string, // name
+        t.number, // jersey number
+        t.obj({
+          pointsScored: t.number
+        }) // statistics
+      ]);
+      type Target = t.Infer<typeof Target>;
+      const instance = Target.parse(['a', 1, { pointsScored: 1231 }]);
+      expect(instance.success).toEqual(true);
+      if (instance.success) {
+        expect(instance.value).toEqual(['a', 1, { pointsScored: 1231 }]);
+      }
+    });
+
     it('fails to parse wrong sized tuple', () => {
       const Target = t.tuple([t.string, t.number, t.boolean]);
       type Target = t.Infer<typeof Target>;

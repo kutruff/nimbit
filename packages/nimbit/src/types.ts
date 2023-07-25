@@ -137,7 +137,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return this.kind === other.kind;
   }
 
-  default(defaultValue: T): Extend<typeof this, Parser<T | undefined, T>> {
+  default(defaultValue: T): typeof this {
     const [clone, originalParse] = overrideParse(this);
     clone.parse = function (value: T | undefined, opts = Typ.defaultOpts) {
       return value === undefined ? pass(defaultValue as any) : originalParse(value, opts);
@@ -168,7 +168,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   ): TDestination {
     const [clone, destinationParse] = overrideParse(destination);
     const source = this;
-    clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {      
+    clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
       const sourceResult = source.parse(value, opts);
       if (!sourceResult.success) {
         return sourceResult;

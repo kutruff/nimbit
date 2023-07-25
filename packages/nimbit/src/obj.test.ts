@@ -195,6 +195,30 @@ describe('obj()', () => {
     expectTypesSupportAssignment<A, ExpectedAShape>();
   });
 
+  it('recursive category example', () => {
+    class CategoryDef {
+      name = t.string;
+      subcategories = t.array(t.obj(CategoryDef));
+    }
+    const Category = t.obj(CategoryDef);
+    type Category = t.Infer<typeof Category>;
+
+    Category.parse({
+      name: 'People',
+      subcategories: [
+        {
+          name: 'Politicians',
+          subcategories: [
+            {
+              name: 'Presidents',
+              subcategories: []
+            }
+          ]
+        }
+      ]
+    }); // passes
+  });
+
   it('allows classes for obj()', () => {
     class ADef {
       prop = t.string;
@@ -208,6 +232,76 @@ describe('obj()', () => {
     type ExpectedAShape = { prop: string };
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
+  });
+
+  it.failing('allows mutual recursion with circular references', () => {
+    //TODO: need to allow circular references
+    class PersonDef {
+      name = t.string;
+      addresses? = t.array(t.obj(AddressDef)).opt();
+    }
+
+    class AddressDef {
+      resident? = t.obj(PersonDef).opt();
+      street = t.string;
+    }
+
+    const Person = t.obj(PersonDef);
+    type Person = t.Infer<typeof Person>;
+
+    const Address = t.obj(AddressDef);
+    type Address = t.Infer<typeof Address>;
+
+    const bob: Person = {
+      name: 'Bob',
+      addresses: [
+        {
+          resident: { name: 'Bob' },
+          street: '123 Main St.'
+        }
+      ]
+    };
+
+    const someAddress: Address = {
+      resident: { name: 'Bob' },
+      street: '123 Main St.'
+    };
+
+    const circularAddress = { ...someAddress };
+    const bobCopy = { ...bob };
+    circularAddress.resident = bobCopy;
+    bobCopy.addresses = [circularAddress];
+
+    const result = Person.parse(bobCopy); // passes
+    expect(result.success).toEqual(true);
+  });
+
+  it('allows mutual recursion', () => {
+    class ADef {
+      b? = t.obj(BDef).opt();
+      strProp = t.string;
+    }
+
+    class BDef {
+      a = t.obj(ADef);
+    }
+
+    const A = t.obj(ADef);
+    type A = t.Infer<typeof A>;
+
+    const B = t.obj(BDef);
+    type B = t.Infer<typeof B>;
+
+    expect(A.shape.b.unionTypes[0]).toEqual(B);
+    expect(B.shape.a).toEqual(A);
+
+    type ExpectedAShape = { b?: B; strProp: string };
+    expectTypesSupportAssignment<ExpectedAShape, A>();
+    expectTypesSupportAssignment<A, ExpectedAShape>();
+
+    type ExpectedBShape = { a: A };
+    expectTypesSupportAssignment<ExpectedBShape, B>();
+    expectTypesSupportAssignment<B, ExpectedBShape>();
   });
 
   it('allows mutual recursion', () => {

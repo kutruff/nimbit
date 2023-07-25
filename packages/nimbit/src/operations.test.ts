@@ -2,15 +2,59 @@
 import ts from 'typescript';
 
 import * as t from '.';
-import { type ParseResult } from '.';
+import { getKeys, type ParseResult } from '.';
 import { expectType, expectTypesSupportAssignment, type TypeEqual, type TypeOf } from './test/utilities';
 
 describe('Type operations', () => {
   describe('extend()', () => {
     it('overrides distinct properties', () => {
       const objA = t.obj({ propA: t.string });
+      const shapeB = { propB: t.number };
+      const Result = t.extend(objA, shapeB);
+      type Result = t.Infer<typeof Result>;
+      type ResultT = t.Resolve<typeof Result>;
+      const ExpectedDefinitionType = t.obj({
+        propA: t.string,
+        propB: t.number
+      });
+      type ExpectedDefinitionType = typeof ExpectedDefinitionType;
+
+      //TODO: The type check fails without having Extend<> have a Resolve around it...
+      expectType<TypeEqual<typeof Result, ExpectedDefinitionType>>(true);
+
+      type ExpectedResult = { propA: string; propB: number };
+      expectType<TypeEqual<Result, ExpectedResult>>(true);
+
+      expect(Result).toEqual(ExpectedDefinitionType);
+    });
+
+    it('overrides conflicting properties from B over A', () => {
+      const objA = t.obj({ prop: t.number, propA: t.string });
+      const shapeB = { prop: t.string, propB: t.number };
+      const Result = t.extend(objA, shapeB);
+      type Result = t.Infer<typeof Result>;
+
+      const ExpectedDefinitionType = t.obj({
+        propA: t.string,
+        propB: t.number,
+        prop: t.string
+      });
+
+      type ExpectedDefinitionType = typeof ExpectedDefinitionType;
+      expectType<TypeEqual<typeof Result, ExpectedDefinitionType>>(true);
+
+      type ExpectedResult = { propA: string; propB: number; prop: string };
+      expectType<TypeEqual<Result, ExpectedResult>>(true);
+
+      expect(Result).toEqual(ExpectedDefinitionType);
+    });
+  });
+
+  describe('merge()', () => {
+    it('overrides distinct properties', () => {
+      const objA = t.obj({ propA: t.string });
       const objB = t.obj({ propB: t.number });
-      const Result = t.extend(objA, objB);
+      const Result = t.merge(objA, objB);
       type Result = t.Infer<typeof Result>;
       type ResultT = t.Resolve<typeof Result>;
       const ExpectedDefinitionType = t.obj({
@@ -31,7 +75,7 @@ describe('Type operations', () => {
     it('overrides conflicting properties from B over A', () => {
       const objA = t.obj({ prop: t.number, propA: t.string });
       const objB = t.obj({ prop: t.string, propB: t.number });
-      const Result = t.extend(objA, objB);
+      const Result = t.merge(objA, objB);
       type Result = t.Infer<typeof Result>;
 
       const ExpectedDefinitionType = t.obj({
@@ -52,11 +96,11 @@ describe('Type operations', () => {
 
   describe('partial()', () => {
     it('makes required properites into optionals', () => {
-      const target = t.obj({ prop: t.string });
+      const target = t.obj({ prop: t.string, prop3: t.record(t.string, t.number) });
       const Result = t.partial(target);
       type Result = t.Infer<typeof Result>;
 
-      const ExpectedDefinition = t.obj({ prop: t.string.opt() });
+      const ExpectedDefinition = t.obj({ prop: t.string.opt(), prop3: t.union(t.record(t.string, t.number), t.undef) });
       type ExpectedDefinition = t.Infer<typeof ExpectedDefinition>;
 
       expectType<TypeEqual<typeof Result, typeof ExpectedDefinition>>(true);
@@ -64,7 +108,31 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<typeof ExpectedDefinition, typeof Result>();
       expectTypesSupportAssignment<typeof Result, typeof ExpectedDefinition>();
 
-      type ExpectedResult = { prop?: string };
+      type ExpectedResult = { prop?: string; prop3?: Record<string, number> };
+      expectType<TypeEqual<Result, ExpectedResult>>(true);
+
+      expect(Result).toEqual(ExpectedDefinition);
+    });
+
+    it('allows me to pick subset of properties', () => {
+      const target = t.obj({ prop0: t.string, prop1: t.number, prop2: t.bigint, prop3: t.record(t.string, t.number) });
+      const Result = t.partial(target, ...getKeys({ prop0: 1, prop1: 1, prop3: 1 }));
+      type Result = t.Infer<typeof Result>;
+
+      const ExpectedDefinition = t.obj({
+        prop0: t.string.opt(),
+        prop1: t.number.opt(),
+        prop3: t.union(t.record(t.string, t.number), t.undef),
+        prop2: t.bigint
+      });
+      type ExpectedDefinition = t.Infer<typeof ExpectedDefinition>;
+
+      expectType<TypeEqual<typeof Result, typeof ExpectedDefinition>>(true);
+
+      expectTypesSupportAssignment<typeof ExpectedDefinition, typeof Result>();
+      expectTypesSupportAssignment<typeof Result, typeof ExpectedDefinition>();
+
+      type ExpectedResult = { prop0?: string; prop1?: number; prop2: bigint; prop3?: Record<string, number> };
       expectType<TypeEqual<Result, ExpectedResult>>(true);
 
       expect(Result).toEqual(ExpectedDefinition);
@@ -107,6 +175,24 @@ describe('Type operations', () => {
       expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
 
       type ExpectedResultTsType = { optProp: string; normalProp: number };
+      expectTypesSupportAssignment<ExpectedResultTsType, Result>();
+      expectTypesSupportAssignment<Result, ExpectedResultTsType>();
+
+      expect(result).toEqual(ExpectedResult);
+    });
+
+    it('allows me to pick a subset of properites into required properties', () => {
+      const target = t.obj({ prop0: t.string.opt(), prop1: t.number, prop3: t.bigint.opt() });
+      const result = t.required(target, ...getKeys({ prop3: 1 }));
+      type result = t.Resolve<typeof result>;
+      type Result = t.Infer<typeof result>;
+
+      const ExpectedResult = t.obj({ prop0: t.string.opt(), prop1: t.number, prop3: t.bigint });
+      type ExpectedDefinitionType = typeof ExpectedResult;
+      expectTypesSupportAssignment<ExpectedDefinitionType, typeof result>();
+      expectTypesSupportAssignment<typeof result, ExpectedDefinitionType>();
+
+      type ExpectedResultTsType = { prop0?: string; prop1: number; prop3: bigint };
       expectTypesSupportAssignment<ExpectedResultTsType, Result>();
       expectTypesSupportAssignment<Result, ExpectedResultTsType>();
 
@@ -188,9 +274,18 @@ describe('Type operations', () => {
     it('selects correct properties', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.pick(target, 'prop0');
+      const resultadf = t.pick(target, ...getKeys({ prop0: true, prop1: 1 }));
       type ResultTsType = t.Infer<typeof result>;
       expect(t.areEqual(result.shape.prop0, t.string)).toEqual(true);
       expect(result.shape).not.toHaveProperty('prop1');
+    });
+
+    it('selects correct properties with getKeys', () => {
+      const target = t.obj({ prop0: t.string, prop1: t.bigint });
+      const result = t.pick(target, ...getKeys({ prop1: 1 }));
+      type ResultTsType = t.Infer<typeof result>;
+      expect(t.areEqual(result.shape.prop1, t.bigint)).toEqual(true);
+      expect(result.shape).not.toHaveProperty('prop0');
     });
   });
 

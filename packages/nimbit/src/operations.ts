@@ -17,6 +17,8 @@ import {
   type ObjType,
   type Resolve,
   type Shape,
+  type ShapeDefinition,
+  type ShapeDefinitionToObjType,
   type ToUnionMemberList,
   type TupleKeysToUnion,
   type Typ,
@@ -26,14 +28,26 @@ import {
   type UnionType
 } from '.';
 
-export type Extend<TA, TB> = Omit<TA, keyof TB> & TB;
+export type Extend<TA, TB> = Resolve<Omit<TA, keyof TB> & TB>;
 
 //TODO: figure out why this resolve is required for assignment checks in the unit test
-export function extend<TObjA extends ObjType<unknown, unknown>, TObjB extends ObjType<unknown, unknown>>(
+export function merge<TObjA extends ObjType<unknown, unknown>, TObjB extends ObjType<unknown, unknown>>(
   objectTypeA: TObjA,
   objectTypeB: TObjB
-): ObjType<Resolve<Extend<TObjA['shape'], TObjB['shape']>>, Resolve<Extend<TObjA[typeof _type], TObjB[typeof _type]>>> {
+): ObjType<Extend<TObjA['shape'], TObjB['shape']>, Extend<TObjA[typeof _type], TObjB[typeof _type]>> {
   return obj({ ...(objectTypeA as any).shape, ...(objectTypeB as any).shape }) as any;
+}
+
+//TODO: figure out why this resolve is required for assignment checks in the unit test
+export function extend<
+  TObjA extends ObjType<unknown, unknown>,
+  TShapeDefinition extends ShapeDefinition,
+  TObjB extends ObjType<unknown, unknown> = ShapeDefinitionToObjType<TShapeDefinition>
+>(
+  objectTypeA: TObjA,
+  shape: TShapeDefinition
+): ObjType<Extend<TObjA['shape'], TObjB['shape']>, Extend<TObjA[typeof _type], TObjB[typeof _type]>> {
+  return obj({ ...(objectTypeA as any).shape, ...shape }) as any;
 }
 
 export type PartialType<T> = {
@@ -47,43 +61,68 @@ export type PartialType<T> = {
     : never;
 };
 
-export function partial<TShape, T>(objType: ObjType<TShape, T>): ObjType<PartialType<TShape>, Partial<T>> {
+export function partial<TShape, T>(objType: ObjType<TShape, T>): ObjType<PartialType<TShape>, Partial<T>>;
+export function partial<TShape, K extends keyof TShape & keyof T, T>(
+  objType: ObjType<TShape, T>,
+  ...keys: Array<K>
+): ObjType<Extend<TShape, PartialType<Pick<TShape, K>>>, Extend<T, Partial<Pick<T, K>>>>;
+export function partial<TShape, K extends keyof TShape & keyof T, T>(
+  objType: ObjType<TShape, T>,
+  ...keys: Array<K>
+): ObjType<PartialType<TShape>, Partial<T>> {
   const result = {} as Shape;
-  const shape = objType.shape as Shape;
-  for (const key of Object.keys(shape)) {
-    result[key] = union(shape[key] as any, undef);
+  const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as Shape;
+
+  for (const key of Object.keys(source)) {
+    result[key] = union(source[key] as any, undef);
   }
 
-  return obj(result) as any;
+  return obj({ ...objType.shape, ...result }) as any;
 }
 
 export type RequiredType<T> = {
   [P in keyof T]: T[P] extends Typ<unknown, unknown> ? ExcludeFlattenedType<T[P], [UndefinedT]> : never;
 };
 
-export function required<TShape, T>(objType: ObjType<TShape, T>): ObjType<RequiredType<TShape>, Required<T>> {
+export function required<TShape, T>(objType: ObjType<TShape, T>): ObjType<RequiredType<TShape>, Required<T>>;
+export function required<TShape, K extends keyof TShape & keyof T, T>(
+  objType: ObjType<TShape, T>,
+  ...keys: Array<K>
+): ObjType<Extend<TShape, RequiredType<Pick<TShape, K>>>, Extend<T, Required<Pick<T, K>>>>;
+export function required<TShape, K extends keyof TShape & keyof T, T>(
+  objType: ObjType<TShape, T>,
+  ...keys: Array<K>
+): ObjType<RequiredType<TShape>, Required<T>> {
+  // export function required<TShape, T>(objType: ObjType<TShape, T>): ObjType<RequiredType<TShape>, Required<T>> {
   const result = {} as Shape;
-  const shape = objType.shape as Shape;
-  for (const key of Object.keys(shape)) {
-    result[key] = flatExclude(shape[key] as any, undef);
+  const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as Shape;
+
+  for (const key of Object.keys(source)) {
+    result[key] = flatExclude(source[key] as any, undef);
   }
-  return obj(result) as any;
+
+  return obj({ ...objType.shape, ...result }) as any;
 }
 
-export function pick<TShape, K extends keyof TShape & keyof T, T>(
+export function pick<TShape, T, K extends keyof TShape & keyof T>(
   objType: ObjType<TShape, T>,
   ...keys: Array<K>
 ): ObjType<Pick<TShape, K>, Pick<T, K>> {
+  const result = pickProps<TShape, T, K>(objType, keys);
+
+  return obj(result as any) as unknown as ObjType<Pick<TShape, K>, Pick<T, K>>;
+}
+
+function pickProps<TShape, T, K extends keyof TShape & keyof T>(objType: ObjType<TShape, T>, keys: K[]) {
   const result = {} as Pick<TShape, K>;
 
   for (const key of keys) {
     result[key] = objType.shape[key];
   }
-
-  return obj(result as any) as unknown as ObjType<Pick<TShape, K>, Pick<T, K>>;
+  return result;
 }
 
-export function omit<TShape, K extends keyof TShape & keyof T, T>(
+export function omit<TShape, T, K extends keyof TShape & keyof T>(
   objType: ObjType<TShape, T>,
   ...keys: Array<K>
 ): ObjType<Omit<TShape, K>, Omit<T, K>> {
