@@ -26,11 +26,8 @@ export class MapType<TKey, TValue, T> extends Typ<'map', [TKey, TValue], T> {
     const parsedMap = new Map();
     for (const [key, value] of valueAsMap) {
       const keyResult = (this.shape[0] as any).parse(key, opts);
-      if (!keyResult.success) {
-        return fail();
-      }
       const valueResult = (this.shape[1] as any).parse(value, opts);
-      if (!keyResult.success) {
+      if (!keyResult.success || !valueResult.success) {
         return fail();
       }
       parsedMap.set(keyResult.value, valueResult.value);

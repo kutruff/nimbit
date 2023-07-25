@@ -140,10 +140,12 @@ export function exclude<T extends Typ, U extends Typ[]>(typeT: T, ...typesU: U):
 }
 
 function excludeTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, typesU: U) {
+  const flatTypesU = typesU.flatMap(x => [...flatIterateUnion(x)]);
+  // return unionIfNeeded(typesT.filter(typeT => typesUFlattened.find(typeU => areEqual(typeT, typeU)) === undefined));
   const notExcluded = [];
   for (const elementT of typesT) {
     let didFindMatchingMember = false;
-    for (const typeU of typesU.flatMap(x => [...flatIterateUnion(x)])) {
+    for (const typeU of flatTypesU) {
       if (areEqual(elementT, typeU)) {
         didFindMatchingMember = true;
         break;
@@ -183,16 +185,14 @@ export function flatExtract<T extends Typ, U extends Typ[]>(typesT: T, ...typesU
 export function extract<T extends Typ, U extends Typ[]>(typeT: T, ...typesU: U): ExtractType<T, U> {
   const typesT = typeT.isUnion() ? (typeT as unknown as IUnionType<any>).members : [typeT];
 
-  return extractTypesFromTypes(
-    typesT,
-    typesU.flatMap(x => [...flatIterateUnion(x)])
-  );
+  return extractTypesFromTypes(typesT, typesU);
 }
 
 function extractTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, typesU: U) {
   const foundMembers = [];
+  const flatTypesU = typesU.flatMap(x => [...flatIterateUnion(x)]);
   for (const typeT of typesT) {
-    for (const typeU of typesU.flatMap(x => [...flatIterateUnion(x)])) {
+    for (const typeU of flatTypesU) {
       if (areEqual(typeT, typeU)) {
         foundMembers.push(typeT);
         break;

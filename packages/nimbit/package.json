@@ -23,11 +23,10 @@
   },
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
-    "old-build": "tsup ./index.ts --format esm,cjs --dts --clean --minify --sourcemap",
-    "build": "tsup ",
-    "build:nomin": "tsup ./index.ts --format esm,cjs --dts --clean --sourcemap",
+    "build": "tsup && cp ../../README.md ./dist/",
+    "build:minify": "tsup --minify",
     "build:tar": "tar -czf dist.tar.gz dist/index.js",
-    "build:size": "pnpm build && pnpm build:tar && echo zipped bytes: $(stat --printf=\"%s\" dist.tar.gz) && rm dist.tar.gz",
+    "build:size": "pnpm build:minify && pnpm build:tar && echo zipped bytes: $(stat --printf=\"%s\" dist.tar.gz) && rm dist.tar.gz",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit",
@@ -50,6 +49,7 @@
   "tsup": {
     "dts": true,
     "treeshake": true,
+    "clean": true,
     "format": [
       "esm",
       "cjs"

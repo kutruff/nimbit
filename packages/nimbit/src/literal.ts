@@ -1,8 +1,8 @@
 import { _type, fail, pass, Typ, type Literal, type ParseResult } from '.';
 
 export class LiteralType<TLiteralValue> extends Typ<'literal', TLiteralValue, TLiteralValue> {
-  constructor(literal: TLiteralValue, name?: string) {
-    super('literal', literal, name);
+  constructor(public value: TLiteralValue, name?: string) {
+    super('literal', value, name);
   }
 
   parse(value: unknown): ParseResult<TLiteralValue> {

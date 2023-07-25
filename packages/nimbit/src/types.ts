@@ -168,7 +168,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   ): TDestination {
     const [clone, destinationParse] = overrideParse(destination);
     const source = this;
-    clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
+    clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {      
       const sourceResult = source.parse(value, opts);
       if (!sourceResult.success) {
         return sourceResult;
@@ -233,7 +233,9 @@ export function overrideParse<TType extends Typ<unknown, unknown, unknown>>(
   obj: TType
 ): [clone: TType, parse: TType['parse']] {
   const clone = cloneObject(obj);
-  return [clone, clone.parse.bind(clone) as any];
+
+  //TODO: may want to get rid of lambda if possible?
+  return [clone, val => obj.parse(val) as any];
 }
 
 //TODO: audit for any form of of prototype poisoning.

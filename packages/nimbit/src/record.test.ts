@@ -1,25 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import * as t from '.';
 
-describe('MapType', () => {
+describe('RecordType', () => {
   it('can be created', () => {
-    const Target = t.map(t.string, t.number);
+    const Target = t.record(t.string, t.number);
     type Target = t.Infer<typeof Target>;
     // type Target = t.TsType<typeof Target>;
-    const instance: Target = new Map<string, number>([['hello', 2]]);
-    expect(Target.kind).toEqual('map');
+
+    expect(Target.kind).toEqual('record');
     expect(Target.key).toEqual(t.string);
     expect(Target.value).toEqual(t.number);
   });
 
   it('parse works', () => {
-    const Target = t.map(t.string, t.number);
-    type Target = t.TsType<typeof Target>;
-    const instance: Target = new Map<string, number>([
-      ['hello', 2],
-      ['yes', 2]
-    ]);
+    const Target = t.record(t.string, t.number);
+    type Target = t.Infer<typeof Target>;
+    const instance: Target = { hello: 2, yes: 3 };
+
     const result = Target.parse(instance);
     expect(result.success).toEqual(true);
     if (result.success) {
@@ -28,23 +26,18 @@ describe('MapType', () => {
   });
 
   it('parse fails when keys are not correct types', () => {
-    const Target = t.map(t.string, t.string);
-    type Target = t.TsType<typeof Target>;
-    const instance = new Map<number, string>([
-      [2, 'hello'],
-      [3, 'yes']
-    ]);
+    const Target = t.record(t.string, t.number);
+    type Target = t.Infer<typeof Target>;
+    const testSymbol = Symbol('SymbolT');
+    const instance = { [testSymbol]: 2, yes: 3 };
     const result = Target.parse(instance as any);
     expect(result.success).toEqual(false);
   });
 
   it('parse fails when values are not correct types bigint', () => {
-    const Target = t.map(t.string, t.bigint);
-    type Target = t.TsType<typeof Target>;
-    const instance = new Map<number, string>([
-      [2, 'hello'],
-      [3, 'yes']
-    ]);
+    const Target = t.record(t.string, t.number);
+    type Target = t.Infer<typeof Target>;
+    const instance = { hello: 2, yes: '1' };
     const result = Target.parse(instance as any);
     expect(result.success).toEqual(false);
   });
