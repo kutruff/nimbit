@@ -706,14 +706,14 @@ const stringOrUndefined = t.union(t.string, t.undef);
 type A = t.Infer<typeof stringOrUndefined>; // string | undefined;
 ```
 
-You can remove `undef` from a an optiona/`union` by calling `unwrap()`.
+You can remove `undef` and `nul` from an optional / `union` by calling `unwrap()`.
 
 ```ts
 const optionalString = t.string.opt();
 optionalString.unwrap() === stringSchema; // true
 ```
 
-NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExclude()` if you wish to remove a type from all unions
+NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExcludeKind()` if you wish to remove a type from all nested unions.
 
 ```ts
 const optionalString = t.string.opt().opt();
@@ -721,7 +721,7 @@ optionalString.unwrap() === stringSchema; // false!
 optionalString.unwrap().unwrap() === stringSchema; // true!
 
 t.exclude(optionalString, t.undef) === stringSchema; // false!
-t.flatExclude(optionalString, t.undef) === stringSchema; // true!
+t.flatExcludeKind(optionalString, t.undef) === stringSchema; // true!
 ```
 
 ## Nullables
@@ -736,12 +736,12 @@ nullableString.parse(null); // => null
 
 ## Nullish
 
-Similarly, you can create types that are both optional and nullable with `nullish()`. Again, this is a `union` of a type with `nul` and `undef`
+You can create types that are both optional and nullable with `nullish()`. Again, this is a `union` of a type with `nul` and `undef`
 
 ```ts
 const nullishString = t.string.nullish();
 nullishString.parse('asdf'); // => "asdf"
-nullishString.parse('undefined'); // => "asdf"
+nullishString.parse(undefined); // => undefined
 nullishString.parse(null); // => null
 ```
 
@@ -833,7 +833,7 @@ You could also just pass the property name directly.
 const JustTheName = pick(Recipe, 'name');
 ```
 
-There's also the `getKeys()` convenience method if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typeds.
+There's also the `getKeys()` convenience method if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typed.
 
 ```ts
 const JustTheName = pick(Recipe, ...getKeys({ id: 1, name: 1 }));
@@ -842,10 +842,13 @@ const JustTheName = pick(Recipe, ...getKeys({ id: 1, name: 1 }));
 To remove certain keys, use `.omit` in the same fashion as `pick()`
 
 ```ts
-const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
-
-type JustRecipeName = t.Infer<typeof NoIDRecipe>;
+const JustRecipeName = required(User, 'id', 'ingredients);
+type JustRecipeName = t.Infer<typeof JustRecipeName>;
 // => { name: string }
+
+//alternative ways of omitting properties by name
+const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
+const JustRecipeName = omit(Recipe, ...getKeys({id: 1, ingredients: 1}));
 ```
 
 ### `.partial`
@@ -948,7 +951,7 @@ const requiredEmail = User.required(User.k.email);
 }
 */
 
-//alternative ways of picking propertis to the above
+//alternative ways of picking properties by name
 const requiredEmail = required(User, 'email');
 const requiredEmail = required(User, ...getKeys({email: 1}));
 ```
@@ -1276,7 +1279,7 @@ type Teacher = z.infer<typeof Teacher>;
 // { id:string; name:string };
 ```  -->
 
-## Recursive types
+## Recursive Objects
 
 One of the biggest advantages of Nimbit is a new approach to recursive types. In Nimbit, recursive types are defined as naturally as typical objects, but instead you first define your object's shape as a class before passing it to `t.obj()`.
 
@@ -1303,7 +1306,7 @@ Category.parse({
   ]
 }); // passes
 
-// after you've defnied Category with t.obj(), you no longer have to refer to the class definition. Magic!
+// after you've defined Category with t.obj(), you no longer have to refer to the class definition. Magic!
 const categoryList = t.array(Category);
 ```
 
@@ -1346,6 +1349,26 @@ Address.parse({
 
 One caveat of using classes to define your object shemas is that you must mark the class properties with a `?` like above if you wish it to remain optional in your TypeScript definition. Calling `.opt()` alone won't do the trick. This is because of TypeScript.
 
+### Other Recursive Types / JSON
+
+Unfortunately, recursive unions, and records are not as straightforward. For that you use `lazy()` which lets you use a type as you define it.  The only problem is that you must provide the TypeScript types manually.
+
+If you want to validate any JSON value, you can use the snippet below.
+
+```ts
+const Literals = union(string, number, boolean, nul);
+type JsonLiterals = Infer<typeof Literals>;
+
+//json uses itself recursively.
+type json = JsonLiterals | json[] | { [key: string]: json };
+
+const jsonSchema: LazyType<json> = lazy(() => union(Literals, array(jsonSchema), record(string, jsonSchema)));
+
+export const json = coerce(jsonSchema, jsonParse);
+
+json.parse('{"a":1}'); //passes and returns { a: 1 }
+```
+
 ### ZodType with ZodEffects
 
 When using `z.ZodType` with `z.ZodEffects` (
@@ -1354,43 +1377,6 @@ When using `z.ZodType` with `z.ZodEffects` (
 [`preprocess`](https://github.com/colinhacks/zod#preprocess),
 etc...
 ), you will need to define the input and output types of the schema. `z.ZodType<Output, z.ZodTypeDef, Input>`
-
-```ts
-const isValidId = (id: string): id is `${string}/${string}` => id.split('/').length === 2;
-
-const baseSchema = z.object({
-  id: z.string().refine(isValidId)
-});
-
-type Input = z.input<typeof baseSchema> & {
-  children: Input[];
-};
-
-type Output = z.output<typeof baseSchema> & {
-  children: Output[];
-};
-
-const schema: z.ZodType<Output, z.ZodTypeDef, Input> = baseSchema.extend({
-  children: z.lazy(() => schema.array())
-});
-```
-
-Thanks to [marcus13371337](https://github.com/marcus13371337) and [JoelBeeldi](https://github.com/JoelBeeldi) for this example.
-
-### JSON type (TODO: verify if needs to be recursive)
-
-If you want to validate any JSON value, you can use the snippet below.
-
-```ts
-t.json.parse('{"a":1}'); //passes and returns { a: 1 }
-
-const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
-type Literal = z.infer<typeof literalSchema>;
-type Json = Literal | { [key: string]: Json } | Json[];
-const jsonSchema: z.ZodType<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(jsonSchema)]));
-
-jsonSchema.parse(data);
-```
 
 ### Cyclical objects (TODO: Add support in parsing context)
 

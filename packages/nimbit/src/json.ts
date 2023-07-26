@@ -5,21 +5,38 @@ import {
   fail,
   nul,
   number,
-  obj,
   pass,
   string,
   union,
-  unknown,
   type Infer,
+  type LazyType,
   type ParseResult
 } from '.';
+import { lazy } from './lazy';
+import { record } from './record';
 
-const anyObject = obj({}, undefined, false);
+// const anyObject = obj({}, undefined, PropertyPolicy.passthrough);
+// const base = union(anyObject, array(unknown), string, number, boolean, nul);
+// export const jsonOld = coerce(base, jsonParse);
+// // export const looped = jsonOld.to(jsonOld, x => pass(x));
+// function parseJsonDeep(x: string) {
+//   const top = jsonOld.parse(x);
+//   if (top.success) {
+//     const isArray = top.value.parse(top.value)
+//     if(
+//   }
+// }
 
-export const json = coerce(union(anyObject, array(unknown), string, number, boolean, nul), jsonParse);
-export type json = Infer<typeof json>;
+const Literals = union(string, number, boolean, nul);
+type JsonLiterals = Infer<typeof Literals>;
 
-export function jsonParse(x: string): ParseResult<string | number | boolean | unknown[] | object | null> {
+type json = JsonLiterals | json[] | { [key: string]: json };
+
+const jsonSchema: LazyType<json> = lazy(() => union(Literals, array(jsonSchema), record(string, jsonSchema)));
+
+export const json = coerce(jsonSchema, jsonParse);
+
+export function jsonParse(x: string): ParseResult<json> {
   try {
     return pass(JSON.parse(x));
   } catch (err) {
@@ -27,24 +44,26 @@ export function jsonParse(x: string): ParseResult<string | number | boolean | un
   }
 }
 
-// export const stringMatch = (regex: RegExp) => string.where(x => regex.test(x));
+// const jsonSchema: UnionType<
+//   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
+//   json
+// > = {} as any;
 
-// // //all of these where taken from Zod.
-// export const cuid = stringMatch(/^c[^\s-]{8,}$/i);
-// export const cuid2 = stringMatch(/^[a-z][a-z0-9]*$/);
-// export const ulid = stringMatch(/[0-9A-HJKMNP-TV-Z]{26}/);
-// export const uuid = stringMatch(
-//   /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i
-// );
-// export const email = stringMatch(/^([A-Z0-9_+-]+\.?)*[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i);
-// export const emoji = stringMatch(/^(\p{Extended_Pictographic}|\p{Emoji_Component})+$/u);
+// const jsonSchema: UnionType<
+//   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
+//   json
+// > = lazy(x => {
+//   return union(Literals, array(x), record(string, x));
+// });
 
-// export const ipv4 = stringMatch(
-//   /^(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))$/
-// );
-// export const ipv6 = stringMatch(
-//   /^(([a-f0-9]{1,4}:){7}|::([a-f0-9]{1,4}:){0,6}|([a-f0-9]{1,4}:){1}:([a-f0-9]{1,4}:){0,5}|([a-f0-9]{1,4}:){2}:([a-f0-9]{1,4}:){0,4}|([a-f0-9]{1,4}:){3}:([a-f0-9]{1,4}:){0,3}|([a-f0-9]{1,4}:){4}:([a-f0-9]{1,4}:){0,2}|([a-f0-9]{1,4}:){5}:([a-f0-9]{1,4}:){0,1})([a-f0-9]{1,4}|(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2})))$/
-// );
+// const result = jsonSchema.parse({ prop: 1 });
+
+// const jsonSchema: UnionType<
+//   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
+//   json
+// > = makeRecursive(() => {
+//   return union(Literals, array(jsonSchema), record(string, jsonSchema));
+// });
 
 //TODO: look into declaration merging for allowing extension of the fluent interface
 //https://tanstack.com/router/v1/docs/guide/type-safety#exported-hooks-components-and-utilities

@@ -10,9 +10,9 @@ export class LiteralType<TLiteralValue> extends Typ<'literal', TLiteralValue, TL
     return value === this.shape ? pass(this.shape) : fail();
   }
 
-  areEqual(other: Typ<unknown, unknown>): boolean {
-    return this.shape === (other as LiteralType<TLiteralValue>).shape;
-  }
+  // areEqual(other: Typ<unknown, unknown>): boolean {
+  //   return this.shape === (other as LiteralType<TLiteralValue>).shape;
+  // }
 }
 
 export function literal<T, TLiteralValue>(literalValue: Literal<T, TLiteralValue>) {

@@ -35,7 +35,11 @@ export function merge<TObjA extends ObjType<unknown, unknown>, TObjB extends Obj
   objectTypeA: TObjA,
   objectTypeB: TObjB
 ): ObjType<Extend<TObjA['shape'], TObjB['shape']>, Extend<TObjA[typeof _type], TObjB[typeof _type]>> {
-  return obj({ ...(objectTypeA as any).shape, ...(objectTypeB as any).shape }) as any;
+  return obj(
+    { ...(objectTypeA as any).shape, ...(objectTypeB as any).shape },
+    undefined,
+    objectTypeB.propertyPolicy
+  ) as any;
 }
 
 //TODO: figure out why this resolve is required for assignment checks in the unit test
@@ -52,12 +56,7 @@ export function extend<
 
 export type PartialType<T> = {
   [P in keyof T]: T[P] extends Typ<unknown, unknown>
-    ? UnionType<
-        T[P]['kind'] | 'undefined',
-        T[P]['shape'] | undefined,
-        T[P][typeof _type] | undefined,
-        [T[P], UndefinedT]
-      >
+    ? UnionType<[T[P], UndefinedT], T[P][typeof _type] | undefined>
     : never;
 };
 
@@ -93,12 +92,11 @@ export function required<TShape, K extends keyof TShape & keyof T, T>(
   objType: ObjType<TShape, T>,
   ...keys: Array<K>
 ): ObjType<RequiredType<TShape>, Required<T>> {
-  // export function required<TShape, T>(objType: ObjType<TShape, T>): ObjType<RequiredType<TShape>, Required<T>> {
   const result = {} as Shape;
   const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as Shape;
 
   for (const key of Object.keys(source)) {
-    result[key] = flatExclude(source[key] as any, undef);
+    result[key] = flatExcludeKinds(source[key] as any, undef);
   }
 
   return obj({ ...objType.shape, ...result }) as any;
@@ -150,7 +148,7 @@ export type TupleExtract<T, TExtract, Acc extends any[] = []> = T extends [infer
 
 type ExcludeFlattenedUnionMembers<T, U extends Typ[]> = TupleExclude<
   FlattenUnionMembers<[T]>,
-  TupleKeysToUnion<FlattenUnionMembers<U>>
+  ToBaseKind<TupleKeysToUnion<FlattenUnionMembers<U>>>
 >;
 
 export type ExcludeFlattenedType<
@@ -161,18 +159,21 @@ export type ExcludeFlattenedType<
 
 type ExcludeUnionMembers<T, U extends Typ[]> = TupleExclude<
   ToUnionMemberList<T>,
-  TupleKeysToUnion<FlattenUnionMembers<U>>
+  ToBaseKind<TupleKeysToUnion<FlattenUnionMembers<U>>>
 >;
 
 export type ExcludeType<T, U extends Typ[], TUnionExcluded = ExcludeUnionMembers<T, U>> = TUnionExcluded extends []
   ? typeof never
   : UnionOrSingle<TUnionExcluded>;
 
-export function flatExclude<T extends Typ, U extends Typ[]>(typesT: T, ...typesU: U): ExcludeFlattenedType<T, U> {
+//TODO: This makes the type broad to just the kind.  If this were removed, all the above typings would work based on full type and not just kind
+type ToBaseKind<T> = T extends Typ<infer TKind, unknown, unknown> ? Typ<TKind, unknown, unknown> : never;
+
+export function flatExcludeKinds<T extends Typ, U extends Typ[]>(typesT: T, ...typesU: U): ExcludeFlattenedType<T, U> {
   return excludeTypesFromTypes([...flatIterateUnion(typesT)], typesU);
 }
 
-export function exclude<T extends Typ, U extends Typ[]>(typeT: T, ...typesU: U): ExcludeType<T, U> {
+export function excludeKinds<T extends Typ, U extends Typ[]>(typeT: T, ...typesU: U): ExcludeType<T, U> {
   const typesT = typeT.isUnion() ? (typeT as unknown as IUnionType<any>).members : [typeT];
 
   return excludeTypesFromTypes(typesT, typesU);
@@ -185,7 +186,8 @@ function excludeTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, type
   for (const elementT of typesT) {
     let didFindMatchingMember = false;
     for (const typeU of flatTypesU) {
-      if (areEqual(elementT, typeU)) {
+      // if (areEqual(elementT, typeU)) {
+      if (elementT.kind === typeU.kind) {
         didFindMatchingMember = true;
         break;
       }
@@ -194,7 +196,7 @@ function excludeTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, type
       notExcluded.push(elementT);
     }
   }
-  return unionIfNeeded(notExcluded);
+  return unionIfNeeded(notExcluded) as any;
 }
 
 type ExtractFlattenedUnionMembers<T, U extends Typ[]> = TupleExtract<
@@ -217,30 +219,30 @@ export type ExtractType<T, U extends Typ[], TUnionExtracted = ExtractUnionMember
   ? typeof never
   : UnionOrSingle<TUnionExtracted>;
 
-export function flatExtract<T extends Typ, U extends Typ[]>(typesT: T, ...typesU: U): ExtractFlattenedType<T, U> {
-  return extractTypesFromTypes([...flatIterateUnion(typesT)], typesU);
-}
+// export function flatExtract<T extends Typ, U extends Typ[]>(typesT: T, ...typesU: U): ExtractFlattenedType<T, U> {
+//   return extractTypesFromTypes([...flatIterateUnion(typesT)], typesU);
+// }
 
-export function extract<T extends Typ, U extends Typ[]>(typeT: T, ...typesU: U): ExtractType<T, U> {
-  const typesT = typeT.isUnion() ? (typeT as unknown as IUnionType<any>).members : [typeT];
+// export function extract<T extends Typ, U extends Typ[]>(typeT: T, ...typesU: U): ExtractType<T, U> {
+//   const typesT = typeT.isUnion() ? (typeT as unknown as IUnionType<any>).members : [typeT];
 
-  return extractTypesFromTypes(typesT, typesU);
-}
+//   return extractTypesFromTypes(typesT, typesU);
+// }
 
-function extractTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, typesU: U) {
-  const foundMembers = [];
-  const flatTypesU = typesU.flatMap(x => [...flatIterateUnion(x)]);
-  for (const typeT of typesT) {
-    for (const typeU of flatTypesU) {
-      if (areEqual(typeT, typeU)) {
-        foundMembers.push(typeT);
-        break;
-      }
-    }
-  }
+// function extractTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, typesU: U) {
+//   const foundMembers = [];
+//   const flatTypesU = typesU.flatMap(x => [...flatIterateUnion(x)]);
+//   for (const typeT of typesT) {
+//     for (const typeU of flatTypesU) {
+//       if (areEqual(typeT, typeU)) {
+//         foundMembers.push(typeT);
+//         break;
+//       }
+//     }
+//   }
 
-  return unionIfNeeded(foundMembers);
-}
+//   return unionIfNeeded(foundMembers);
+// }
 // export function readonly<TShape extends Shape, T>(
 //   objType: ObjType<TShape, T>
 // ): ObjType<ReadonlyType<TShape>, Readonly<T>> {

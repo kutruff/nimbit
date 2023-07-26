@@ -23,8 +23,8 @@ import {
 } from '.';
 
 // export type Intersect<A, B> = [A, B] extends [
-//   infer A extends UnionType<unknown, unknown, unknown, unknown[]>,
-//   infer B extends UnionType<unknown, unknown, unknown, unknown[]>
+//   infer A extends UnionType<unknown[], unknown>,
+//   infer B extends UnionType<unknown[], unknown>
 // ]
 //   ? UnionType<
 //       A['kind'] & B['kind'],
@@ -43,7 +43,7 @@ import {
 //     >
 //   : // : [A, B] extends [
 //   //     infer A extends Typ<unknown, unknown, unknown>,
-//   //     infer B extends UnionType<unknown, unknown, unknown, unknown[]>
+//   //     infer B extends UnionType<unknown[], unknown>
 //   //   ]
 //   // ? UnionType<
 //   //     A['kind'] & B['kind'],
@@ -83,39 +83,27 @@ type t = TuplifyUnion<abc>; // ["a", "b", "c"]
 type adaghdagag = (string | number) & number;
 
 export type Intersect<A, B> = [A, B] extends [
-  infer A extends UnionType<unknown, unknown, unknown, unknown[]>,
-  infer B extends UnionType<unknown, unknown, unknown, unknown[]>
+  infer A extends UnionType<unknown[], unknown>,
+  infer B extends UnionType<unknown[], unknown>
 ]
   ? UnionType<
-      A['kind'] & B['kind'],
-      A['shape'] & B['shape'],
-      A[typeof _type] & B[typeof _type],
       TuplifyUnion<
         Intersect<
           TupleKeysToUnion<FlattenUnionMembers<A['members']>>,
           TupleKeysToUnion<FlattenUnionMembers<B['members']>>
         >
-      >
+      >,
+      A[typeof _type] & B[typeof _type]
     >
-  : [A, B] extends [
-      infer A extends Typ<unknown, unknown, unknown>,
-      infer B extends UnionType<unknown, unknown, unknown, unknown[]>
-    ]
+  : [A, B] extends [infer A extends Typ<unknown, unknown, unknown>, infer B extends UnionType<unknown[], unknown>]
   ? UnionType<
-      A['kind'] & B['kind'],
-      A['shape'] & B['shape'],
-      A[typeof _type] & B[typeof _type],
-      TuplifyUnion<Intersect<A, TupleKeysToUnion<FlattenUnionMembers<B['members']>>>>
+      TuplifyUnion<Intersect<A, TupleKeysToUnion<FlattenUnionMembers<B['members']>>>>,
+      A[typeof _type] & B[typeof _type]
     >
-  : [A, B] extends [
-      infer A extends UnionType<unknown, unknown, unknown, unknown[]>,
-      infer B extends Typ<unknown, unknown, unknown>
-    ]
+  : [A, B] extends [infer A extends UnionType<unknown[], unknown>, infer B extends Typ<unknown, unknown, unknown>]
   ? UnionType<
-      A['kind'] & B['kind'],
-      A['shape'] & B['shape'],
-      A[typeof _type] & B[typeof _type],
-      TuplifyUnion<Intersect<TupleKeysToUnion<FlattenUnionMembers<A['members']>>, B>>
+      TuplifyUnion<Intersect<TupleKeysToUnion<FlattenUnionMembers<A['members']>>, B>>,
+      A[typeof _type] & B[typeof _type]
     >
   : [A, B] extends [infer A extends ObjType<unknown, unknown>, infer B extends ObjType<unknown, unknown>]
   ? Typ<
@@ -186,7 +174,7 @@ export function intersection<TA extends Typ<unknown, unknown, unknown>, TB exten
 
     const results = [...equalTypes.values()];
 
-    return unionIfNeeded(results);
+    return unionIfNeeded(results) as any;
   }
 
   return (areEqual(typeA as any, typeB as any, cache) ? typeB : never) as any;

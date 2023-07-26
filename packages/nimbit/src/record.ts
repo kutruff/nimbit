@@ -45,11 +45,11 @@ export class RecordType<TKey, TValue, T> extends Typ<'record', [TKey, TValue], T
     return pass(result);
   }
 
-  areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
-    const otherRecord = other as RecordType<unknown, unknown, unknown>;
-    return (
-      areEqual(this.key as Typ, otherRecord.key as Typ, cache) &&
-      areEqual(this.value as Typ, otherRecord.value as Typ, cache)
-    );
-  }
+  // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
+  //   const otherRecord = other as RecordType<unknown, unknown, unknown>;
+  //   return (
+  //     areEqual(this.key as Typ, otherRecord.key as Typ, cache) &&
+  //     areEqual(this.value as Typ, otherRecord.value as Typ, cache)
+  //   );
+  // }
 }

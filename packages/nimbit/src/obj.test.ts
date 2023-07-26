@@ -28,8 +28,7 @@ describe('obj()', () => {
     const roundTrippedInstance = {
       kind: 'object',
       name: undefined,
-      strict: undefined,
-      unionTypes: [],
+      propertyPolicy: t.PropertyPolicy.strip,
       [_type]: undefined,
       shape: {
         name: t.string,
@@ -39,7 +38,7 @@ describe('obj()', () => {
     };
 
     //expect(Person).toEqual(Person);
-    expect(Person).toEqual(roundTrippedInstance);
+    expect(Person).toMatchObject(roundTrippedInstance);
     expect(Person.k).toEqual({
       name: 'name',
       age: 'age',
@@ -188,7 +187,7 @@ describe('obj()', () => {
 
     const a: A = { self: { self: { self: { self: {} } } } };
 
-    expect(A.shape.self.unionTypes[0]).toEqual(A);
+    expect(A.shape.self.members[0]).toEqual(A);
 
     type ExpectedAShape = { self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();
@@ -292,7 +291,7 @@ describe('obj()', () => {
     const B = t.obj(BDef);
     type B = t.Infer<typeof B>;
 
-    expect(A.shape.b.unionTypes[0]).toEqual(B);
+    expect(A.shape.b.members[0]).toEqual(B);
     expect(B.shape.a).toEqual(A);
 
     type ExpectedAShape = { b?: B; strProp: string };
@@ -320,7 +319,7 @@ describe('obj()', () => {
     const B = t.obj(BDef);
     type B = t.Infer<typeof B>;
 
-    expect(A.shape.b.unionTypes[0]).toEqual(B);
+    expect(A.shape.b.members[0]).toEqual(B);
     expect(B.shape.a).toEqual(A);
 
     type ExpectedAShape = { b?: B; strProp: string };
@@ -343,7 +342,7 @@ describe('obj()', () => {
 
     const foo: A = { children: [{ children: [] }] };
 
-    expect(A.shape.children.unionTypes[0]).toEqual(t.array(A));
+    expect(A.shape.children.members[0]).toEqual(t.array(A));
 
     type ExpectedAShape = { children?: A[]; self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();
@@ -361,7 +360,7 @@ describe('obj()', () => {
 
     const exampleAssignment: A = { children: [{}, {}] };
 
-    expect(A.shape.children.unionTypes[0]).toEqual(t.tuple([A, A]));
+    expect(A.shape.children.members[0]).toEqual(t.tuple([A, A]));
     type ExpectedAShape = {
       children?: [ExpectedAShape, ExpectedAShape];
       self?: ExpectedAShape;

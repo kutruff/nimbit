@@ -73,6 +73,10 @@ export function createType<TKind extends string, TType>(
   return instance;
 }
 
+// class DateEx extends Typ<'date', Date, Date> {
+
+//   min
+// }
 // //TODO: make sure we're okay with the above. It could also be a class so that the parse is in the prototype could also use a class to
 // function createType<TKind extends string, TType>(kind: TKind, parse: (value: TType) => ParseResult<TType>) : Typ<TKind, TType>{
 //   const theClass = class extends Typ<TKind, TType> {

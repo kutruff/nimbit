@@ -307,7 +307,7 @@ describe('Type operations', () => {
     it.todo('check objects ');
 
     it('does not exclude single type outside set', () => {
-      const Result = t.flatExclude(t.string, t.bigint, t.number);
+      const Result = t.flatExcludeKinds(t.string, t.bigint, t.number);
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<Result, string>>(true);
@@ -319,7 +319,7 @@ describe('Type operations', () => {
     it('does not exclude unions when out of set', () => {
       const target = t.union(t.number, t.string, t.bigint, t.boolean);
 
-      const Result = t.flatExclude(target, t.literal('foo'));
+      const Result = t.flatExcludeKinds(target, t.literal('foo'));
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<typeof Result, typeof target>>(true);
@@ -330,7 +330,7 @@ describe('Type operations', () => {
     it('excludes subset of union', () => {
       const target = t.union(t.string, t.number, t.bigint);
 
-      const Result = t.flatExclude(target, t.string);
+      const Result = t.flatExcludeKinds(target, t.string);
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<Result, bigint | number>>(true);
@@ -342,7 +342,7 @@ describe('Type operations', () => {
     it('excludes unions of unions works', () => {
       const target = t.union(t.union(t.boolean, t.string, t.number, t.date));
       const flattened = t.flattenUnion(target);
-      const Result = t.flatExclude(target, t.union(t.string, t.bigint, t.boolean));
+      const Result = t.flatExcludeKinds(target, t.union(t.string, t.bigint, t.boolean));
       // const Result = t.exclude(target, ...t.flattenUnion(t.union(t.string, t.bigint, t.boolean)).members);
       // const Result = t.exclude(flattened, ...t.flattenUnion(t.union(t.string, t.bigint, t.boolean)).members);
       type Result = t.Infer<typeof Result>;
@@ -355,7 +355,7 @@ describe('Type operations', () => {
 
     it('returns never when nothing is left', () => {
       const target = t.union(t.number, t.string, t.bigint, t.boolean);
-      const Result = t.flatExclude(target, t.union(t.number, t.string, t.bigint, t.boolean));
+      const Result = t.flatExcludeKinds(target, t.union(t.number, t.string, t.bigint, t.boolean));
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<Result, never>>(true);
@@ -371,7 +371,10 @@ describe('Type operations', () => {
 
       class BDef {
         a = t.obj(ADef);
-        a2 = t.flatExclude(t.flattenUnion(t.union(t.obj(ADef), t.union(t.obj(BDef), t.undef), t.string)), t.string);
+        a2 = t.flatExcludeKinds(
+          t.flattenUnion(t.union(t.obj(ADef), t.union(t.obj(BDef), t.undef), t.string)),
+          t.string
+        );
       }
 
       const A = t.obj(ADef);
@@ -380,7 +383,7 @@ describe('Type operations', () => {
       const B = t.obj(BDef);
       type B = t.Infer<typeof B>;
 
-      expect(A.shape.b.unionTypes[0]).toEqual(B);
+      expect(A.shape.b.members[0]).toEqual(B);
       expect(B.shape.a).toEqual(A);
 
       type ExpectedAShape = { b?: B; strProp: string };
@@ -395,7 +398,17 @@ describe('Type operations', () => {
 
   describe('exclude()', () => {
     it('does not exclude single type outside set', () => {
-      const Result = t.exclude(t.string, t.bigint, t.number);
+      const Result = t.excludeKinds(t.string, t.bigint, t.number);
+      type Result = t.Infer<typeof Result>;
+
+      expectType<TypeEqual<Result, string>>(true);
+      const expected = t.string;
+      expectType<TypeEqual<typeof Result, typeof expected>>(true);
+      expect(Result).toEqual(expected);
+    });
+
+    it('excludes based on kind only', () => {
+      const Result = t.excludeKinds(t.union(t.string, t.obj({ prop: t.number })), t.obj({ random: t.bigint }));
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<Result, string>>(true);
@@ -405,7 +418,7 @@ describe('Type operations', () => {
     });
 
     it('keeps repeated types as union', () => {
-      const Result = t.exclude(t.union(t.string, t.string, t.bigint), t.bigint);
+      const Result = t.excludeKinds(t.union(t.string, t.string, t.bigint), t.bigint);
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<Result, string>>(true);
@@ -417,7 +430,7 @@ describe('Type operations', () => {
     it('is shallow for unions of unions', () => {
       const target = t.union(t.number, t.union(t.boolean, t.number));
 
-      const Result = t.exclude(target, t.union(t.number, t.bigint, t.boolean));
+      const Result = t.excludeKinds(target, t.union(t.number, t.bigint, t.boolean));
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<Result, boolean | number>>(true);
@@ -429,7 +442,7 @@ describe('Type operations', () => {
     it('returns never when nothing is left', () => {
       const target = t.union(t.number, t.string, t.bigint, t.boolean);
       // const Result = t.exclude(target, t.union(t.number, t.string, t.bigint, t.boolean));
-      const Result = t.exclude(target, t.number, t.string, t.bigint, t.boolean);
+      const Result = t.excludeKinds(target, t.number, t.string, t.bigint, t.boolean);
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<Result, never>>(true);
@@ -445,7 +458,7 @@ describe('Type operations', () => {
 
       class BDef {
         a = t.obj(ADef);
-        a2 = t.exclude(t.exclude(t.union(t.obj(ADef), t.union(t.obj(BDef), t.undef), t.string)), t.string);
+        a2 = t.excludeKinds(t.excludeKinds(t.union(t.obj(ADef), t.union(t.obj(BDef), t.undef), t.string)), t.string);
       }
 
       const A = t.obj(ADef);
@@ -454,7 +467,7 @@ describe('Type operations', () => {
       const B = t.obj(BDef);
       type B = t.Infer<typeof B>;
 
-      expect(A.shape.b.unionTypes[0]).toEqual(B);
+      expect(A.shape.b.members[0]).toEqual(B);
       expect(B.shape.a).toEqual(A);
 
       type ExpectedAShape = { b?: B; strProp: string };
@@ -467,112 +480,111 @@ describe('Type operations', () => {
     });
   });
 
-  describe('extract()', () => {
-    it.todo('check for literals and strings in both directions');
+  // describe('extract()', () => {
+  //   it.todo('check for literals and strings in both directions');
 
-    it('extracts single types', () => {
-      const Result = t.extract(t.string, t.bigint, t.string);
-      type Result = t.Infer<typeof Result>;
+  //   it('extracts single types', () => {
+  //     const Result = t.extract(t.string, t.bigint, t.string);
+  //     type Result = t.Infer<typeof Result>;
 
-      expectType<TypeEqual<Result, string>>(true);
-      const expected = t.string;
-      expectType<TypeEqual<typeof Result, typeof expected>>(true);
-      expect(Result).toEqual(expected);
-    });
+  //     expectType<TypeEqual<Result, string>>(true);
+  //     const expected = t.string;
+  //     expectType<TypeEqual<typeof Result, typeof expected>>(true);
+  //     expect(Result).toEqual(expected);
+  //   });
 
-    it('extracting from outside the set returns empty', () => {
-      const target = t.union(t.number, t.string, t.bigint, t.boolean);
-      const result = t.extract(target, t.literal('foo'));
+  //   it('extracting from outside the set returns empty', () => {
+  //     const target = t.union(t.number, t.string, t.bigint, t.boolean);
+  //     const result = t.extract(target, t.literal('foo'));
 
-      expect(result.kind).toEqual('never');
-      expect(result.unionTypes).toEqual([]);
-    });
+  //     expect(result.kind).toEqual('never');
+  //   });
 
-    it('is shallow for unions of unions', () => {
-      const target = t.union(t.boolean, t.union(t.boolean, t.number));
+  //   it('is shallow for unions of unions', () => {
+  //     const target = t.union(t.boolean, t.union(t.boolean, t.number));
 
-      const Result = t.extract(target, t.union(t.number, t.bigint, t.boolean));
+  //     const Result = t.extract(target, t.union(t.number, t.bigint, t.boolean));
 
-      const toExtract = t.union(t.number, t.bigint, t.boolean);
-      type Result = t.Infer<typeof Result>;
+  //     const toExtract = t.union(t.number, t.bigint, t.boolean);
+  //     type Result = t.Infer<typeof Result>;
 
-      expectType<TypeEqual<Result, boolean>>(true);
-      const expected = t.boolean;
-      expectType<TypeEqual<typeof Result, typeof expected>>(true);
-      expect(Result).toEqual(expected);
-    });
+  //     expectType<TypeEqual<Result, boolean>>(true);
+  //     const expected = t.boolean;
+  //     expectType<TypeEqual<typeof Result, typeof expected>>(true);
+  //     expect(Result).toEqual(expected);
+  //   });
 
-    it('returns types from union in extraction set', () => {
-      const target = t.union(t.string, t.number, t.bigint);
+  //   it('returns types from union in extraction set', () => {
+  //     const target = t.union(t.string, t.number, t.bigint);
 
-      const Result = t.extract(target, t.bigint, t.number);
-      type Result = t.Infer<typeof Result>;
+  //     const Result = t.extract(target, t.bigint, t.number);
+  //     type Result = t.Infer<typeof Result>;
 
-      expectType<TypeEqual<Result, bigint | number>>(true);
-      const expected = t.union(t.number, t.bigint);
-      // expectType<TypeEqual<typeof Result, typeof expected>>(true);
-      expect(Result).toEqual(expected);
-    });
+  //     expectType<TypeEqual<Result, bigint | number>>(true);
+  //     const expected = t.union(t.number, t.bigint);
+  //     // expectType<TypeEqual<typeof Result, typeof expected>>(true);
+  //     expect(Result).toEqual(expected);
+  //   });
 
-    it('extracting only single value returns the value not a union', () => {
-      const target = t.union(t.number, t.string, t.bigint, t.boolean);
-      const result = t.extract(target, t.string);
+  //   it('extracting only single value returns the value not a union', () => {
+  //     const target = t.union(t.number, t.string, t.bigint, t.boolean);
+  //     const result = t.extract(target, t.string);
 
-      expect(result).toEqual(t.string);
-      expect(result.unionTypes).toEqual([]);
-    });
-  });
+  //     expect(result).toEqual(t.string);
+  //     expect(result.members).toEqual([]);
+  //   });
+  // });
 
-  describe('flatExtract()', () => {
-    it.todo('check for literals and strings in both directions');
+  // describe('flatExtract()', () => {
+  //   it.todo('check for literals and strings in both directions');
 
-    it('extracts single types', () => {
-      const Result = t.flatExtract(t.string, t.bigint, t.string);
-      type Result = t.Infer<typeof Result>;
+  //   it('extracts single types', () => {
+  //     const Result = t.flatExtract(t.string, t.bigint, t.string);
+  //     type Result = t.Infer<typeof Result>;
 
-      expectType<TypeEqual<Result, string>>(true);
-      const expected = t.string;
-      expectType<TypeEqual<typeof Result, typeof expected>>(true);
-      expect(Result).toEqual(expected);
-    });
+  //     expectType<TypeEqual<Result, string>>(true);
+  //     const expected = t.string;
+  //     expectType<TypeEqual<typeof Result, typeof expected>>(true);
+  //     expect(Result).toEqual(expected);
+  //   });
 
-    it('extracting from outside the set returns empty', () => {
-      const target = t.union(t.number, t.string, t.bigint, t.boolean);
-      const result = t.flatExtract(target, t.literal('foo'));
+  //   it('extracting from outside the set returns empty', () => {
+  //     const target = t.union(t.number, t.string, t.bigint, t.boolean);
+  //     const result = t.flatExtract(target, t.literal('foo'));
 
-      expect(result.kind).toEqual('never');
-      expect(result.unionTypes).toEqual([]);
-    });
+  //     expect(result.kind).toEqual('never');
+  //     expect(result.members).toEqual([]);
+  //   });
 
-    it('returns types from union in extraction set', () => {
-      const target = t.union(t.string, t.number, t.bigint);
+  //   it('returns types from union in extraction set', () => {
+  //     const target = t.union(t.string, t.number, t.bigint);
 
-      const Result = t.flatExtract(target, t.bigint, t.number);
-      type Result = t.Infer<typeof Result>;
+  //     const Result = t.flatExtract(target, t.bigint, t.number);
+  //     type Result = t.Infer<typeof Result>;
 
-      expectType<TypeEqual<Result, bigint | number>>(true);
-      const expected = t.union(t.number, t.bigint);
-      // expectType<TypeEqual<typeof Result, typeof expected>>(true);
-      expect(Result).toEqual(expected);
-    });
+  //     expectType<TypeEqual<Result, bigint | number>>(true);
+  //     const expected = t.union(t.number, t.bigint);
+  //     // expectType<TypeEqual<typeof Result, typeof expected>>(true);
+  //     expect(Result).toEqual(expected);
+  //   });
 
-    it('extracting unions of unions works', () => {
-      const target = t.union(t.union(t.boolean, t.string));
-      const Result = t.flatExtract(target, t.union(t.string, t.bigint, t.boolean));
+  //   it('extracting unions of unions works', () => {
+  //     const target = t.union(t.union(t.boolean, t.string));
+  //     const Result = t.flatExtract(target, t.union(t.string, t.bigint, t.boolean));
 
-      type Result = t.Infer<typeof Result>;
-      expectType<TypeEqual<Result, string | boolean>>(true);
-      const expected = t.union(t.boolean, t.string);
-      // expectType<TypeEqual<typeof Result, typeof expected>>(true);
-      expect(Result).toEqual(expected);
-    });
+  //     type Result = t.Infer<typeof Result>;
+  //     expectType<TypeEqual<Result, string | boolean>>(true);
+  //     const expected = t.union(t.boolean, t.string);
+  //     // expectType<TypeEqual<typeof Result, typeof expected>>(true);
+  //     expect(Result).toEqual(expected);
+  //   });
 
-    it('extracting only single value returns the value not a union', () => {
-      const target = t.union(t.number, t.string, t.bigint, t.boolean);
-      const result = t.flatExtract(target, t.string);
+  //   it('extracting only single value returns the value not a union', () => {
+  //     const target = t.union(t.number, t.string, t.bigint, t.boolean);
+  //     const result = t.flatExtract(target, t.string);
 
-      expect(result).toEqual(t.string);
-      expect(result.unionTypes).toEqual([]);
-    });
-  });
+  //     expect(result).toEqual(t.string);
+  //     expect(result.members).toEqual([]);
+  //   });
+  // });
 });

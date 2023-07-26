@@ -39,28 +39,28 @@ export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> exten
     return fail();
   }
 
-  areEqual(other: Type<unknown, unknown>): boolean {
-    const otherT = other as typeof this;
+  // areEqual(other: Type<unknown, unknown>): boolean {
+  //   const otherT = other as typeof this;
 
-    const values = this.shape;
-    const otherValues = otherT.shape;
+  //   const values = this.shape;
+  //   const otherValues = otherT.shape;
 
-    if (this.name !== otherT.name || values.length !== otherValues.length) {
-      return false;
-    }
-    //TODO: is O(n^2) the best we can do here since the set of values *should* be small?
-    for (const value of values) {
-      let result = false;
-      for (const otherValue of otherValues) {
-        if (value === otherValue) {
-          result = true;
-          break;
-        }
-      }
-      if (!result) {
-        return false;
-      }
-    }
-    return true;
-  }
+  //   if (this.name !== otherT.name || values.length !== otherValues.length) {
+  //     return false;
+  //   }
+  //   //TODO: is O(n^2) the best we can do here since the set of values *should* be small?
+  //   for (const value of values) {
+  //     let result = false;
+  //     for (const otherValue of otherValues) {
+  //       if (value === otherValue) {
+  //         result = true;
+  //         break;
+  //       }
+  //     }
+  //     if (!result) {
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // }
 }

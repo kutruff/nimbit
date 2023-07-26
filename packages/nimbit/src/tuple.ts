@@ -42,22 +42,22 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
     return pass(parsedTuple as any);
   }
 
-  areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
-    const elements = this.elementTypes as unknown as Typ<unknown, unknown>[];
-    const otherElements = (other as typeof this).elementTypes;
+  // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
+  //   const elements = this.elementTypes as unknown as Typ<unknown, unknown>[];
+  //   const otherElements = (other as typeof this).elementTypes;
 
-    if (elements.length !== otherElements.length) {
-      return false;
-    }
+  //   if (elements.length !== otherElements.length) {
+  //     return false;
+  //   }
 
-    for (let i = 0; i < elements.length; i++) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (!areEqual(elements[i]!, otherElements[i]! as Typ, cache)) {
-        return false;
-      }
-    }
-    return true;
-  }
+  //   for (let i = 0; i < elements.length; i++) {
+  //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  //     if (!areEqual(elements[i]!, otherElements[i]! as Typ, cache)) {
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // }
 }
 
 export function tuple<TTuple extends [Type<unknown, unknown>, ...Type<unknown, unknown>[]]>(values: TTuple) {
