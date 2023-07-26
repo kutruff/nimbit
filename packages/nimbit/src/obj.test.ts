@@ -376,8 +376,6 @@ describe('obj()', () => {
 
       type Target = t.Infer<typeof target>;
 
-      const res = t.objKeys(target);
-
       const ExpectedResult = t.obj({
         prop: t.union(t.string, t.undef)
       });

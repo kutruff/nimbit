@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-this-alias */
@@ -11,7 +12,6 @@ import {
   union,
   type ComparisonCache,
   type Constructor,
-  type Extend,
   type MakeUndefinedOptional,
   type ObjectKeyMap,
   type ObjType,
@@ -65,18 +65,6 @@ export type ShapeDefinitionToObjType<T> = T extends Constructor
 export type TsType<T extends Type<unknown, unknown>> = T[typeof _type];
 export type Infer<T extends Type<unknown, unknown>> = Resolve<T[typeof _type]>;
 
-// export function unionMembers<T extends Typ2<unknown, unknown>>(type: T): T[] {
-//   return type.unionTypes.flatMap(x => x.unionTypes) as Array<T>;
-// }
-
-//TODO: see if this simplification alias can be the output of opt() and not break inference
-// export type Optional<T extends Typ<unknown, unknown, unknown>> = UnionType<
-//   T['kind'] | 'undefined',
-//   T['shape'] | undefined,
-//   T[typeof _type],
-//   [T | typeof undef]
-// >;
-
 export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type<TKind, T> {
   static defaultOpts: ParseOptions = {};
 
@@ -104,14 +92,6 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   isUnion(): boolean {
     return this.unionTypes.length > 0;
   }
-
-  // opt(): Typ<TKind | 'undefined', TShape | undefined, T | undefined> {
-  //   return union(this, undef) as any;
-  // }
-  // opt(): Optional<typeof this> {
-  // opt(): TKind extends 'undefined'
-  //   ? typeof this
-  //   : UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof undef]> {
 
   opt(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof undef]> {
     return union(this, undef) as any;
@@ -183,37 +163,6 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
 
     return clone;
   }
-
-  // have Typ implement the Parser interface with T as default. Introduce a new property like _inputType to store the type for later inference
-
-  // to<TDestination extends Extend<Typ<unknown, unknown>, Parser<T, unknown>>>(
-  //   destination: TDestination
-  // ): Extend<TDestination, Parser<T, TsType<TDestination>>>;
-  // to<TDestination extends Typ<unknown, unknown>>(
-  //   destination: TDestination,
-  //   converter: TypeConverter<T, TsType<TDestination>>
-  // ): Extend<TDestination, Parser<T, TsType<TDestination>>>;
-  // to<TDestination extends Typ<unknown, unknown>>(
-  //   destination: TDestination,
-  //   converter?: TypeConverter<T, TsType<TDestination>>
-  // ): Extend<TDestination, Parser<T, TsType<TDestination>>> {
-  //   const [clone, destinationParse] = overrideParse(destination);
-  //   const source = this;
-  //   clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
-  //     const sourceResult = source.parse(value, opts);
-  //     if (!sourceResult.success) {
-  //       return sourceResult;
-  //     }
-
-  //     if (converter) {
-  //       const convertedResult = converter(sourceResult.value, opts);
-  //       return convertedResult.success ? destinationParse(convertedResult.value, opts) : convertedResult;
-  //     }
-  //     return destinationParse(sourceResult.value, opts);
-  //   };
-
-  //   return clone;
-  // }
 }
 
 export function coerce<TDestination extends Typ<unknown, unknown>, TSourceInput>(
@@ -232,17 +181,7 @@ export function coerce<TDestination extends Typ<unknown, unknown>, TSourceInput>
 export function overrideParse<TType extends Typ<unknown, unknown, unknown>>(
   obj: TType
 ): [clone: TType, parse: TType['parse']] {
-  const clone = cloneObject(obj);
-
+  const clone = Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
   //TODO: may want to get rid of lambda if possible?
   return [clone, val => obj.parse(val) as any];
-}
-
-//TODO: audit for any form of of prototype poisoning.
-export function cloneObject<T>(obj: T) {
-  return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) as T;
-}
-
-export function objKeys<T extends Typ<'object', object, unknown>>(type: T): ObjectKeyMap<T['shape']> {
-  return keyMap(type.shape as any);
 }

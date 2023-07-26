@@ -160,23 +160,23 @@ describe('experiments', () => {
       // });
 
       //TODO: is this branded types or not?
-      const timpestamptz = t.cloneObject(t.date);
-      timpestamptz.name = 'timestampz';
+      // const timpestamptz = t.cloneObject(t.date);
+      // timpestamptz.name = 'timestampz';
 
         //Typ<'date', Date, Date>('date', 'timestampz');
 
       // const stringToDate = t.createConverter(t.string, t.date, value => new Date(value));
       // const dateToString = t.createConverter(t.date, t.string, value => value.toISOString());
 
-      const Event = t.obj(
-        {
-          id: t.string, //'postgres',
-          content: t.string, //'postgres',
-          created_at: timpestamptz //null
-        },
-        'tables'
-      );
-      type Event = t.Infer<typeof Event>;
+      // const Event = t.obj(
+      //   {
+      //     id: t.string, //'postgres',
+      //     content: t.string, //'postgres',
+      //     created_at: timpestamptz //null
+      //   },
+      //   'tables'
+      // );
+      // type Event = t.Infer<typeof Event>;
 
       // export const TablesParser = t.parser(Tables, {
       //   table_name: Tables.shape.table_name.type

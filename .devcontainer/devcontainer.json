@@ -20,53 +20,28 @@
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-        "bradlc.vscode-tailwindcss",
-        "Prisma.prisma",
-        "ms-azuretools.vscode-docker",
-        "GitHub.vscode-pull-request-github",
-        "eamodio.gitlens",
-        "pflannery.vscode-versionlens",
-        "redhat.vscode-yaml",
-        "mtxr.sqltools",
-        "mtxr.sqltools-driver-pg",
-        "ckolkman.vscode-postgres",
-        "GitHub.copilot",
-        "GitHub.copilot-labs",
-        "netcorext.uuid-generator",
-        "thebearingedge.vscode-sql-lit",
-        "nicoespeon.abracadabra"
-      ],
-      "settings": {
-        "sqltools.connections": [
-          {
-            "name": "Container database",
-            "driver": "PostgreSQL",
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 54322,
-            "database": "postgres",
-            "username": "postgres",
-            "password": "postgres"
-          }
-        ]
-      }
+		"esbenp.prettier-vscode",
+		"dbaeumer.vscode-eslint",
+		"ms-azuretools.vscode-docker",
+		"GitHub.vscode-pull-request-github",
+		"eamodio.gitlens",
+		"pflannery.vscode-versionlens",
+		"redhat.vscode-yaml",
+		"ckolkman.vscode-postgres",
+		"GitHub.copilot",
+		"GitHub.copilot-labs",
+		"nicoespeon.abracadabra",
+		"github.vscode-github-actions"
+	]
     }
   },
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [3000, 3030, 5432, 54322],
-  "forwardPorts": [3000, 3030],
+  // "forwardPorts": [3000, 3030, 5432, 54322],  
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "npm i -g pnpm",
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "node",
-  "remoteEnv": {
-    "PGHOST": "localhost",
-    "PGPORT": "54322",
-    "PGUSER": "postgres",
-    "PGPASSWORD": "postgres"
-  },  
+  "remoteEnv": {},
   "features": {
     "docker-from-docker": "latest"
   }
