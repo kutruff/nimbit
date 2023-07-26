@@ -35,7 +35,11 @@ export function merge<TObjA extends ObjType<unknown, unknown>, TObjB extends Obj
   objectTypeA: TObjA,
   objectTypeB: TObjB
 ): ObjType<Extend<TObjA['shape'], TObjB['shape']>, Extend<TObjA[typeof _type], TObjB[typeof _type]>> {
-  return obj({ ...(objectTypeA as any).shape, ...(objectTypeB as any).shape }, undefined, objectTypeB.propertyPolicy) as any;
+  return obj(
+    { ...(objectTypeA as any).shape, ...(objectTypeB as any).shape },
+    undefined,
+    objectTypeB.propertyPolicy
+  ) as any;
 }
 
 //TODO: figure out why this resolve is required for assignment checks in the unit test
@@ -52,12 +56,7 @@ export function extend<
 
 export type PartialType<T> = {
   [P in keyof T]: T[P] extends Typ<unknown, unknown>
-    ? UnionType<
-        T[P]['kind'] | 'undefined',
-        T[P]['shape'] | undefined,
-        T[P][typeof _type] | undefined,
-        [T[P], UndefinedT]
-      >
+    ? UnionType<[T[P], UndefinedT], T[P][typeof _type] | undefined>
     : never;
 };
 

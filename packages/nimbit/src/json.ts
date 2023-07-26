@@ -1,70 +1,69 @@
 import {
-  any,
   array,
   boolean,
   coerce,
   fail,
   nul,
   number,
-  obj,
   pass,
-  PropertyPolicy,
-  record,
   string,
   union,
-  unionRef,
-  unknown,
   type Infer,
+  type LazyType,
   type ParseResult
 } from '.';
+import { lazy } from './lazy';
+import { record } from './record';
 
-const anyObject = obj({}, undefined, PropertyPolicy.passthrough);
-
-export const json = coerce(union(anyObject, array(unknown), string, number, boolean, nul), jsonParse);
-
-// class JSonObjDef {
-//   literals = union(string, number, boolean, nul);
-//   obj = record(string, this.literals);
-//   // arr = array(obj(JSonObjDef).shape.schema);
-//   schema = union(this.literals, record(string, obj(JSonObjDef)));
+// const anyObject = obj({}, undefined, PropertyPolicy.passthrough);
+// const base = union(anyObject, array(unknown), string, number, boolean, nul);
+// export const jsonOld = coerce(base, jsonParse);
+// // export const looped = jsonOld.to(jsonOld, x => pass(x));
+// function parseJsonDeep(x: string) {
+//   const top = jsonOld.parse(x);
+//   if (top.success) {
+//     const isArray = top.value.parse(top.value)
+//     if(
+//   }
 // }
 
-// class ArrayDef {
-//   element = JsonUnionDef;
-// }
+const Literals = union(string, number, boolean, nul);
+type JsonLiterals = Infer<typeof Literals>;
 
-// class JsonSchema {
-//   members = [string, number, boolean, nul, array(unionRef(JsonSchema)), record(string, unionRef(JsonSchema))];
-// }
+type json = JsonLiterals | json[] | { [key: string]: json };
 
-function JsonSchema()  {
-  return [string, number, boolean, nul, array(unionRef(JsonSchema)), record(string, unionRef(JsonSchema))];
-}
-const result = unionRef(JsonSchema);
+const jsonSchema: LazyType<json> = lazy(() => union(Literals, array(jsonSchema), record(string, jsonSchema)));
 
-// class JSonRecordDef {
-//   key = string;
-//   value = UnionDef;
-// }
+export const json = coerce(jsonSchema, jsonParse);
 
-// class JSonSchemaDef {
-//   key = string;
-//   value = UnionDef;
-// }
-
-// export const jsonBase = coerce(union(anyObject, array(unknown), string, number, boolean, nul), jsonParse);
-
-// export const json = any.to(any, x => json.parse(jsonParse) )
-
-export type json = Infer<typeof json>;
-
-export function jsonParse(x: string): ParseResult<string | number | boolean | unknown[] | object | null> {
+export function jsonParse(x: string): ParseResult<json> {
   try {
     return pass(JSON.parse(x));
   } catch (err) {
     return fail();
   }
 }
+
+// const jsonSchema: UnionType<
+//   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
+//   json
+// > = {} as any;
+
+// const jsonSchema: UnionType<
+//   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
+//   json
+// > = lazy(x => {
+//   return union(Literals, array(x), record(string, x));
+// });
+
+// const result = jsonSchema.parse({ prop: 1 });
+
+// const jsonSchema: UnionType<
+//   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
+//   json
+// > = makeRecursive(() => {
+//   return union(Literals, array(jsonSchema), record(string, jsonSchema));
+// });
 
 //TODO: look into declaration merging for allowing extension of the fluent interface
 //https://tanstack.com/router/v1/docs/guide/type-safety#exported-hooks-components-and-utilities

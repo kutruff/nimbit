@@ -12,11 +12,13 @@ import {
   type ComparisonCache,
   type Constructor,
   type MakeUndefinedOptional,
+  type NullT,
   type ObjectKeyMap,
   type ObjType,
   type ParseResult,
   type Resolve,
   type TypeConverter,
+  type UndefinedT,
   type UnionType
 } from '.';
 
@@ -94,17 +96,17 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return false;
   }
 
-  opt(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof undef]> {
+  opt(): UnionType<[typeof this, UndefinedT], T | undefined> {
     return union(this, undef) as any;
   }
 
   // nullable(): Typ<TKind | 'null', TShape | null, T | null> {
-  nullable(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof nul]> {
+  nullable(): UnionType<[typeof this, NullT], T | null> {
     return union(this, nul) as any;
   }
 
   // nullish(): Typ<TKind | 'undefined' | 'null', TShape | undefined | null, T | undefined | null> {
-  nullish(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof nul]> {
+  nullish(): UnionType<[typeof this, NullT, UndefinedT], T | null | undefined> {
     return union(this, undef, nul) as any;
   }
 

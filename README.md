@@ -1279,7 +1279,7 @@ type Teacher = z.infer<typeof Teacher>;
 // { id:string; name:string };
 ```  -->
 
-## Recursive types
+## Recursive Objects
 
 One of the biggest advantages of Nimbit is a new approach to recursive types. In Nimbit, recursive types are defined as naturally as typical objects, but instead you first define your object's shape as a class before passing it to `t.obj()`.
 
@@ -1306,7 +1306,7 @@ Category.parse({
   ]
 }); // passes
 
-// after you've defnied Category with t.obj(), you no longer have to refer to the class definition. Magic!
+// after you've defined Category with t.obj(), you no longer have to refer to the class definition. Magic!
 const categoryList = t.array(Category);
 ```
 
@@ -1349,6 +1349,26 @@ Address.parse({
 
 One caveat of using classes to define your object shemas is that you must mark the class properties with a `?` like above if you wish it to remain optional in your TypeScript definition. Calling `.opt()` alone won't do the trick. This is because of TypeScript.
 
+### Other Recursive Types / JSON
+
+Unfortunately, recursive unions, and records are not as straightforward. For that you use `lazy()` which lets you use a type as you define it.  The only problem is that you must provide the TypeScript types manually.
+
+If you want to validate any JSON value, you can use the snippet below.
+
+```ts
+const Literals = union(string, number, boolean, nul);
+type JsonLiterals = Infer<typeof Literals>;
+
+//json uses itself recursively.
+type json = JsonLiterals | json[] | { [key: string]: json };
+
+const jsonSchema: LazyType<json> = lazy(() => union(Literals, array(jsonSchema), record(string, jsonSchema)));
+
+export const json = coerce(jsonSchema, jsonParse);
+
+json.parse('{"a":1}'); //passes and returns { a: 1 }
+```
+
 ### ZodType with ZodEffects
 
 When using `z.ZodType` with `z.ZodEffects` (
@@ -1357,43 +1377,6 @@ When using `z.ZodType` with `z.ZodEffects` (
 [`preprocess`](https://github.com/colinhacks/zod#preprocess),
 etc...
 ), you will need to define the input and output types of the schema. `z.ZodType<Output, z.ZodTypeDef, Input>`
-
-```ts
-const isValidId = (id: string): id is `${string}/${string}` => id.split('/').length === 2;
-
-const baseSchema = z.object({
-  id: z.string().refine(isValidId)
-});
-
-type Input = z.input<typeof baseSchema> & {
-  children: Input[];
-};
-
-type Output = z.output<typeof baseSchema> & {
-  children: Output[];
-};
-
-const schema: z.ZodType<Output, z.ZodTypeDef, Input> = baseSchema.extend({
-  children: z.lazy(() => schema.array())
-});
-```
-
-Thanks to [marcus13371337](https://github.com/marcus13371337) and [JoelBeeldi](https://github.com/JoelBeeldi) for this example.
-
-### JSON type (TODO: verify if needs to be recursive)
-
-If you want to validate any JSON value, you can use the snippet below.
-
-```ts
-t.json.parse('{"a":1}'); //passes and returns { a: 1 }
-
-const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
-type Literal = z.infer<typeof literalSchema>;
-type Json = Literal | { [key: string]: Json } | Json[];
-const jsonSchema: z.ZodType<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(jsonSchema)]));
-
-jsonSchema.parse(data);
-```
 
 ### Cyclical objects (TODO: Add support in parsing context)
 

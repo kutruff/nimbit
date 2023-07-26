@@ -8,15 +8,10 @@ describe('Unions of types', () => {
       const Target = t.union(t.string, t.boolean);
       type Target = t.Infer<typeof Target>;
 
-      type ExpectedDefinitionType = t.UnionType<
-        'string' | 'boolean',
-        string | boolean,
-        string | boolean,
-        [typeof t.string, typeof t.boolean]
-      >;
+      type ExpectedDefinitionType = t.UnionType<[typeof t.string, typeof t.boolean], string | boolean>;
       expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
-      expect(Target.kind).toEqual(['string', 'boolean']);
+      expect(Target.kind).toEqual('union');
       expect(Target.members.length).toEqual(2);
       expect(Target.members).toContainEqual(t.string);
       expect(Target.members).toContainEqual(t.boolean);
@@ -29,18 +24,10 @@ describe('Unions of types', () => {
         const Target = t.union(peer0, peer1);
         type Target = t.Infer<typeof Target>;
 
-        type ExpectedDefinitionType = t.UnionType<
-          'string' | 'boolean' | 'number' | 'bigint',
-          string | number | boolean | bigint,
-          string | number | boolean | bigint,
-          [typeof peer0, typeof peer1]
-        >;
+        type ExpectedDefinitionType = t.UnionType<[typeof peer0, typeof peer1], string | number | boolean | bigint>;
         expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
-        expect(Target.kind).toEqual([
-          ['string', 'number'],
-          ['boolean', 'bigint']
-        ]);
+        expect(Target.kind).toEqual('union');
 
         expect(Target.members.length).toEqual(2);
         expect(Target.members).toContainEqual(t.union(t.string, t.number));
@@ -53,16 +40,11 @@ describe('Unions of types', () => {
           const Target = t.union(t.string, subUnion);
           type Target = t.Infer<typeof Target>;
 
-          type ExpectedDefinitionType = t.UnionType<
-            'string' | 'boolean' | 'bigint',
-            string | boolean | bigint,
-            string | boolean | bigint,
-            [typeof t.string, typeof subUnion]
-          >;
+          type ExpectedDefinitionType = t.UnionType<[typeof t.string, typeof subUnion], string | boolean | bigint>;
 
           expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
-          expect(Target.kind).toEqual(['string', ['boolean', 'bigint']]);
+          expect(Target.kind).toEqual('union');
           expect(Target.members.length).toEqual(2);
           expect(Target.members).toContainEqual(t.string);
           expect(Target.members).toContainEqual(t.union(t.boolean, t.bigint));
@@ -75,14 +57,12 @@ describe('Unions of types', () => {
           type Target = t.Infer<typeof Target>;
 
           type ExpectedDefinitionType = t.UnionType<
-            'string' | 'boolean' | 'number' | 'bigint',
-            string | number | boolean | bigint,
-            string | number | boolean | bigint,
-            [typeof t.string, typeof union1]
+            [typeof t.string, typeof union1],
+            string | number | boolean | bigint
           >;
           expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
-          expect(Target.kind).toEqual(['string', ['boolean', ['number', 'bigint']]]);
+          expect(Target.kind).toEqual('union');
           expect(Target.members.length).toEqual(2);
           expect(Target.members).toContainEqual(t.string);
           expect(Target.members).toContainEqual(t.union(t.boolean, t.union(t.number, t.bigint)));
@@ -100,10 +80,8 @@ describe('Unions of types', () => {
       type Result = t.Infer<typeof Result>;
 
       type ExpectedDefinitionType = t.UnionType<
-        'number' | 'bigint',
-        number | bigint,
-        number | bigint,
-        [typeof t.number, typeof t.bigint, typeof t.number, typeof t.number, typeof t.bigint]
+        [typeof t.number, typeof t.bigint, typeof t.number, typeof t.number, typeof t.bigint],
+        number | bigint
       >;
 
       expectType<TypeEqual<ExpectedDefinitionType, typeof Result>>(true);
