@@ -35,10 +35,10 @@ export class MapType<TKey, TValue, T> extends Typ<'map', [TKey, TValue], T> {
     return pass(parsedMap as T);
   }
 
-  areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
-    const otherMap = other as MapType<unknown, unknown, unknown>;
-    return (
-      areEqual(this.key as Typ, otherMap.key as Typ, cache) && areEqual(this.value as Typ, otherMap.value as Typ, cache)
-    );
-  }
+  // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
+  //   const otherMap = other as MapType<unknown, unknown, unknown>;
+  //   return (
+  //     areEqual(this.key as Typ, otherMap.key as Typ, cache) && areEqual(this.value as Typ, otherMap.value as Typ, cache)
+  //   );
+  // }
 }

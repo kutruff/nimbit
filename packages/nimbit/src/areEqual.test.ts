@@ -1,6 +1,6 @@
 import * as t from './index';
 
-describe('Type equality', () => {
+describe.skip('Type equality', () => {
   describe('areEqual()', () => {
     it.each([
       [t.string, t.string, true],

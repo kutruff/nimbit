@@ -17,9 +17,9 @@ describe('Unions of types', () => {
       expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
       expect(Target.kind).toEqual(['string', 'boolean']);
-      expect(Target.unionTypes.length).toEqual(2);
-      expect(Target.unionTypes).toContainEqual(t.string);
-      expect(Target.unionTypes).toContainEqual(t.boolean);
+      expect(Target.members.length).toEqual(2);
+      expect(Target.members).toContainEqual(t.string);
+      expect(Target.members).toContainEqual(t.boolean);
     });
 
     describe('union of unions', () => {
@@ -42,9 +42,9 @@ describe('Unions of types', () => {
           ['boolean', 'bigint']
         ]);
 
-        expect(Target.unionTypes.length).toEqual(2);
-        expect(Target.unionTypes).toContainEqual(t.union(t.string, t.number));
-        expect(Target.unionTypes).toContainEqual(t.union(t.boolean, t.bigint));
+        expect(Target.members.length).toEqual(2);
+        expect(Target.members).toContainEqual(t.union(t.string, t.number));
+        expect(Target.members).toContainEqual(t.union(t.boolean, t.bigint));
       });
 
       describe('nested unions', () => {
@@ -63,9 +63,9 @@ describe('Unions of types', () => {
           expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
           expect(Target.kind).toEqual(['string', ['boolean', 'bigint']]);
-          expect(Target.unionTypes.length).toEqual(2);
-          expect(Target.unionTypes).toContainEqual(t.string);
-          expect(Target.unionTypes).toContainEqual(t.union(t.boolean, t.bigint));
+          expect(Target.members.length).toEqual(2);
+          expect(Target.members).toContainEqual(t.string);
+          expect(Target.members).toContainEqual(t.union(t.boolean, t.bigint));
         });
 
         it('combines depth 3 unions', () => {
@@ -83,9 +83,9 @@ describe('Unions of types', () => {
           expectType<TypeEqual<ExpectedDefinitionType, typeof Target>>(true);
 
           expect(Target.kind).toEqual(['string', ['boolean', ['number', 'bigint']]]);
-          expect(Target.unionTypes.length).toEqual(2);
-          expect(Target.unionTypes).toContainEqual(t.string);
-          expect(Target.unionTypes).toContainEqual(t.union(t.boolean, t.union(t.number, t.bigint)));
+          expect(Target.members.length).toEqual(2);
+          expect(Target.members).toContainEqual(t.string);
+          expect(Target.members).toContainEqual(t.union(t.boolean, t.union(t.number, t.bigint)));
         });
       });
     });
@@ -138,16 +138,28 @@ describe('Unions of types', () => {
       expectType<TypeEqual<Result, string>>(true);
     });
 
-    it('returns union when undef and others', () => {
+    it('returns single when undef and null others', () => {
       const Target = t.union(t.string, t.nul, t.undef);
       const Result = Target.unwrap();
       type Result = t.Infer<typeof Result>;
 
-      const expected = t.union(t.string, t.nul);
+      const expected = t.string;
       expect(Result).toEqual(expected);
 
       expectType<TypeEqual<typeof Result, typeof expected>>(true);
-      expectType<TypeEqual<Result, string | null>>(true);
+      expectType<TypeEqual<Result, string>>(true);
+    });
+
+    it('returns union when undef and others', () => {
+      const Target = t.union(t.string, t.nul, t.undef, t.bigint);
+      const Result = Target.unwrap();
+      type Result = t.Infer<typeof Result>;
+
+      const expected = t.union(t.string, t.bigint);
+      expect(Result).toEqual(expected);
+
+      expectType<TypeEqual<typeof Result, typeof expected>>(true);
+      expectType<TypeEqual<Result, string | bigint>>(true);
     });
   });
 

@@ -29,7 +29,7 @@ export class ArrayType<TValue, T> extends Typ<'array', TValue, T> {
     return pass(parsedArray as T);
   }
 
-  areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
-    return areEqual(this.shape as Typ, other.shape as Typ, cache);
-  }
+  // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
+  //   return areEqual(this.shape as Typ, other.shape as Typ, cache);
+  // }
 }

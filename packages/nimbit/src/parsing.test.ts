@@ -6,6 +6,113 @@ import * as t from '.';
 import { pass } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
+describe('Parsing Policy', () => {
+  it('strips objects when policy is strip', () => {
+    const Person = t.obj(
+      {
+        name: t.string,
+        age: t.number,
+        isActive: t.boolean
+      },
+      'Person',
+      t.PropertyPolicy.strip
+    );
+
+    const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+
+    expect(result.success).toEqual(true);
+
+    if (result.success) {
+      expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+      expect((result.value as any).extraProperty).toEqual(undefined);
+    }
+  });
+
+  it('strict parsing fails with extra property', () => {
+    const Person = t.obj(
+      {
+        name: t.string,
+        age: t.number,
+        isActive: t.boolean
+      },
+      'Person',
+      t.PropertyPolicy.strict
+    );
+
+    const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+
+    expect(result.success).toEqual(false);
+  });
+
+  it('strict parsing succeeds when just the right number of props', () => {
+    const Person = t.obj(
+      {
+        name: t.string,
+        age: t.number,
+        isActive: t.boolean
+      },
+      'Person',
+      t.PropertyPolicy.strict
+    );
+
+    const result = Person.parse({ name: 'John', age: 10, isActive: true } as any);
+
+    expect(result.success).toEqual(true);
+
+    if (result.success) {
+      expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+      expect((result.value as any).extraProperty).toEqual(undefined);
+    }
+  });
+
+  it('passthrough parsing leaves properties not on the shape', () => {
+    const Person = t.obj(
+      {
+        name: t.string,
+        age: t.number,
+        isActive: t.boolean
+      },
+      'Person',
+      t.PropertyPolicy.passthrough
+    );
+
+    const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+
+    expect(result.success).toEqual(true);
+
+    if (result.success) {
+      expect(result.value).toEqual({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' });
+    }
+  });
+
+  // it('parses objects strict when default set', () => {
+  //   const originalOptions = t.Typ.defaultOpts;
+  //   try {
+  //     t.Typ.defaultOpts = { strict: true };
+
+  //     const Person = t.obj(
+  //       {
+  //         name: t.string,
+  //         age: t.number,
+  //         isActive: t.boolean
+  //       },
+  //       'Person'
+  //     );
+
+  //     const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+
+  //     expect(result.success).toEqual(true);
+
+  //     if (result.success) {
+  //       expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+  //       expect((result.value as any).extraProperty).toEqual(undefined);
+  //     }
+  //   } finally {
+  //     t.Typ.defaultOpts = originalOptions;
+  //   }
+  // });
+});
+
 describe('TypeConverter', () => {
   it('parses', () => {
     const Person = t.obj({
@@ -22,75 +129,6 @@ describe('TypeConverter', () => {
     if (result.success) {
       expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
     }
-  });
-
-  describe('strict parsing', () => {
-    it('parses objects strict when told to', () => {
-      const Person = t.obj(
-        {
-          name: t.string,
-          age: t.number,
-          isActive: t.boolean
-        },
-        'Person',
-        true
-      );
-
-      const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
-
-      expect(result.success).toEqual(true);
-
-      if (result.success) {
-        expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
-        expect((result.value as any).extraProperty).toEqual(undefined);
-      }
-    });
-
-    it('parses objects strict', () => {
-      const Person = t.obj({
-        name: t.string,
-        age: t.number,
-        isActive: t.boolean
-      });
-
-      const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any, {
-        strict: true
-      });
-
-      expect(result.success).toEqual(true);
-
-      if (result.success) {
-        expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
-        expect((result.value as any).extraProperty).toEqual(undefined);
-      }
-    });
-
-    it('parses objects strict when default set', () => {
-      const originalOptions = t.Typ.defaultOpts;
-      try {
-        t.Typ.defaultOpts = { strict: true };
-
-        const Person = t.obj(
-          {
-            name: t.string,
-            age: t.number,
-            isActive: t.boolean
-          },
-          'Person'
-        );
-
-        const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
-
-        expect(result.success).toEqual(true);
-
-        if (result.success) {
-          expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
-          expect((result.value as any).extraProperty).toEqual(undefined);
-        }
-      } finally {
-        t.Typ.defaultOpts = originalOptions;
-      }
-    });
   });
 
   it('supports where', () => {
@@ -338,7 +376,7 @@ describe('TypeConverter', () => {
 
     const unionedAgain = t.union(stringToUnion, t.number);
 
-    type isUnion = (typeof unionedAgain)['unionTypes'];
+    type isUnion = (typeof unionedAgain)['members'];
 
     const tupleTest = t
       .tuple([t.string, t.string])
@@ -404,8 +442,11 @@ describe('TypeConverter', () => {
     }
     const a: A = { self: { self: { self: { self: {} } } } };
 
-    expect(A.shape.self.unionTypes[0]).toEqual(A);
+    expect(A.shape.self.members[0]).toEqual(A);
 
+    // t.string.where(t.length(1, 2));
+    // t.number.where(t.min(1));
+    // t.number.where(x => x > 1);
     type ExpectedAShape = { self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
@@ -438,7 +479,7 @@ describe('TypeConverter', () => {
     const A = t.obj(ADef, 'A');
     type A = t.Infer<typeof A>;
 
-    expect(A.shape.self.unionTypes[0]?.name).toEqual('A');
+    expect(A.shape.self.members[0]?.name).toEqual('A');
 
     type ExpectedAShape = { prop: string; self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();

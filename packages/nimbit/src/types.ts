@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-this-alias */
@@ -32,6 +31,7 @@ export interface ParseOptions {
 //Need this symbol / property definition so that type inference will actual use the T parameter during type inference
 //https://github.com/Microsoft/TypeScript/issues/29657#issuecomment-460728148
 export const _type: unique symbol = Symbol('type');
+export const _union: unique symbol = Symbol('union');
 
 //TODO: evaluate if  this interface is needed now
 export interface Type<TKind = unknown, T = unknown> {
@@ -71,7 +71,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   [_type]!: T;
 
   //TODO: union types may not be needed anymore.
-  unionTypes: Array<Typ<TKind, TShape, T>> = [];
+  // unionTypes: Array<Typ<TKind, TShape, T>> = [];
 
   //TODO: potential optimization for dealing with union types. If nothing has modified the default parse() we can then flatten unions.
   // otherwise we may just be able to use strict object equality and use the instance
@@ -90,7 +90,8 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   // }
 
   isUnion(): boolean {
-    return this.unionTypes.length > 0;
+    // return this.unionTypes.length > 0;
+    return false;
   }
 
   opt(): UnionType<TKind | 'undefined', TShape | undefined, T | undefined, [typeof this, typeof undef]> {
@@ -112,10 +113,10 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return fail();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
-    return this.kind === other.kind;
-  }
+  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
+  //   return this.kind === other.kind;
+  // }
 
   default(defaultValue: T): typeof this {
     const [clone, originalParse] = overrideParse(this);
@@ -181,7 +182,11 @@ export function coerce<TDestination extends Typ<unknown, unknown>, TSourceInput>
 export function overrideParse<TType extends Typ<unknown, unknown, unknown>>(
   obj: TType
 ): [clone: TType, parse: TType['parse']] {
-  const clone = Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
+  const clone = cloneObject(obj);
   //TODO: may want to get rid of lambda if possible?
   return [clone, val => obj.parse(val) as any];
+}
+
+export function cloneObject<T>(obj: T): T {
+  return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 }

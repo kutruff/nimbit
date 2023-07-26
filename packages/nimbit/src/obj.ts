@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -6,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   areEqual,
+  cloneObject,
   fail,
   getKeys,
   keyMap,
@@ -22,15 +22,52 @@ import {
   type ShapeDefinitionToObjType
 } from '.';
 
+// export enum PropertyPolicy {
+//   strict = 'strict',
+//   passthrough = 'passthrough',
+//   strip = 'strip'
+// }
+
+// export enum PropertyPolicy {
+//   strict,
+//   passthrough,
+//   strip
+// }
+
+export const PropertyPolicy = {
+  strict: 0,
+  passthrough: 1,
+  strip: 2
+} as const;
+export type PropertyPolicy = (typeof PropertyPolicy)[keyof typeof PropertyPolicy];
+
 export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
-  _k?: ObjectKeyMap<TShape>;
+  private _k?: ObjectKeyMap<TShape>;
   get k(): ObjectKeyMap<TShape> {
     if (!this._k) this._k = keyMap(this.shape as any);
     return this._k;
   }
 
-  constructor(shape: TShape, name?: string, public strict?: boolean) {
+  constructor(shape: TShape, name?: string, public propertyPolicy?: PropertyPolicy) {
     super('object', shape, name);
+  }
+
+  strict(): typeof this {
+    return this.changePropertyPolicy(PropertyPolicy.strict);
+  }
+
+  strip(): typeof this {
+    return this.changePropertyPolicy(PropertyPolicy.strip);
+  }
+
+  passthrough(): typeof this {
+    return this.changePropertyPolicy(PropertyPolicy.passthrough);
+  }
+
+  changePropertyPolicy(policy: PropertyPolicy): typeof this {
+    const clone = cloneObject(this);
+    clone.propertyPolicy = policy;
+    return clone;
   }
 
   parse(value: unknown, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
@@ -38,10 +75,22 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     if (typeof value !== 'object' || Array.isArray(value) || value === null) {
       return fail();
     }
-    const isStrict = this.strict === undefined ? opts.strict : this.strict;
-    const result: any = isStrict ? {} : { ...value };
+    // const isStrict = this.strict === undefined ? opts.strict : this.strict;
+    // const result: any = isStrict ? {} : { ...value };
 
     const shape = this.shape as any;
+
+    if (this.propertyPolicy === PropertyPolicy.strict) {      
+      const valueKeys = getKeys(value);
+      for (const key of valueKeys) {        
+        if (!Object.hasOwn(shape, key)) {
+          return fail();
+        }
+      }
+    }
+
+    const result: any = this.propertyPolicy === PropertyPolicy.passthrough ? { ...value } : {};
+
     for (const key of getKeys(shape)) {
       const propResult = shape[key].parse((value as any)[key], opts);
 
@@ -53,30 +102,30 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     return pass(result);
   }
 
-  areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
-    const otherT = other as typeof this;
+  // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
+  //   const otherT = other as typeof this;
 
-    const shape = this.shape as Shape;
-    const otherShape = otherT.shape as Shape;
+  //   const shape = this.shape as Shape;
+  //   const otherShape = otherT.shape as Shape;
 
-    const keys = Object.keys(shape);
-    const otherKeys = Object.keys(otherShape);
+  //   const keys = Object.keys(shape);
+  //   const otherKeys = Object.keys(otherShape);
 
-    if (keys.length !== otherKeys.length) {
-      return false;
-    }
+  //   if (keys.length !== otherKeys.length) {
+  //     return false;
+  //   }
 
-    for (const key of keys) {
-      const prop = shape[key];
-      const otherProp = otherShape[key];
+  //   for (const key of keys) {
+  //     const prop = shape[key];
+  //     const otherProp = otherShape[key];
 
-      if (!prop == null || otherProp == null || !areEqual(prop as any, otherProp as any, cache)) {
-        return false;
-      }
-    }
+  //     if (!prop == null || otherProp == null || !areEqual(prop as any, otherProp as any, cache)) {
+  //       return false;
+  //     }
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 }
 
 const constructorsToObj = new WeakMap();
@@ -86,9 +135,9 @@ const constructorsToObj = new WeakMap();
 export function obj<TShapeDefinition extends ShapeDefinition>(
   shapeDefinition: TShapeDefinition,
   name?: string,
-  strict?: boolean
+  policy: PropertyPolicy = PropertyPolicy.strip
 ): ShapeDefinitionToObjType<TShapeDefinition> {
-  const resultObj = new ObjType({}, name, strict) as any;
+  const resultObj = new ObjType({}, name, policy) as any;
 
   if (typeof shapeDefinition === 'function') {
     const constructor = shapeDefinition;

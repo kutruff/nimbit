@@ -29,7 +29,7 @@ export class SetType<TValue, T> extends Typ<'set', TValue, T> {
     return pass(parsed as T);
   }
 
-  areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
-    return areEqual(this.value as Typ, (other as SetType<unknown, unknown>).value as Typ, cache);
-  }
+  // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
+  //   return areEqual(this.value as Typ, (other as SetType<unknown, unknown>).value as Typ, cache);
+  // }
 }

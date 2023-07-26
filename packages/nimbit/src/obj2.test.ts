@@ -46,10 +46,7 @@ describe('obj2', () => {
     const InterComplexRes1 = intersection(ComplexA, ComplexB);
     type InterComplexRes1 = t.Infer<typeof InterComplexRes1>;
 
-    const UnionPropIntersection = intersection(
-      t.obj({ prop: t.union(t.string, t.number) }),
-      t.obj({ prop: t.string })
-    );
+    const UnionPropIntersection = intersection(t.obj({ prop: t.union(t.string, t.number) }), t.obj({ prop: t.string }));
     type res = typeof UnionPropIntersection.shape.prop.shape;
   });
 
@@ -198,7 +195,7 @@ describe('obj2', () => {
 
     const foo: A = { children: [{ children: [] }] };
 
-    expect(A.shape.children.unionTypes[0]).toEqual(t.array(A));
+    expect(A.shape.children.members[0]).toEqual(t.array(A));
 
     type ExpectedAShape = { children?: A[]; self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();
@@ -293,7 +290,7 @@ describe('obj2', () => {
     const IntersectedCUnion2 = intersection(C, t.union(t.string, t.number));
     type IntersectedCUnion2 = t.Infer<typeof IntersectedCUnion2>;
 
-    const afdafdafdadf = IntersectedCUnion0.unionTypes[0]!;
+    // const afdafdafdadf = IntersectedCUnion0.members[0]!;
 
     // const foo: A = { children: [{ children: [] }] };
 

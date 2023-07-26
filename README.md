@@ -706,14 +706,14 @@ const stringOrUndefined = t.union(t.string, t.undef);
 type A = t.Infer<typeof stringOrUndefined>; // string | undefined;
 ```
 
-You can remove `undef` from a an optiona/`union` by calling `unwrap()`.
+You can remove `undef` and `nul` from an optional / `union` by calling `unwrap()`.
 
 ```ts
 const optionalString = t.string.opt();
 optionalString.unwrap() === stringSchema; // true
 ```
 
-NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExclude()` if you wish to remove a type from all unions
+NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExcludeKind()` if you wish to remove a type from all nested unions.
 
 ```ts
 const optionalString = t.string.opt().opt();
@@ -721,7 +721,7 @@ optionalString.unwrap() === stringSchema; // false!
 optionalString.unwrap().unwrap() === stringSchema; // true!
 
 t.exclude(optionalString, t.undef) === stringSchema; // false!
-t.flatExclude(optionalString, t.undef) === stringSchema; // true!
+t.flatExcludeKind(optionalString, t.undef) === stringSchema; // true!
 ```
 
 ## Nullables
@@ -736,12 +736,12 @@ nullableString.parse(null); // => null
 
 ## Nullish
 
-Similarly, you can create types that are both optional and nullable with `nullish()`. Again, this is a `union` of a type with `nul` and `undef`
+You can create types that are both optional and nullable with `nullish()`. Again, this is a `union` of a type with `nul` and `undef`
 
 ```ts
 const nullishString = t.string.nullish();
 nullishString.parse('asdf'); // => "asdf"
-nullishString.parse('undefined'); // => "asdf"
+nullishString.parse(undefined); // => undefined
 nullishString.parse(null); // => null
 ```
 
@@ -833,7 +833,7 @@ You could also just pass the property name directly.
 const JustTheName = pick(Recipe, 'name');
 ```
 
-There's also the `getKeys()` convenience method if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typeds.
+There's also the `getKeys()` convenience method if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typed.
 
 ```ts
 const JustTheName = pick(Recipe, ...getKeys({ id: 1, name: 1 }));
@@ -842,10 +842,13 @@ const JustTheName = pick(Recipe, ...getKeys({ id: 1, name: 1 }));
 To remove certain keys, use `.omit` in the same fashion as `pick()`
 
 ```ts
-const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
-
-type JustRecipeName = t.Infer<typeof NoIDRecipe>;
+const JustRecipeName = required(User, 'id', 'ingredients);
+type JustRecipeName = t.Infer<typeof JustRecipeName>;
 // => { name: string }
+
+//alternative ways of omitting properties by name
+const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
+const JustRecipeName = omit(Recipe, ...getKeys({id: 1, ingredients: 1}));
 ```
 
 ### `.partial`
@@ -948,7 +951,7 @@ const requiredEmail = User.required(User.k.email);
 }
 */
 
-//alternative ways of picking propertis to the above
+//alternative ways of picking properties by name
 const requiredEmail = required(User, 'email');
 const requiredEmail = required(User, ...getKeys({email: 1}));
 ```

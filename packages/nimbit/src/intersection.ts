@@ -186,7 +186,7 @@ export function intersection<TA extends Typ<unknown, unknown, unknown>, TB exten
 
     const results = [...equalTypes.values()];
 
-    return unionIfNeeded(results);
+    return unionIfNeeded(results) as any;
   }
 
   return (areEqual(typeA as any, typeB as any, cache) ? typeB : never) as any;

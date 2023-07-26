@@ -4,12 +4,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
-  exclude,
+  excludeKinds,
   fail,
   never,
+  nul,
   Typ,
   undef,
   type _type,
+  type Constructor,
   type ElementType,
   type ExcludeType,
   type IsLengthOneTuple,
@@ -42,8 +44,8 @@ export type UnionFlattenedOrSingle<T, TMembers = FlattenUnionMembers<T>> = IsLen
     : never
   : IsLengthOneTuple<TMembers>;
 
-export type ToUnionMemberList<T> = T extends IUnionType<infer TM>
-  ? TM
+export type ToUnionMemberList<T> = T extends IUnionType<infer TMembers>
+  ? TMembers
   : T extends [infer _THead, ...infer _TRest]
   ? T
   : [T];
@@ -60,15 +62,19 @@ export class UnionType<TKind, TShape, T, TMembers extends unknown[]>
   extends Typ<TKind, TShape, T>
   implements IUnionType<TMembers>
 {
-  //Not athat members and shape are really the same object
+  //Note that members and shape are really the same object
   constructor(public members: TMembers, shape: TShape[], name?: string) {
     super(shape.map(x => (x as any).kind) as TKind, shape as TShape, name);
-    this.unionTypes = shape as any;
+    // this.unionTypes = shape as any;
+  }
+
+  isUnion(): boolean {
+    return true;
   }
 
   //TODO: test
-  unwrap(): ExcludeType<TMembers, [typeof undef]> {
-    return exclude(this, undef) as any;
+  unwrap(): ExcludeType<TMembers, [Typ<'undefined', unknown, unknown>, Typ<'null', unknown, unknown>]> {
+    return excludeKinds(this, undef, nul) as any;
   }
 
   parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
@@ -87,13 +93,42 @@ export function union<T extends Typ<unknown, unknown, unknown>[]>(...args: T): C
   return new UnionType(args, args) as any;
 }
 
-export function unionIfNeeded<T extends Typ<unknown, unknown>[]>(types: T) {
+export type UnionDefinition =
+  | {
+      members: Typ<unknown, unknown>[];
+    }
+  // | Constructor;
+  | (() => any);
+
+// export type ToTsTypes<T> = T extends Type<unknown, unknown>
+//   ? T[typeof _type]
+//   : {
+//       [P in keyof T]: ToTsTypes<T[P]>;
+//     };
+
+type UnionDefMemberTypes<T> = T extends {
+  members: Typ<unknown, unknown>[];
+}
+  ? T['members']
+  : never;
+
+// type UnionDefMemberTypes<T> = T[keyof T];
+
+export type ShapeDefinitionToUnionType<T> = T extends () => any ? CreateUnionFromTypes<ReturnType<T>> : never;
+
+export function unionRef<T extends UnionDefinition>(unionDef: T): ShapeDefinitionToUnionType<T> {
+  const unionDefMembers = new (unionDef as any)();
+
+  return new UnionType(unionDefMembers.members, unionDefMembers.members) as any;
+}
+
+export function unionIfNeeded<T extends Typ<unknown, unknown>[]>(types: T): UnionOrSingle<T> {
   return (types.length > 1 ? union(...types) : types.length === 1 ? types[0] : never) as any;
 }
 
 export function* flatIterateUnion(type: Typ): IterableIterator<Typ> {
   if (type.isUnion()) {
-    for (const member of type.unionTypes) {
+    for (const member of (type as UnionType<unknown, unknown, unknown, Typ[]>).members) {
       yield* flatIterateUnion(member);
     }
   } else {
