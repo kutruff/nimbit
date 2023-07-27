@@ -284,7 +284,7 @@ If the coercion succeeds you just need to return `pass(result)`. If the coercion
 
 After that you can use `asNumber` any place you would use a `string`.
 
-### Pipelining 
+### Pipelining
 
 With Nimbit you use `.to()` to chain types together to reuse logic and coercions.
 
@@ -305,7 +305,7 @@ asIsoString.parse(new Date('2035-02-25')); // => "2035-02-25T00:00:00.000Z"
 asIsoString.parse('2035-02-25'); // => "2035-02-25T00:00:00.000Z"
 ```
 
-As a convenience, you can use `tweak()` which is a shorthand for `to()` when you are not altering the type of the data.  It will always pass your result to the `pass` function.
+As a convenience, you can use `tweak()` which is a shorthand for `to()` when you are not altering the type of the data. It will always pass your result to the `pass` function.
 
 ```ts
 const prefixedString = string.tweak(x => `_${x}`);
@@ -330,7 +330,7 @@ const terrific = literal(terrificSymbol);
 
 // retrieve literal value
 tuna.value; // "tuna"
-````
+```
 
 ## Strings (TODO: decide if these will be in the library or in a separate library)
 

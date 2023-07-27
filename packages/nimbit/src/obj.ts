@@ -86,12 +86,9 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     if (typeof value !== 'object' || Array.isArray(value) || value === null) {
       return fail();
     }
-    // const isStrict = this.strict === undefined ? opts.strict : this.strict;
-    // const result: any = isStrict ? {} : { ...value };
 
     const shape = this.shape as any;
 
-    // const result: any = this.propertyPolicy === PropertyPolicy.passthrough ? { ...value } : {};
     let result: any = {};
 
     if (this.catchallType) {

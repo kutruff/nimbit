@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
+import { fail, pass, Typ, type ParseResult, type TsType, type Type } from '.';
 
 export function set<TValue extends Type<unknown, unknown>>(value: TValue) {
   return new SetType<TValue, Set<TsType<TValue>>>(value);
