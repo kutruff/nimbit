@@ -6,9 +6,9 @@
 
 [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit)
 
-A very tiny Typescript type definition, validation, and reflection library - types are always introspectable no matter what validations you add to them.
+A very tiny TypeScript type definition, validation, and reflection library. Your types are always introspectable no matter what validations or transformations you add to them.
 
-The library is heavily inspired by Zod, and has all the best parts of Zod and but is very tiny and produces less noise in your code. The documentation here intentionally follows Zod's documentation part to help you transition from Zod to Nimbit.
+The library heavily mirrors Zod's excellent design, and has all the best parts of Zod. However, but is very tiny, produces less noise in your code, and always guarantees reflection. The documentation here intentionally follows Zod's documentation part to help you transition from Zod to Nimbit.
 
 This is in alpha. Still working on validation.
 
@@ -16,33 +16,29 @@ This is in alpha. Still working on validation.
 npm install nimbit
 ```
 
-### `nimbit`
-
-✅ Type definitions
-✅ Validation
-✅ Mutually recursive types
-
-## Library Comparison
+## Library Features and Comparison
 
 This comparison strives to be as accurate and as unbiased as possible. If you use any of these libraries and feel the information could be improved, feel free to suggest changes.
 
 NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 
-| [Nimbit](https://github.com/kutruff/nimbit)                                                                             | [Zod](https://github.com/colinhacks/zod)                                                                          |
-| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+|                                       [Nimbit](https://github.com/kutruff/nimbit)                                       |                                     [Zod](https://github.com/colinhacks/zod)                                      |
+| :---------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
 | [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
 
-|                                | [Nimbit](https://github.com/kutruff/nimbit) | [Zod](https://github.com/colinhacks/zod) |
-| ------------------------------ | ------------------------------------------- | ---------------------------------------- |
-| Type defintions                | ✅                                          | ✅                                       |
-| Schema Validation              | ✅                                          | ✅                                       |
-| Recursive Types without lazy() | ✅                                          | 🟥                                       |
-| Cyclical Relationships         | Verify                                      | 🟥                                       |
-| No parenthesis on types()      | ✅                                          | 🟥                                       |
-| Reflection always guaranteed   | ✅                                          | 🟥                                       |
-| Fluent                         | ✅                                          | ✅                                       |
-| Immutable                      | ✅                                          | ✅                                       |
-| Node + Browsers                | ✅                                          | ✅                                       |
+|                                                  | [Nimbit](https://github.com/kutruff/nimbit) | [Zod](https://github.com/colinhacks/zod) |
+| :----------------------------------------------- | :-----------------------------------------: | :--------------------------------------: |
+| Type defintions                                  |                     ✅                      |                    ✅                    |
+| Schema validation                                |                     ✅                      |                    ✅                    |
+| Recursive objects types with automatic TS types! |                     ✅                      |                    🟥                    |
+| No parenthesis on types                          |                     ✅                      |                    🟥                    |
+| Reflection always guaranteed                     |                     ✅                      |                    🟥                    |
+| Cyclical relationships                           |                     TBD                     |                    🟥                    |
+| General recursive types                          |                     ✅                      |                    ✅                    |
+| Fluent                                           |                     ✅                      |                    ✅                    |
+| Immutable                                        |                     ✅                      |                    ✅                    |
+| Node + Browsers                                  |                     ✅                      |                    ✅                    |
+| Types defined in userland                        |                     ✅                      |               Investigate                |
 
 - [Table of contents](#table-of-contents)
 - [Introduction](#introduction)
@@ -209,28 +205,28 @@ type User = t.Infer<typeof User>;
 ## Primitives
 
 ```ts
-import { t } from 'nimbit';
+import { any, bigint, boolean, date, never, nul, number, string, symbol, undef, unknown } from 'nimbit';
 
 // primitive values
-t.string;
-t.number;
-t.bigint;
-t.boolean;
-t.date;
-t.symbol;
+string;
+number;
+bigint;
+boolean;
+date;
+symbol;
 
 // empty types
-t.undef;
-t.nul;
+undef;
+nul;
 
 // catch-all types
 // allows any value
-t.any;
-t.unknown;
+any;
+unknown;
 
 // never type
 // allows no values
-t.never;
+never;
 ```
 
 ## Coercion for primitives
@@ -238,41 +234,34 @@ t.never;
 There are built in helpers for coercing primitive types.
 
 ```ts
-t.asString.parse('tuna'); // => "tuna"
-t.asString.parse(12); // => "12"
-t.asString.parse(true); // => "true"
+asString.parse('tuna'); // => "tuna"
+asString.parse(12); // => "12"
+asString.parse(true); // => "true"
 ```
 
 ```ts
-t.asString; // String(input)
-t.asNumber; // Number(input)
-t.asBoolean; // Boolean(input)
-t.asBigint; // BigInt(input)
-t.asDate; // new Date(input)
+asString; // String(input)
+asNumber; // Number(input)
+asBoolean; // Boolean(input)
+asBigint; // BigInt(input)
+asDate; // new Date(input)
 ```
 
-These coercion data types are full fledged Types equivalent to their output type. In other words, `areEqual(t.asString, t.string)` is `true`. The only difference is what happens when you call `parse().`
-
-```ts
-t.asString; // String(input)
-t.asNumber; // Number(input)
-t.asBoolean; // Boolean(input)
-t.asBigint; // BigInt(input)
-t.asDate; // new Date(input)
-```
+These coercion data types are full fledged Types equivalent to their output type. In other words, `areEqual(asString, string)` is `true`. The only difference is what happens when you call `parse().
 
 **Boolean coercion**
 
 Nimbit's boolean coercion is very simple! It passes the value into the `Boolean(value)` function, that's it. Any truthy value will resolve to `true`, any falsy value will resolve to `false`.
 
 ```ts
-t.asBoolean.parse('tuna'); // => true
-t.asBoolean.parse('true'); // => true
-t.asBoolean.parse('false'); // => true
-t.asBoolean.parse(1); // => true
-t.asBoolean.parse([]); // t.asBt.asBoolean.parse(0); // => false
-t.asBoolean.parse(undefined); // => false
-t.asBoolean.parse(null); // => false
+asBoolean.parse('tuna'); // => true
+asBoolean.parse('true'); // => true
+asBoolean.parse('false'); // => true
+asBoolean.parse(1); // => true
+asBoolean.parse(0); // => false
+asBoolean.parse([]); // => false
+asBoolean.parse(undefined); // => false
+asBoolean.parse(null); // => false
 ```
 
 ### Custom coercion
@@ -280,7 +269,7 @@ t.asBoolean.parse(null); // => false
 Writing your own coercion is extremely easy. For example, here is how the `asNumber` coercion is implemented:
 
 ```ts
-const asNumber = t.coerce(t.number, (x: unknown) => {
+const asNumber = coerce(number, (x: unknown) => {
   const result = Number(x);
   return !isNaN(result) ? pass(result) : fail();
 });
@@ -299,8 +288,8 @@ After that you can use `asNumber` any place you would use a `string`.
 With Nimbit you use `.to()` through a series of other types to reuse logic and coercions.
 
 ```ts
-const allowedQuantity = t.number.where(x => x > 100).;
-const labelContents = t.string.to(t.asNumber).to(minimumQuantity);
+const allowedQuantity = number.where(x => x > 100).;
+const labelContents = string.to(asNumber).to(minimumQuantity);
 
 labelContents.parse('12'); // => fail
 labelContents.parse('150'); // => 150
@@ -310,7 +299,7 @@ labelContents.parse(150); // => fail  //expected a string on initial input!
 `to()` also supports inline coercion while keeping your resulting type reflective.
 
 ```ts
-const asIsoString = asDate.to(t.string, x => t.pass(x.toISOString()));
+const asIsoString = asDate.to(string, x => pass(x.toISOString()));
 ```
 
 ## Literals
@@ -318,14 +307,14 @@ const asIsoString = asDate.to(t.string, x => t.pass(x.toISOString()));
 Literal schemas represent a [literal type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types), like `"hello world"` or `5`.
 
 ```ts
-const tuna = t.literal('tuna');
-const twelve = t.literal(12);
+const tuna = literal('tuna');
+const twelve = literal(12);
 
-const twobig = t.literal(2n); // bigint literal
-const tru = t.literal(true);
+const twobig = literal(2n); // bigint literal
+const tru = literal(true);
 
 const terrificSymbol = Symbol('terrific');
-const terrific = t.literal(terrificSymbol);
+const terrific = literal(terrificSymbol);
 
 // retrieve literal value
 tuna.value; // "tuna"
@@ -575,23 +564,23 @@ console.log(dateSchema.safeParse('0000-00-00').success); // false
 ## Enums
 
 ```ts
-const FishEnum = t.enumm(['Salmon', 'Tuna', 'Trout']);
-type FishEnum = t.Infer<typeof FishEnum>;
+const FishEnum = enumm(['Salmon', 'Tuna', 'Trout']);
+type FishEnum = Infer<typeof FishEnum>;
 // 'Salmon' | 'Tuna' | 'Trout'
 ```
 
-`t.enumm` is a way to declare a schema with a fixed set of allowable _string_ values. Pass the array of values directly into `t.enumm()`. Alternatively, use `as const` to define your enum values as a tuple of strings. See the [const assertion docs](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions) for details.
+`enumm` is a way to declare a schema with a fixed set of allowable _string_ values. Pass the array of values directly into `enumm()`. Alternatively, use `as const` to define your enum values as a tuple of strings. See the [const assertion docs](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions) for details.
 
 ```ts
 const VALUES = ['Salmon', 'Tuna', 'Trout'] as const;
-const FishEnum = t.enumm(VALUES);
+const FishEnum = enumm(VALUES);
 ```
 
 This is not allowed, since TypeScript isn't able to infer the exact values of each element.
 
 ```ts
 const fish = ['Salmon', 'Tuna', 'Trout'];
-const FishEnum = t.enum(fish);
+const FishEnum = enum(fish);
 ```
 
 **Autocompletion**
@@ -690,38 +679,38 @@ FruitEnum.enum.Apple; // "apple"
 You can make any schema by calling `.opt()` on any type.
 
 ```ts
-const stringOrUndefined = t.string.opt();
-type A = t.Infer<typeof stringOrUndefined>; // string | undefined;
+const stringOrUndefined = string.opt();
+type A = Infer<typeof stringOrUndefined>; // string | undefined;
 
-const user = t.obj({
-  username: t.string.opt
+const user = obj({
+  username: string.opt
 });
-type C = t.Infer<typeof user>; // { username?: string | undefined };
+type C = Infer<typeof user>; // { username?: string | undefined };
 ```
 
 `opt()` is simply a shorthand for creating a union of a type with the `undef` type and they are exactly equivalent.
 
 ```ts
-const stringOrUndefined = t.union(t.string, t.undef);
-type A = t.Infer<typeof stringOrUndefined>; // string | undefined;
+const stringOrUndefined = union(string, undef);
+type A = Infer<typeof stringOrUndefined>; // string | undefined;
 ```
 
 You can remove `undef` and `nul` from an optional / `union` by calling `unwrap()`.
 
 ```ts
-const optionalString = t.string.opt();
+const optionalString = string.opt();
 optionalString.unwrap() === stringSchema; // true
 ```
 
 NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExcludeKind()` if you wish to remove a type from all nested unions.
 
 ```ts
-const optionalString = t.string.opt().opt();
+const optionalString = string.opt().opt();
 optionalString.unwrap() === stringSchema; // false!
 optionalString.unwrap().unwrap() === stringSchema; // true!
 
-t.exclude(optionalString, t.undef) === stringSchema; // false!
-t.flatExcludeKind(optionalString, t.undef) === stringSchema; // true!
+exclude(optionalString, undef) === stringSchema; // false!
+flatExcludeKind(optionalString, undef) === stringSchema; // true!
 ```
 
 ## Nullables
@@ -729,7 +718,7 @@ t.flatExcludeKind(optionalString, t.undef) === stringSchema; // true!
 Similarly, you can create nullable types with `nullable()`. Again, this is a `union` of a type with `nul`
 
 ```ts
-const nullableString = t.string.nullable();
+const nullableString = string.nullable();
 nullableString.parse('asdf'); // => "asdf"
 nullableString.parse(null); // => null
 ```
@@ -739,7 +728,7 @@ nullableString.parse(null); // => null
 You can create types that are both optional and nullable with `nullish()`. Again, this is a `union` of a type with `nul` and `undef`
 
 ```ts
-const nullishString = t.string.nullish();
+const nullishString = string.nullish();
 nullishString.parse('asdf'); // => "asdf"
 nullishString.parse(undefined); // => undefined
 nullishString.parse(null); // => null
@@ -749,13 +738,13 @@ nullishString.parse(null); // => null
 
 ```ts
 // all properties are required by default
-const Dog = t.obj({
-  name: t.string,
-  age: t.number,
+const Dog = obj({
+  name: string,
+  age: number,
 });
 
 // extract the inferred type like this
-type Dog = t.Infer<typeof Dog>;
+type Dog = Infer<typeof Dog>;
 
 // equivalent to:
 type Dog = {
@@ -787,7 +776,7 @@ You can add additional fields to an object schema with the `.extend` method.
 
 ```ts
 const DogWithBreed = Dog.extend({
-  breed: t.string
+  breed: string
 });
 ```
 
@@ -798,11 +787,11 @@ You can use `.extend` to overwrite fields! Be careful with this power!
 Equivalent to `A.extend(B.shape)`.
 
 ```ts
-const BaseTeacher = t.obj({ students: t.array(t.string) });
-const HasID = t.obj({ id: t.string });
+const BaseTeacher = obj({ students: array(string) });
+const HasID = obj({ id: string });
 
 const Teacher = BaseTeacher.merge(HasID);
-type Teacher = t.Infer<typeof Teacher>; // => { students: string[], id: string }
+type Teacher = Infer<typeof Teacher>; // => { students: string[], id: string }
 ```
 
 > If the two schemas share keys, the properties of B overrides the property of A. The returned schema also inherits the "unknownKeys" policy (strip/strict/passthrough) and the catchall schema of B.
@@ -812,10 +801,10 @@ type Teacher = t.Infer<typeof Teacher>; // => { students: string[], id: string }
 You may use `pick()` and `omit()` to get a modified version of an `object` schema. Consider this Recipe schema:
 
 ```ts
-const Recipe = t.obj({
-  id: t.string,
-  name: t.string,
-  ingredients: t.array(t.string)
+const Recipe = obj({
+  id: string,
+  name: string,
+  ingredients: array(string)
 });
 ```
 
@@ -823,7 +812,7 @@ To only keep certain keys, use `.pick` .
 
 ```ts
 const JustTheName = pick(Recipe, Recipe.k.name);
-type JustTheName = t.Infer<typeof JustTheName>;
+type JustTheName = Infer<typeof JustTheName>;
 // => { name: string }
 ```
 
@@ -843,7 +832,7 @@ To remove certain keys, use `.omit` in the same fashion as `pick()`
 
 ```ts
 const JustRecipeName = required(User, 'id', 'ingredients);
-type JustRecipeName = t.Infer<typeof JustRecipeName>;
+type JustRecipeName = Infer<typeof JustRecipeName>;
 // => { name: string }
 
 //alternative ways of omitting properties by name
@@ -858,9 +847,9 @@ Jus like built-in TypeScript utility type [Partial](https://www.typescriptlang.o
 Starting from this object:
 
 ```ts
-const User = t.obj({
-  email: t.string
-  username: t.string,
+const User = obj({
+  email: string
+  username: string,
 });
 // { email: string; username: string }
 ```
@@ -926,9 +915,9 @@ Contrary to the `.partial` method, the `.required` method makes all properties r
 Starting from this object:
 
 ```ts
-const User = partial(t.obj({
-  email: t.string
-  username: t.string,
+const User = partial(obj({
+  email: string
+  username: string,
 }));
 // { email?: string | undefined; username?: string | undefined }
 ```
@@ -1033,7 +1022,7 @@ Using `.catchall()` obviates `.passthrough()` , `.strip()` , or `.strict()`. All
 ## Arrays
 
 ```ts
-const stringArray = array(t.string);
+const stringArray = array(string);
 ```
 
 ### `.element`
@@ -1081,15 +1070,15 @@ Unlike `.nonempty()` these methods do not change the inferred type.
 Unlike arrays, tuples have a fixed number of elements and each element can have a different type.
 
 ```ts
-const athleteSchema = t.tuple([
-  t.string, // name
-  t.number, // jersey number
-  t.obj({
-    pointsScored: t.number
+const athleteSchema = tuple([
+  string, // name
+  number, // jersey number
+  obj({
+    pointsScored: number
   }) // statistics
 ]);
 
-type Athlete = t.Infer<typeof athleteSchema>;
+type Athlete = Infer<typeof athleteSchema>;
 // type Athlete = [string, number, { pointsScored: number }]
 ```
 
@@ -1106,7 +1095,7 @@ const result = variadicTuple.parse(['hello', 1, 2, 3]);
 The `union()` method is for composing "OR" types. In Nimbit, unions are much richer than other libaries as they support reflection and the
 
 ```ts
-const stringOrNumber = t.union(t.string, t.number);
+const stringOrNumber = union(string, number);
 
 stringOrNumber.parse('foo'); // passes
 stringOrNumber.parse(14); // passes
@@ -1121,7 +1110,7 @@ To validate an optional form input, you can union the desired string validation 
 This example validates an input that is optional but needs to contain a [valid URL](#strings):
 
 ```ts
-const optionalUrl = t.union(t.string.where(isUrl).nullish(), t.literal(''));
+const optionalUrl = union(string.where(isUrl).nullish(), literal(''));
 
 optionalUrl.parse(undefined).success; // true
 optionalUrl.parse(null).success; // true
@@ -1135,7 +1124,7 @@ optionalUrl.parse('not a valid url').success; // false
 Unions can be nested, so there is a `.members` property on `union` schemas that returns a strongly typed tuple of the union nesting hiearchy
 
 ```ts
-const nestedUnions = t.union(t.string, t.union(t.number, t.undef));
+const nestedUnions = union(string, union(number, undef));
 
 nestedUnions.members; // => [StringT, [UnionType<..., [NumberT, UndefinedT]>]
 nestedUnions.members[1].members; // => [NumberT, UndefinedT]
@@ -1167,12 +1156,12 @@ myUnion.parse({ status: 'success', data: 'yippie ki yay' });
 
 Record schemas are used to validate types such as `{ [k: string]: number }`.
 
-If you want to validate the _values_ of an object against some schema but don't care about the keys, use `t.record(t.any, valueType)`:
+If you want to validate the _values_ of an object against some schema but don't care about the keys, use `record(any, valueType)`:
 
 ```ts
-const NumberCache = t.record(t.string, t.number);
+const NumberCache = record(string, number);
 
-type NumberCache = t.Infer<typeof NumberCache>;
+type NumberCache = Infer<typeof NumberCache>;
 // => { [k: string]: number }
 ```
 
@@ -1194,8 +1183,8 @@ You can validate both the keys and the values
 
 ```ts
 const NoEmptyKeysSchema = z.record(
-  t.string.where(x => x.length >= 1),
-  t.number
+  string.where(x => x.length >= 1),
+  number
 );
 NoEmptyKeysSchema.parse({ count: 1 }); // => { 'count': 1 }
 NoEmptyKeysSchema.parse({ '': 1 }); // fails
@@ -1223,17 +1212,17 @@ As you can see, JavaScript automatically casts all object keys to strings under 
 ## Maps
 
 ```ts
-const stringNumberMap = t.map(t.string, t.number);
+const stringNumberMap = map(string, number);
 
-type StringNumberMap = t.Infer<typeof stringNumberMap>;
+type StringNumberMap = Infer<typeof stringNumberMap>;
 // type StringNumberMap = Map<string, number>
 ```
 
 ## Sets
 
 ```ts
-const numberSet = t.set(t.number);
-type NumberSet = t.Infer<typeof numberSet>;
+const numberSet = set(number);
+type NumberSet = Infer<typeof numberSet>;
 // type NumberSet = Set<number>
 ```
 
@@ -1281,15 +1270,15 @@ type Teacher = z.infer<typeof Teacher>;
 
 ## Recursive Objects
 
-One of the biggest advantages of Nimbit is a new approach to recursive types. In Nimbit, recursive types are defined as naturally as typical objects, but instead you first define your object's shape as a class before passing it to `t.obj()`.
+One of the biggest advantages of Nimbit is a new approach to recursive types. In Nimbit, recursive types are defined as naturally as typical objects, but instead you first define your object's shape as a class before passing it to `obj()`.
 
 ```ts
 class CategoryDef {
-  name = t.string;
-  subcategories = t.array(t.obj(CategoryDef));
+  name = string;
+  subcategories = array(obj(CategoryDef));
 }
-const Category = t.obj(CategoryDef);
-type Category = t.Infer<typeof Category>;
+const Category = obj(CategoryDef);
+type Category = Infer<typeof Category>;
 
 Category.parse({
   name: 'People',
@@ -1306,28 +1295,28 @@ Category.parse({
   ]
 }); // passes
 
-// after you've defined Category with t.obj(), you no longer have to refer to the class definition. Magic!
-const categoryList = t.array(Category);
+// after you've defined Category with obj(), you no longer have to refer to the class definition. Magic!
+const categoryList = array(Category);
 ```
 
 Mutually recursive types are also allowed.
 
 ```ts
 class PersonDef {
-  name = t.string;
-  addresses? = t.array(t.obj(AddressDef)).opt(); //notice that the class property is marked with '?'
+  name = string;
+  addresses? = array(obj(AddressDef)).opt(); //notice that the class property is marked with '?'
 }
 
 class AddressDef {
-  resident? = t.obj(PersonDef).opt();
-  street = t.string;
+  resident? = obj(PersonDef).opt();
+  street = string;
 }
 
-const Person = t.obj(PersonDef);
-type Person = t.Infer<typeof Person>;
+const Person = obj(PersonDef);
+type Person = Infer<typeof Person>;
 
-const Address = t.obj(AddressDef);
-type Address = t.Infer<typeof Address>;
+const Address = obj(AddressDef);
+type Address = Infer<typeof Address>;
 
 Person.parse({
   name: 'Bob',
@@ -1351,7 +1340,7 @@ One caveat of using classes to define your object shemas is that you must mark t
 
 ### Other Recursive Types / JSON
 
-Unfortunately, recursive unions, and records are not as straightforward. For that you use `lazy()` which lets you use a type as you define it.  The only problem is that you must provide the TypeScript types manually.
+Unfortunately, recursive unions, and records are not as straightforward. For that you use `lazy()` which lets you use a type as you define it. The only problem is that you must provide the TypeScript types manually.
 
 If you want to validate any JSON value, you can use the snippet below.
 

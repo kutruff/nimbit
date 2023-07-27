@@ -1,11 +1,11 @@
 {
   "name": "nimbit",
-  "version": "0.1.6",
+  "version": "0.1.14",
   "description": "Reflective typing and validation for TypeScript",
   "homepage": "https://github.com/kutruff/nimbit",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kutruff/nimbit"
+    "url": "https://github.com/kutruff/nimbit"
   },
   "files": [
     "dist"
@@ -23,7 +23,7 @@
   },
   "scripts": {
     "clean": "rm -rf .turbo node_modules dist",
-    "build": "tsup && cp ../../README.md ./dist/",
+    "build": "tsup",
     "build:minify": "tsup --minify",
     "build:tar": "tar -czf dist.tar.gz dist/index.js",
     "build:size": "pnpm build:minify && pnpm build:tar && echo zipped bytes: $(stat --printf=\"%s\" dist.tar.gz) && rm dist.tar.gz",
@@ -32,7 +32,8 @@
     "type-check": "tsc --noEmit",
     "test": "jest --detectOpenHandles",
     "with-env": "dotenv -e ../../.env --",
-    "set-token": "pnpm set //registry.npmjs.org/:_authToken"
+    "set-token": "pnpm set //registry.npmjs.org/:_authToken",
+    "do-publish": "cp ../../README.md . && pnpm publish --no-git-checks && rm README.md"
   },
   "dependencies": {},
   "jest": {

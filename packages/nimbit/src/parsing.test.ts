@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
+import { any, bigint, boolean, date, never, nul, number, string, symbol, undef, unknown } from '.';
 import * as t from '.';
 import { pass } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';

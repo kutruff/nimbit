@@ -6,13 +6,17 @@ export type TypeConverter<TSource, TDestinationType> = (
   opts?: ParseOptions
 ) => ParseResult<TDestinationType>;
 
-export const pass = <T>(value: T): ParseResult<T> => ({ success: true as const, value });
+export function pass<T>(value: T): ParseResult<T> {
+  return ({ success: true as const, value });
+}
 
-export const fail = (message?: string, error?: unknown) => ({
-  success: false as const,
-  message,
-  error
-});
+export function fail(message?: string, error?: unknown) {
+  return ({
+    success: false as const,
+    message,
+    error
+  });
+}
 
 // // TODO: see if wrapping throw is useful
 // export const tryPass = <T>(action: () => T): ParseResult<T> => {

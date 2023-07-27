@@ -22,10 +22,6 @@ import {
   type UnionType
 } from '.';
 
-export interface Parser<TInput, TOutput> {
-  parse(value: TInput, opts?: ParseOptions): ParseResult<TOutput>;
-}
-
 export interface ParseOptions {
   strict?: boolean;
 }
@@ -33,7 +29,6 @@ export interface ParseOptions {
 //Need this symbol / property definition so that type inference will actual use the T parameter during type inference
 //https://github.com/Microsoft/TypeScript/issues/29657#issuecomment-460728148
 export const _type: unique symbol = Symbol('type');
-export const _union: unique symbol = Symbol('union');
 
 //TODO: evaluate if  this interface is needed now
 export interface Type<TKind = unknown, T = unknown> {
