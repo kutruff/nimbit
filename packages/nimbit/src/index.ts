@@ -16,3 +16,4 @@ export * from './map';
 export * from './set';
 export * from './record';
 export * from './lazy';
+export * from './nativeEnum';

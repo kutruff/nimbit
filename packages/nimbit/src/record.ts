@@ -12,7 +12,8 @@ import {
   type ParseResult,
   type StringT,
   type SymbolT,
-  type TsType
+  type TsType,
+  isBasicObject
 } from '.';
 
 export function record<TKey extends StringT | NumberT | SymbolT, TValue extends Typ<unknown, unknown>>(
@@ -29,7 +30,7 @@ export class RecordType<TKey, TValue, T> extends Typ<'record', [TKey, TValue], T
   }
 
   safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
-    if (typeof value !== 'object' || value === null) {
+    if (!isBasicObject(value) || Object.hasOwn(value, '__proto__')) {
       return fail();
     }
 

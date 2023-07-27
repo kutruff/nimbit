@@ -84,14 +84,15 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return fail();
   }
 
-  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // parse(value: unknown, opts = Typ.defaultOpts): T {
-  //   const result = this.safeParse(value, opts);
-  //   if (result.success) {
-  //     return result.value;
-  //   }
-  //   return fail();
-  // }
+  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+    const result = this.safeParse(value, opts);
+    if (result.success) {
+      return result;
+    }
+
+    throw new Error(result.message ?? 'parse failed');
+  }
+
 
   // // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {

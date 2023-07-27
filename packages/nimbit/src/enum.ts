@@ -7,7 +7,6 @@ import {
   type MapOfTupleKeys,
   type ParseResult,
   type TupleKeysToUnion,
-  type Type,
   type Writeable
 } from '.';
 

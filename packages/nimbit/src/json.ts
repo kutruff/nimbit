@@ -38,7 +38,8 @@ export const json = coerce(jsonSchema, jsonParse);
 
 export function jsonParse(x: string): ParseResult<json> {
   try {
-    return pass(JSON.parse(x));
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return pass(JSON.parse(x, (key, value) => (key === '__proto__' ? undefined : value)));
   } catch (err) {
     return fail();
   }

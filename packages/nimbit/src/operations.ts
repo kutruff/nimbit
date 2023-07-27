@@ -72,7 +72,7 @@ export function partial<TShape, K extends keyof TShape & keyof T, T>(
   const result = {} as ObjTypShape;
   const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as ObjTypShape;
 
-  for (const key of Object.keys(source)) {
+  for (const key of Reflect.ownKeys(source)) {
     result[key] = union(source[key] as any, undef);
   }
 
@@ -95,7 +95,7 @@ export function required<TShape, K extends keyof TShape & keyof T, T>(
   const result = {} as ObjTypShape;
   const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as ObjTypShape;
 
-  for (const key of Object.keys(source)) {
+  for (const key of Reflect.ownKeys(source)) {
     result[key] = flatExcludeKinds(source[key] as any, undef);
   }
 

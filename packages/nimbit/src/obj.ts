@@ -8,6 +8,7 @@ import {
   cloneObject,
   fail,
   getKeys,
+  isBasicObject,
   keyMap,
   pass,
   Typ,
@@ -22,7 +23,7 @@ import {
 } from '.';
 
 export interface ObjTypShape {
-  [key: string]: Type<unknown, unknown>;
+  [key: string | symbol]: Type<unknown, unknown>;
 }
 
 export type ObjShapeDefinition = ObjTypShape | Constructor;
@@ -83,7 +84,8 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
 
   safeParse(value: unknown, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
     //TODO: turn this into a global that users can add to to add their own custom types.
-    if (typeof value !== 'object' || Array.isArray(value) || value === null) {
+    //TODO: do we need to check for array here?
+    if (!isBasicObject(value)) {
       return fail();
     }
 
@@ -92,7 +94,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     let result: any = {};
 
     if (this.catchallType) {
-      const valueKeys = getKeys(value);
+      const valueKeys = Reflect.ownKeys(value);
       for (const key of valueKeys) {
         if (!Object.hasOwn(shape, key)) {
           const propResult = this.catchallType.safeParse((value as any)[key], opts);
@@ -103,19 +105,21 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
         }
       }
     } else if (this.propertyPolicy === PropertyPolicy.strict) {
-      const valueKeys = getKeys(value);
+      const valueKeys = Reflect.ownKeys(value);
       for (const key of valueKeys) {
         if (!Object.hasOwn(shape, key)) {
           return fail();
         }
       }
     } else if (this.propertyPolicy == PropertyPolicy.passthrough) {
+      if (Object.hasOwn(value, '__proto__')) {
+        return fail();
+      }
       result = { ...value };
     }
 
-    for (const key of getKeys(shape)) {
+    for (const key of Reflect.ownKeys(shape)) {
       const propResult = shape[key].safeParse((value as any)[key], opts);
-
       if (!propResult.success) {
         return fail();
       }
