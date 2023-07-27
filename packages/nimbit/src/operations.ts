@@ -4,7 +4,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
-  areEqual,
   flatIterateUnion,
   obj,
   undef,

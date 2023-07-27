@@ -1,6 +1,6 @@
 {
   "name": "nimbit",
-  "version": "0.1.14",
+  "version": "0.2.0",
   "description": "Reflective typing and validation for TypeScript",
   "homepage": "https://github.com/kutruff/nimbit",
   "repository": {

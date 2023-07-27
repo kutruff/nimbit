@@ -15,18 +15,6 @@ import {
 import { lazy } from './lazy';
 import { record } from './record';
 
-// const anyObject = obj({}, undefined, PropertyPolicy.passthrough);
-// const base = union(anyObject, array(unknown), string, number, boolean, nul);
-// export const jsonOld = coerce(base, jsonParse);
-// // export const looped = jsonOld.to(jsonOld, x => pass(x));
-// function parseJsonDeep(x: string) {
-//   const top = jsonOld.parse(x);
-//   if (top.success) {
-//     const isArray = top.value.parse(top.value)
-//     if(
-//   }
-// }
-
 const Literals = union(string, number, boolean, nul);
 type JsonLiterals = Infer<typeof Literals>;
 
@@ -44,20 +32,6 @@ export function jsonParse(x: string): ParseResult<json> {
     return fail();
   }
 }
-
-// const jsonSchema: UnionType<
-//   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
-//   json
-// > = {} as any;
-
-// const jsonSchema: UnionType<
-//   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
-//   json
-// > = lazy(x => {
-//   return union(Literals, array(x), record(string, x));
-// });
-
-// const result = jsonSchema.parse({ prop: 1 });
 
 // const jsonSchema: UnionType<
 //   [typeof Literals, ArrayType<unknown, Array<json>>, RecordType<StringT, unknown, Record<string, unknown>>],
