@@ -14,10 +14,10 @@ import {
   type FlattenUnionMembers,
   type IUnionType,
   type never,
+  type ObjShapeDefinition,
   type ObjType,
+  type ObjTypShape,
   type Resolve,
-  type Shape,
-  type ShapeDefinition,
   type ShapeDefinitionToObjType,
   type ToUnionMemberList,
   type TupleKeysToUnion,
@@ -45,7 +45,7 @@ export function merge<TObjA extends ObjType<unknown, unknown>, TObjB extends Obj
 //TODO: figure out why this resolve is required for assignment checks in the unit test
 export function extend<
   TObjA extends ObjType<unknown, unknown>,
-  TShapeDefinition extends ShapeDefinition,
+  TShapeDefinition extends ObjShapeDefinition,
   TObjB extends ObjType<unknown, unknown> = ShapeDefinitionToObjType<TShapeDefinition>
 >(
   objectTypeA: TObjA,
@@ -69,8 +69,8 @@ export function partial<TShape, K extends keyof TShape & keyof T, T>(
   objType: ObjType<TShape, T>,
   ...keys: Array<K>
 ): ObjType<PartialType<TShape>, Partial<T>> {
-  const result = {} as Shape;
-  const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as Shape;
+  const result = {} as ObjTypShape;
+  const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as ObjTypShape;
 
   for (const key of Object.keys(source)) {
     result[key] = union(source[key] as any, undef);
@@ -92,8 +92,8 @@ export function required<TShape, K extends keyof TShape & keyof T, T>(
   objType: ObjType<TShape, T>,
   ...keys: Array<K>
 ): ObjType<RequiredType<TShape>, Required<T>> {
-  const result = {} as Shape;
-  const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as Shape;
+  const result = {} as ObjTypShape;
+  const source = (keys.length === 0 ? objType.shape : pickProps(objType, keys)) as ObjTypShape;
 
   for (const key of Object.keys(source)) {
     result[key] = flatExcludeKinds(source[key] as any, undef);

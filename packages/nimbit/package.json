@@ -33,7 +33,7 @@
     "test": "jest --detectOpenHandles",
     "with-env": "dotenv -e ../../.env --",
     "set-token": "pnpm set //registry.npmjs.org/:_authToken",
-    "do-publish": "cp ../../README.md . && pnpm publish --no-git-checks && rm README.md"
+    "do-publish": "pnpm build && cp ../../README.md . && pnpm publish --no-git-checks && rm README.md"
   },
   "dependencies": {},
   "jest": {

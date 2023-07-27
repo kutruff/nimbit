@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
-  areEqual,
   cloneObject,
   fail,
   getKeys,
@@ -12,33 +12,37 @@ import {
   pass,
   Typ,
   type _type,
-  type ComparisonCache,
   type Constructor,
+  type MakeUndefinedOptional,
   type ObjectKeyMap,
   type ParseOptions,
   type ParseResult,
-  type Shape,
-  type ShapeDefinition,
-  type ShapeDefinitionToObjType
+  type Resolve,
+  type Type
 } from '.';
 
-// export enum PropertyPolicy {
-//   strict = 'strict',
-//   passthrough = 'passthrough',
-//   strip = 'strip'
-// }
+export interface ObjTypShape {
+  [key: string]: Type<unknown, unknown>;
+}
 
-// export enum PropertyPolicy {
-//   strict,
-//   passthrough,
-//   strip
-// }
+export type ObjShapeDefinition = ObjTypShape | Constructor;
+
+export type ObjShapeToTsTypes<T> = T extends Type<unknown, unknown>
+  ? T[typeof _type]
+  : {
+      [P in keyof T]: ObjShapeToTsTypes<T[P]>;
+    };
+
+export type ShapeDefinitionToObjType<T> = T extends Constructor
+  ? ObjType<Required<InstanceType<T>>, ObjShapeToTsTypes<InstanceType<T>>>
+  : ObjType<T, Resolve<MakeUndefinedOptional<ObjShapeToTsTypes<T>>>>;
 
 export const PropertyPolicy = {
-  strict: 0,
-  passthrough: 1,
-  strip: 2
+  strip: 0,
+  strict: 1,
+  passthrough: 2
 } as const;
+
 export type PropertyPolicy = (typeof PropertyPolicy)[keyof typeof PropertyPolicy];
 
 export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
@@ -47,6 +51,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     if (!this._k) this._k = keyMap(this.shape as any);
     return this._k;
   }
+  catchallType?: Typ<unknown, unknown, unknown>;
 
   constructor(shape: TShape, name?: string, public propertyPolicy?: PropertyPolicy) {
     super('object', shape, name);
@@ -62,6 +67,12 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
 
   passthrough(): typeof this {
     return this.changePropertyPolicy(PropertyPolicy.passthrough);
+  }
+
+  catchall(catchallType: Typ<unknown, unknown, unknown> | undefined): typeof this {
+    const clone = cloneObject(this);
+    clone.catchallType = catchallType;
+    return clone;
   }
 
   changePropertyPolicy(policy: PropertyPolicy): typeof this {
@@ -80,16 +91,30 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
 
     const shape = this.shape as any;
 
-    if (this.propertyPolicy === PropertyPolicy.strict) {
+    // const result: any = this.propertyPolicy === PropertyPolicy.passthrough ? { ...value } : {};
+    let result: any = {};
+
+    if (this.catchallType) {
+      const valueKeys = getKeys(value);
+      for (const key of valueKeys) {
+        if (!Object.hasOwn(shape, key)) {
+          const propResult = this.catchallType.safeParse((value as any)[key], opts);
+          if (!propResult.success) {
+            return fail();
+          }
+          result[key] = propResult.data;
+        }
+      }
+    } else if (this.propertyPolicy === PropertyPolicy.strict) {
       const valueKeys = getKeys(value);
       for (const key of valueKeys) {
         if (!Object.hasOwn(shape, key)) {
           return fail();
         }
       }
+    } else if (this.propertyPolicy == PropertyPolicy.passthrough) {
+      result = { ...value };
     }
-
-    const result: any = this.propertyPolicy === PropertyPolicy.passthrough ? { ...value } : {};
 
     for (const key of getKeys(shape)) {
       const propResult = shape[key].safeParse((value as any)[key], opts);
@@ -132,7 +157,7 @@ const constructorsToObj = new WeakMap();
 
 //TODO: check if this may want to return Typ or ObjType?
 //Note: Having the option to set a name is important here for recursive objects.
-export function obj<TShapeDefinition extends ShapeDefinition>(
+export function obj<TShapeDefinition extends ObjShapeDefinition>(
   shapeDefinition: TShapeDefinition,
   name?: string,
   policy: PropertyPolicy = PropertyPolicy.strip

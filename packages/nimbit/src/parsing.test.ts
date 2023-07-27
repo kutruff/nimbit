@@ -6,7 +6,69 @@ import { any, bigint, boolean, date, never, nul, number, pass, string, symbol, u
 import * as t from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
-describe('Parsing Policy', () => {
+describe('Typ parsing', () => {
+  describe('catch()', () => {
+    it('returns value on failure', () => {
+      const result = string.catch('hello').safeParse(123);
+
+      expect(result.success).toEqual(true);
+      if (result.success) {
+        expect(result.data).toEqual('hello');
+      }
+    });
+
+    it('not used on success', () => {
+      const result = string.catch('hello').safeParse('world');
+
+      expect(result.success).toEqual(true);
+      if (result.success) {
+        expect(result.data).toEqual('world');
+      }
+    });
+  });
+});
+
+describe('Object parsing', () => {
+  it('parses', () => {
+    const Person = t.obj({
+      name: t.string,
+      age: t.number,
+      isActive: t.boolean
+    });
+
+    type Person = t.Infer<typeof Person>;
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true });
+
+    expect(result.success).toEqual(true);
+
+    if (result.success) {
+      expect(result.data).toEqual({ name: 'John', age: 10, isActive: true });
+    }
+  });
+
+  it('fails when a property fails', () => {
+    const Person = t.obj({
+      name: t.string,
+      age: t.number
+    });
+
+    const result = Person.safeParse({ name: 'John', age: '10' } as any);
+
+    expect(result.success).toEqual(false);
+  });
+
+  it('fails when properties are missing', () => {
+    const Person = t.obj({
+      name: t.string,
+      age: t.number,
+      isActive: t.boolean
+    });
+
+    const result = Person.safeParse({ name: 'John', age: 10 } as any);
+
+    expect(result.success).toEqual(false);
+  });
+
   it('strips objects when policy is strip', () => {
     const Person = t.obj(
       {
@@ -85,52 +147,48 @@ describe('Parsing Policy', () => {
     }
   });
 
-  // it('parses objects strict when default set', () => {
-  //   const originalOptions = t.Typ.defaultOpts;
-  //   try {
-  //     t.Typ.defaultOpts = { strict: true };
+  it('catchall handles all unknown properties and ignores whatever policy is set', () => {
+    const Person = t
+      .obj(
+        {
+          name: t.string,
+          age: t.number,
+          isActive: t.boolean
+        },
+        'Person',
+        t.PropertyPolicy.strict
+      )
+      .catchall(string);
 
-  //     const Person = t.obj(
-  //       {
-  //         name: t.string,
-  //         age: t.number,
-  //         isActive: t.boolean
-  //       },
-  //       'Person'
-  //     );
-
-  //     const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
-
-  //     expect(result.success).toEqual(true);
-
-  //     if (result.success) {
-  //       expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
-  //       expect((result.value as any).extraProperty).toEqual(undefined);
-  //     }
-  //   } finally {
-  //     t.Typ.defaultOpts = originalOptions;
-  //   }
-  // });
-});
-
-describe('TypeConverter', () => {
-  it('parses', () => {
-    const Person = t.obj({
-      name: t.string,
-      age: t.number,
-      isActive: t.boolean
-    });
-
-    type Person = t.Infer<typeof Person>;
-    const result = Person.safeParse({ name: 'John', age: 10, isActive: true });
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
 
     expect(result.success).toEqual(true);
 
     if (result.success) {
-      expect(result.data).toEqual({ name: 'John', age: 10, isActive: true });
+      expect(result.data).toEqual({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' });
     }
   });
 
+  it('catchall failures cause all parsing to fail', () => {
+    const Person = t
+      .obj(
+        {
+          name: t.string,
+          age: t.number,
+          isActive: t.boolean
+        },
+        'Person',
+        t.PropertyPolicy.strip
+      )
+      .catchall(string.where(x => x === 'hello'));
+
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+
+    expect(result.success).toEqual(false);
+  });
+});
+
+describe('TypeConverter', () => {
   it('supports where', () => {
     const Person = t.obj({
       name: t.string,

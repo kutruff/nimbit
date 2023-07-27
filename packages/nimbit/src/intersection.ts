@@ -16,7 +16,7 @@ import {
   type ComparisonCache,
   type FlattenUnionMembers,
   type ObjType,
-  type Shape,
+  type ObjTypShape,
   type TupleKeysToUnion,
   type Typ,
   type UnionType
@@ -133,10 +133,10 @@ export function intersection<TA extends Typ<unknown, unknown, unknown>, TB exten
   }
 
   if (typeA.kind === 'object' && typeB.kind === 'object') {
-    const merged = {} as Shape;
+    const merged = {} as ObjTypShape;
 
-    const shapeA = typeA.shape as Shape;
-    const shapeB = typeB.shape as Shape;
+    const shapeA = typeA.shape as ObjTypShape;
+    const shapeB = typeB.shape as ObjTypShape;
     const allKeysInAB = new Set(Object.keys(shapeA).concat(Object.keys(shapeB)));
 
     for (const key of allKeysInAB) {
