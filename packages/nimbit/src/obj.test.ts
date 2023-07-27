@@ -202,7 +202,7 @@ describe('obj()', () => {
     const Category = t.obj(CategoryDef);
     type Category = t.Infer<typeof Category>;
 
-    Category.parse({
+    Category.safeParse({
       name: 'People',
       subcategories: [
         {
@@ -271,7 +271,7 @@ describe('obj()', () => {
     circularAddress.resident = bobCopy;
     bobCopy.addresses = [circularAddress];
 
-    const result = Person.parse(bobCopy); // passes
+    const result = Person.safeParse(bobCopy); // passes
     expect(result.success).toEqual(true);
   });
 
@@ -455,21 +455,21 @@ describe('obj()', () => {
   describe('default()', () => {
     it('returns default when undefined', () => {
       const target = t.string.default('hello');
-      const result = target.parse(undefined);
+      const result = target.safeParse(undefined);
 
       expect(result.success).toEqual(true);
       if (result.success) {
-        expect(result.value).toEqual('hello');
+        expect(result.data).toEqual('hello');
       }
     });
 
     it('returns parsed value when not undefined', () => {
       const target = t.string.default('world');
-      const result = target.parse('hello');
+      const result = target.safeParse('hello');
 
       expect(result.success).toEqual(true);
       if (result.success) {
-        expect(result.value).toEqual('hello');
+        expect(result.data).toEqual('hello');
       }
     });
   });

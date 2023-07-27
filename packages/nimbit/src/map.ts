@@ -17,7 +17,7 @@ export class MapType<TKey, TValue, T> extends Typ<'map', [TKey, TValue], T> {
     super('map', [key, value], name);
   }
 
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     if (!(value instanceof Map)) {
       return fail();
     }
@@ -25,12 +25,12 @@ export class MapType<TKey, TValue, T> extends Typ<'map', [TKey, TValue], T> {
     const valueAsMap = value as Map<unknown, unknown>;
     const parsedMap = new Map();
     for (const [key, value] of valueAsMap) {
-      const keyResult = (this.shape[0] as any).parse(key, opts);
-      const valueResult = (this.shape[1] as any).parse(value, opts);
+      const keyResult = (this.shape[0] as any).safeParse(key, opts);
+      const valueResult = (this.shape[1] as any).safeParse(value, opts);
       if (!keyResult.success || !valueResult.success) {
         return fail();
       }
-      parsedMap.set(keyResult.value, valueResult.value);
+      parsedMap.set(keyResult.data, valueResult.data);
     }
     return pass(parsedMap as T);
   }

@@ -215,11 +215,11 @@ describe.skip('Type operations', () => {
 
         const toF = resultE.to(t.string, x => t.pass(x.toString()));
 
-        expect(objC.parse({ prop: 'hello' }).success).toEqual(true);
-        expect(resultC.parse({ prop: 'hello' }).success).toEqual(true);
-        expect(resultD.parse({ prop: 'hello' }).success).toEqual(true);
-        expect(resultE.parse({ prop: 'hello' }).success).toEqual(true);
-        expect(toF.parse({ prop: 'hello' }).success).toEqual(true);
+        expect(objC.safeParse({ prop: 'hello' }).success).toEqual(true);
+        expect(resultC.safeParse({ prop: 'hello' }).success).toEqual(true);
+        expect(resultD.safeParse({ prop: 'hello' }).success).toEqual(true);
+        expect(resultE.safeParse({ prop: 'hello' }).success).toEqual(true);
+        expect(toF.safeParse({ prop: 'hello' }).success).toEqual(true);
       });
     });
 

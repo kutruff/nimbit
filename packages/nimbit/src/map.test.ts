@@ -20,10 +20,10 @@ describe('MapType', () => {
       ['hello', 2],
       ['yes', 2]
     ]);
-    const result = Target.parse(instance);
+    const result = Target.safeParse(instance);
     expect(result.success).toEqual(true);
     if (result.success) {
-      expect(result.value).toEqual(instance);
+      expect(result.data).toEqual(instance);
     }
   });
 
@@ -34,7 +34,7 @@ describe('MapType', () => {
       [2, 'hello'],
       [3, 'yes']
     ]);
-    const result = Target.parse(instance as any);
+    const result = Target.safeParse(instance as any);
     expect(result.success).toEqual(false);
   });
 
@@ -45,7 +45,7 @@ describe('MapType', () => {
       [2, 'hello'],
       [3, 'yes']
     ]);
-    const result = Target.parse(instance as any);
+    const result = Target.safeParse(instance as any);
     expect(result.success).toEqual(false);
   });
 });

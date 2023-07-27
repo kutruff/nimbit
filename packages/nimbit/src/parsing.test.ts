@@ -2,9 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { any, bigint, boolean, date, never, nul, number, string, symbol, undef, unknown } from '.';
+import { any, bigint, boolean, date, never, nul, number, pass, string, symbol, undef, unknown } from '.';
 import * as t from '.';
-import { pass } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('Parsing Policy', () => {
@@ -19,13 +18,13 @@ describe('Parsing Policy', () => {
       t.PropertyPolicy.strip
     );
 
-    const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
 
     expect(result.success).toEqual(true);
 
     if (result.success) {
-      expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
-      expect((result.value as any).extraProperty).toEqual(undefined);
+      expect(result.data).toEqual({ name: 'John', age: 10, isActive: true });
+      expect((result.data as any).extraProperty).toEqual(undefined);
     }
   });
 
@@ -40,7 +39,7 @@ describe('Parsing Policy', () => {
       t.PropertyPolicy.strict
     );
 
-    const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
 
     expect(result.success).toEqual(false);
   });
@@ -56,13 +55,13 @@ describe('Parsing Policy', () => {
       t.PropertyPolicy.strict
     );
 
-    const result = Person.parse({ name: 'John', age: 10, isActive: true } as any);
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true } as any);
 
     expect(result.success).toEqual(true);
 
     if (result.success) {
-      expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
-      expect((result.value as any).extraProperty).toEqual(undefined);
+      expect(result.data).toEqual({ name: 'John', age: 10, isActive: true });
+      expect((result.data as any).extraProperty).toEqual(undefined);
     }
   });
 
@@ -77,12 +76,12 @@ describe('Parsing Policy', () => {
       t.PropertyPolicy.passthrough
     );
 
-    const result = Person.parse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' } as any);
 
     expect(result.success).toEqual(true);
 
     if (result.success) {
-      expect(result.value).toEqual({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' });
+      expect(result.data).toEqual({ name: 'John', age: 10, isActive: true, extraProperty: 'extra' });
     }
   });
 
@@ -123,12 +122,12 @@ describe('TypeConverter', () => {
     });
 
     type Person = t.Infer<typeof Person>;
-    const result = Person.parse({ name: 'John', age: 10, isActive: true });
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true });
 
     expect(result.success).toEqual(true);
 
     if (result.success) {
-      expect(result.value).toEqual({ name: 'John', age: 10, isActive: true });
+      expect(result.data).toEqual({ name: 'John', age: 10, isActive: true });
     }
   });
 
@@ -140,7 +139,7 @@ describe('TypeConverter', () => {
     });
 
     type Person = t.Infer<typeof Person>;
-    const result = Person.parse({ name: 'John', age: 10, isActive: true });
+    const result = Person.safeParse({ name: 'John', age: 10, isActive: true });
 
     expect(result.success).toEqual(false);
 
@@ -151,11 +150,11 @@ describe('TypeConverter', () => {
     });
 
     type PersonOver = t.Infer<typeof PersonOver>;
-    const resultOver = PersonOver.parse({ name: 'Bob', age: 21, isActive: true });
+    const resultOver = PersonOver.safeParse({ name: 'Bob', age: 21, isActive: true });
 
     expect(resultOver.success).toEqual(true);
     if (resultOver.success) {
-      expect(resultOver.value).toEqual({ name: 'Bob', age: 21, isActive: true });
+      expect(resultOver.data).toEqual({ name: 'Bob', age: 21, isActive: true });
     }
   });
 
@@ -196,11 +195,11 @@ describe('TypeConverter', () => {
   it('supports to', () => {
     const target = t.string.to(t.number, parseNumber);
 
-    const result = target.parse('24');
+    const result = target.safeParse('24');
 
     expect(result.success).toEqual(true);
     if (result.success) {
-      expect(result.value).toEqual(24);
+      expect(result.data).toEqual(24);
     }
   });
 
@@ -312,60 +311,60 @@ describe('TypeConverter', () => {
 
     const asD = t.string.to(DateLike);
 
-    const unsadf = asD.parse('hello');
+    const unsadf = asD.safeParse('hello');
 
-    asD.parse('hello');
+    asD.safeParse('hello');
     const asIsoString = DateLike.to(t.string, x => t.pass(x.toISOString()));
-    asIsoString.parse(new Date());
+    asIsoString.safeParse(new Date());
     const assigned: DateLike = new Date();
-    const result = DateLike.parse(1232131);
+    const result = DateLike.safeParse(1232131);
 
     if (result.success) {
-      expect(result.value).toEqual(new Date(1232131));
+      expect(result.data).toEqual(new Date(1232131));
     }
 
     expect(result.success).toEqual(true);
     if (result.success) {
-      expect(result.value).toEqual(new Date(1232131));
+      expect(result.data).toEqual(new Date(1232131));
     }
   });
 
   it('to() basic objects', () => {
     const Source = t.obj({ prop: t.string });
     const target = Source.to(t.obj({ prop: t.number }), x => pass({ prop: Number(x.prop) }));
-    const result = target.parse({ prop: '1243' });
+    const result = target.safeParse({ prop: '1243' });
 
     const EnumTest = t.enumm('EnumTest', ['a', 'b', 'c']);
-    const enumResult = EnumTest.parse('a');
+    const enumResult = EnumTest.safeParse('a');
     const enumToString = EnumTest.to(t.string, x => t.pass(x));
     type enumToString = t.Infer<typeof enumToString>;
 
-    const stringResult = t.string.parse('hello');
+    const stringResult = t.string.safeParse('hello');
 
     const ArrayTest = t.array(t.number);
     type ArrayTest = t.Infer<typeof ArrayTest>;
-    const arrayResult = ArrayTest.parse([1, 2, 3]);
+    const arrayResult = ArrayTest.safeParse([1, 2, 3]);
 
     const arrayToString = ArrayTest.to(t.string, x => t.pass(x.join(',')));
     type arrayToString = t.Infer<typeof arrayToString>;
-    const arrayToStringResult = arrayToString.parse([1, 2, 3]);
+    const arrayToStringResult = arrayToString.safeParse([1, 2, 3]);
 
     const stringToArray = t.string.to(ArrayTest, x => t.pass([Number(x)]));
     type stringToArray = t.Infer<typeof stringToArray>;
-    const stringToArrayResult = stringToArray.parse('1,2,3');
+    const stringToArrayResult = stringToArray.safeParse('1,2,3');
 
     const stringToNumber = t.string.to(t.number, x => t.pass(Number(x)));
-    stringToNumber.parse('123');
+    stringToNumber.safeParse('123');
     // type ArrayTestWithInput = ReturnType<typeof ArrayTest._withInput<string>>;
     // type ArrayTestParseType = ArrayTestWithInput['parse'];
 
     const unionTest = t.union(t.string, t.number);
     type unionTest = t.Infer<typeof unionTest>;
-    const unionTestResult = unionTest.parse('123');
+    const unionTestResult = unionTest.safeParse('123');
 
     const unionToString = unionTest.to(t.string, x => t.pass(x as string));
     type unionToString = t.Infer<typeof unionToString>;
-    const unionToStringResult = unionToString.parse('123');
+    const unionToStringResult = unionToString.safeParse('123');
 
     const singleStringUnion = t.union(t.string, t.number);
 
@@ -373,7 +372,7 @@ describe('TypeConverter', () => {
 
     const stringToUnion = t.string.to(singleStringUnion);
     type stringToUnion = t.Infer<typeof stringToUnion>;
-    const stringToUnionResult = stringToUnion.parse('123');
+    const stringToUnionResult = stringToUnion.safeParse('123');
 
     const unionedAgain = t.union(stringToUnion, t.number);
 
@@ -382,14 +381,14 @@ describe('TypeConverter', () => {
     const tupleTest = t
       .tuple([t.string, t.string])
       .to(t.tuple([t.string, t.number]), x => pass(t.asTuple(x[0], Number(x[1]))));
-    const resultTuple = tupleTest.parse(['hello', '123']);
+    const resultTuple = tupleTest.safeParse(['hello', '123']);
     if (resultTuple.success) {
-      expect(resultTuple.value).toEqual(['hello', 123]);
+      expect(resultTuple.data).toEqual(['hello', 123]);
     }
 
     expect(result.success).toEqual(true);
     if (result.success) {
-      expect(result.value.prop).toEqual(1243);
+      expect(result.data.prop).toEqual(1243);
     }
   });
 
@@ -403,24 +402,24 @@ describe('TypeConverter', () => {
     }
 
     const literalTest = t.literal('hello').to(t.literal('world'), x => pass('world' as const));
-    const result = literalTest.parse('hello');
+    const result = literalTest.safeParse('hello');
     if (result.success) {
-      result.value;
+      result.data;
     }
     const A = t.obj(ADef);
     type A = t.Infer<typeof A>;
     const target = A.to(t.obj({ prop: A }), x => pass({ prop: x }));
 
     type adfadgagdag = t.Infer<typeof target>;
-    const result2 = target.parse({
+    const result2 = target.safeParse({
       literalProp: 'world',
       tupleProp: ['myString', 123],
       self: { literalProp: 'world', tupleProp: ['someString', 2354] }
     });
 
     if (result2.success) {
-      result2.value.prop;
-      expect(result2.value.prop.self?.tupleProp[1]).toEqual(2354);
+      result2.data.prop;
+      expect(result2.data.prop.self?.tupleProp[1]).toEqual(2354);
     }
     // const a: A = { self: {literalProp: 'world', } } } };
 
@@ -437,9 +436,9 @@ describe('TypeConverter', () => {
     const target = A.to(t.obj({ prop: A }), x => pass({ prop: x }));
 
     type adfadgagdag = t.Infer<typeof target>;
-    const result2 = target.parse({ self: {} });
+    const result2 = target.safeParse({ self: {} });
     if (result2.success) {
-      result2.value.prop;
+      result2.data.prop;
     }
     const a: A = { self: { self: { self: { self: {} } } } };
 
@@ -460,11 +459,11 @@ describe('TypeConverter', () => {
     // const DateLike = t.date.from(t.union(t.number, t.string, t.date), coerceToDate);
     // const DateLike2 = t.date.from(DateLike);
 
-    const result = DateLike.parse(1232131);
+    const result = DateLike.safeParse(1232131);
 
     expect(result.success).toEqual(true);
     if (result.success) {
-      expect(result.value).toEqual(new Date(1232131));
+      expect(result.data).toEqual(new Date(1232131));
     }
   });
 

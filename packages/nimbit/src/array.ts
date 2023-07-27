@@ -13,18 +13,18 @@ export class ArrayType<TValue, T> extends Typ<'array', TValue, T> {
     super('array', element, name);
   }
 
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     if (!Array.isArray(value)) {
       return fail();
     }
     const valueAsArray = value as unknown[];
     const parsedArray = [];
     for (const element of valueAsArray) {
-      const result = (this.shape as any).parse(element, opts);
+      const result = (this.shape as any).safeParse(element, opts);
       if (!result.success) {
         return fail();
       }
-      parsedArray.push(result.value);
+      parsedArray.push(result.data);
     }
     return pass(parsedArray as T);
   }

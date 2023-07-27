@@ -22,7 +22,7 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
     super('tuple', elementTypes, name);
   }
 
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<InferTupleKeys<TElements>> {
+  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<InferTupleKeys<TElements>> {
     if (!Array.isArray(value) || value.length !== this.elementTypes.length) {
       return fail();
     }
@@ -31,12 +31,12 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
     parsedTuple.length = this.elementTypes.length;
 
     for (let i = 0; i < this.elementTypes.length; i++) {
-      const result = (this.elementTypes[i] as any).parse(valueAsArray[i], opts);
+      const result = (this.elementTypes[i] as any).safeParse(valueAsArray[i], opts);
 
       if (!result.success) {
         return fail();
       }
-      parsedTuple[i] = result.value;
+      parsedTuple[i] = result.data;
     }
 
     return pass(parsedTuple as any);

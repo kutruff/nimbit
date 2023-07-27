@@ -18,10 +18,10 @@ describe('RecordType', () => {
     type Target = t.Infer<typeof Target>;
     const instance: Target = { hello: 2, yes: 3 };
 
-    const result = Target.parse(instance);
+    const result = Target.safeParse(instance);
     expect(result.success).toEqual(true);
     if (result.success) {
-      expect(result.value).toEqual(instance);
+      expect(result.data).toEqual(instance);
     }
   });
 
@@ -30,7 +30,7 @@ describe('RecordType', () => {
     type Target = t.Infer<typeof Target>;
     const testSymbol = Symbol('SymbolT');
     const instance = { [testSymbol]: 2, yes: 3 };
-    const result = Target.parse(instance as any);
+    const result = Target.safeParse(instance as any);
     expect(result.success).toEqual(false);
   });
 
@@ -38,7 +38,7 @@ describe('RecordType', () => {
     const Target = t.record(t.string, t.number);
     type Target = t.Infer<typeof Target>;
     const instance = { hello: 2, yes: '1' };
-    const result = Target.parse(instance as any);
+    const result = Target.safeParse(instance as any);
     expect(result.success).toEqual(false);
   });
 });

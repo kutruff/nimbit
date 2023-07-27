@@ -5,7 +5,7 @@ export class LiteralType<TLiteralValue> extends Typ<'literal', TLiteralValue, TL
     super('literal', value, name);
   }
 
-  parse(value: unknown): ParseResult<TLiteralValue> {
+  safeParse(value: unknown): ParseResult<TLiteralValue> {
     //does not handle new String() on purpose.
     return value === this.shape ? pass(this.shape) : fail();
   }

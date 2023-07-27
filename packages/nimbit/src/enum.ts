@@ -30,7 +30,7 @@ export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> exten
     this.enum = enumMap;
   }
 
-  parse(value: unknown): ParseResult<TupleKeysToUnion<TEnumValues>> {
+  safeParse(value: unknown): ParseResult<TupleKeysToUnion<TEnumValues>> {
     for (const element of this.shape) {
       if (value === element) {
         return pass(element as any);

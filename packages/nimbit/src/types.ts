@@ -106,9 +106,18 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     return fail();
   }
+
+  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // parse(value: unknown, opts = Typ.defaultOpts): T {
+  //   const result = this.safeParse(value, opts);
+  //   if (result.success) {
+  //     return result.value;
+  //   }
+  //   return fail();
+  // }
 
   // // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
@@ -117,7 +126,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
 
   default(defaultValue: T): typeof this {
     const [clone, originalParse] = overrideParse(this);
-    clone.parse = function (value: T | undefined, opts = Typ.defaultOpts) {
+    clone.safeParse = function (value: T | undefined, opts = Typ.defaultOpts) {
       return value === undefined ? pass(defaultValue as any) : originalParse(value, opts);
     };
     return clone;
@@ -125,9 +134,9 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
 
   where(predicate: (value: T) => boolean, errorMessage?: string): typeof this {
     const [clone, originalParse] = overrideParse(this);
-    clone.parse = function (value: T, opts = Typ.defaultOpts) {
+    clone.safeParse = function (value: T, opts = Typ.defaultOpts) {
       const result = originalParse(value, opts);
-      return result.success && predicate(result.value) ? result : fail(errorMessage);
+      return result.success && predicate(result.data) ? result : fail(errorMessage);
     };
     return clone;
   }
@@ -146,17 +155,17 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   ): TDestination {
     const [clone, destinationParse] = overrideParse(destination);
     const source = this;
-    clone.parse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
-      const sourceResult = source.parse(value, opts);
+    clone.safeParse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
+      const sourceResult = source.safeParse(value, opts);
       if (!sourceResult.success) {
         return sourceResult;
       }
 
       if (converter) {
-        const convertedResult = converter(sourceResult.value, opts);
-        return convertedResult.success ? destinationParse(convertedResult.value, opts) : convertedResult;
+        const convertedResult = converter(sourceResult.data, opts);
+        return convertedResult.success ? destinationParse(convertedResult.data, opts) : convertedResult;
       }
-      return destinationParse(sourceResult.value, opts);
+      return destinationParse(sourceResult.data, opts);
     };
 
     return clone;
@@ -169,19 +178,19 @@ export function coerce<TDestination extends Typ<unknown, unknown>, TSourceInput>
 ): TDestination {
   const [clone, originalParse] = overrideParse(destination);
 
-  clone.parse = function (value: TSourceInput, opts = Typ.defaultOpts) {
+  clone.safeParse = function (value: TSourceInput, opts = Typ.defaultOpts) {
     const lastResult = converter(value, opts);
-    return lastResult.success ? originalParse(lastResult.value, opts) : lastResult;
+    return lastResult.success ? originalParse(lastResult.data, opts) : lastResult;
   };
   return clone;
 }
 
 export function overrideParse<TType extends Typ<unknown, unknown, unknown>>(
   obj: TType
-): [clone: TType, parse: TType['parse']] {
+): [clone: TType, parse: TType['safeParse']] {
   const clone = cloneObject(obj);
   //TODO: may want to get rid of lambda if possible?
-  return [clone, val => obj.parse(val) as any];
+  return [clone, val => obj.safeParse(val) as any];
 }
 
 export function cloneObject<T>(obj: T): T {

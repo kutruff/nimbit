@@ -78,9 +78,9 @@ export class UnionType<TMembers, T> extends Typ<'union', TMembers, T> implements
     return excludeKinds(this, undef, nul) as any;
   }
 
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     for (const member of this.shape as Array<unknown>) {
-      const result = (member as any).parse(value, opts);
+      const result = (member as any).safeParse(value, opts);
       if (result.success) {
         return result;
       }
@@ -93,7 +93,6 @@ export class UnionType<TMembers, T> extends Typ<'union', TMembers, T> implements
 export function union<T extends Typ<unknown, unknown, unknown>[]>(...args: T): CreateUnionFromTypes<T> {
   return new UnionType(args) as any;
 }
-
 
 // // export type UnionDefinition =
 // //   | {
@@ -209,7 +208,7 @@ export function union<T extends Typ<unknown, unknown, unknown>[]>(...args: T): C
 
 //   parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
 //     // for (const member of this.shape as Array<unknown>) {
-//     //   const result = (member as any).parse(value, opts);
+//     //   const result = (member as any).safeParse(value, opts);
 //     //   if (result.success) {
 //     //     return result;
 //     //   }

@@ -23,10 +23,10 @@ describe('Tuples', () => {
     it('parses a value', () => {
       const Target = t.tuple([t.string, t.number, t.boolean]);
       type Target = t.Infer<typeof Target>;
-      const instance = Target.parse(['a', 1, true]);
+      const instance = Target.safeParse(['a', 1, true]);
       expect(instance.success).toEqual(true);
       if (instance.success) {
-        expect(instance.value).toEqual(['a', 1, true]);
+        expect(instance.data).toEqual(['a', 1, true]);
       }
     });
 
@@ -39,25 +39,25 @@ describe('Tuples', () => {
         }) // statistics
       ]);
       type Target = t.Infer<typeof Target>;
-      const instance = Target.parse(['a', 1, { pointsScored: 1231 }]);
+      const instance = Target.safeParse(['a', 1, { pointsScored: 1231 }]);
       expect(instance.success).toEqual(true);
       if (instance.success) {
-        expect(instance.value).toEqual(['a', 1, { pointsScored: 1231 }]);
+        expect(instance.data).toEqual(['a', 1, { pointsScored: 1231 }]);
       }
     });
 
     it('fails to parse wrong sized tuple', () => {
       const Target = t.tuple([t.string, t.number, t.boolean]);
       type Target = t.Infer<typeof Target>;
-      // const shouldNotCompile = Target.parse(['a', 1] );
-      const instance = Target.parse(['a', 1] as any);
+      // const shouldNotCompile = Target.safeParse(['a', 1] );
+      const instance = Target.safeParse(['a', 1] as any);
       expect(instance.success).toEqual(false);
     });
 
     it('fails to parse incorrectly typed tuple', () => {
       const Target = t.tuple([t.string, t.number, t.boolean]);
       type Target = t.Infer<typeof Target>;
-      const instance = Target.parse(['a', 1, 'true'] as any);
+      const instance = Target.safeParse(['a', 1, 'true'] as any);
       expect(instance.success).toEqual(false);
     });
   });

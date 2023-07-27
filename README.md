@@ -176,26 +176,26 @@ pnpm add zod          # pnpm
 Creating a simple string schema
 
 ```ts
-import { t } from 'nimbit';
+import { string } from 'nimbit';
 
 // creating a schema for strings
-const mySchema = t.string;
+const mySchema = string;
 
 // parsing
-mySchema.parse('tuna'); // => {success: true; value: "tuna"}
-mySchema.parse(12); // => {success: false}
+mySchema.parse('tuna'); // => "tuna"
+mySchema.parse(12); // => throws error
 ```
 
 Creating an object schema
 
 ```ts
-import { t } from 'nimbit';
+import { obj, string } from 'nimbit';
 
-const User = t.obj({
-  username: t.string
+const User = obj({
+  username: string
 });
 
-User.parse({ username: 'Ludwig' });
+User.parse({ username: 'Ludwig' }); // {username: "Ludwig"}}
 
 // extract the inferred type
 type User = t.Infer<typeof User>;
@@ -229,7 +229,7 @@ unknown;
 never;
 ```
 
-## Coercion for primitives
+## Coercion
 
 There are built in helpers for coercing primitive types.
 
@@ -264,7 +264,7 @@ asBoolean.parse(undefined); // => false
 asBoolean.parse(null); // => false
 ```
 
-### Custom coercion
+### Custom Coercion
 
 Writing your own coercion is extremely easy. For example, here is how the `asNumber` coercion is implemented:
 
@@ -275,31 +275,43 @@ const asNumber = coerce(number, (x: unknown) => {
 });
 
 asNumber.parse('12'); // => 12
+asNumber.parse('hi'); // => throws
 ```
 
-The first argument is the output type of your coercion. This paradigm is important to keep all types defined by Nimbit to be reflective.
+The first argument is the Nimmbit output type of your coercion. This paradigm is important to keep all types defined by Nimbit to be reflective and maintain strong typing throughout your code.
 
-If the coercion succeeds you just need to return `pass(value)`. If the coercion fails, return `fail()`. You can also return `fail(message)` to provide a custom error message.
+If the coercion succeeds you just need to return `pass(result)`. If the coercion fails, return `fail()`. You can also return `fail(message)` to provide a custom error message.
 
 After that you can use `asNumber` any place you would use a `string`.
 
-### Pipelining
+### Pipelining 
 
-With Nimbit you use `.to()` through a series of other types to reuse logic and coercions.
+With Nimbit you use `.to()` to chain types together to reuse logic and coercions.
 
 ```ts
-const allowedQuantity = number.where(x => x > 100).;
-const labelContents = string.to(asNumber).to(minimumQuantity);
+const stringsThatAreNumbers = string.to(asNumber);
 
-labelContents.parse('12'); // => fail
-labelContents.parse('150'); // => 150
-labelContents.parse(150); // => fail  //expected a string on initial input!
+stringsThatAreNumbers.parse('12'); // => 12
+stringsThatAreNumbers.parse('hello'); // => throws
+stringsThatAreNumbers.parse(150); // => throws since only strings are allowed
 ```
 
 `to()` also supports inline coercion while keeping your resulting type reflective.
 
 ```ts
 const asIsoString = asDate.to(string, x => pass(x.toISOString()));
+
+asIsoString.parse(new Date('2035-02-25')); // => "2035-02-25T00:00:00.000Z"
+asIsoString.parse('2035-02-25'); // => "2035-02-25T00:00:00.000Z"
+```
+
+As a convenience, you can use `tweak()` which is a shorthand for `to()` when you are not altering the type of the data.  It will always pass your result to the `pass` function.
+
+```ts
+const prefixedString = string.tweak(x => `_${x}`);
+
+prefixedString.parse('hello'); // => "_hello"
+prefixedString.parse(1); // => throws
 ```
 
 ## Literals
@@ -318,9 +330,9 @@ const terrific = literal(terrificSymbol);
 
 // retrieve literal value
 tuna.value; // "tuna"
-```
+````
 
-## Strings
+## Strings (TODO: decide if these will be in the library or in a separate library)
 
 Zod includes a handful of string-specific validations.
 
@@ -1459,17 +1471,17 @@ await stringSchema.parseAsync('hello world'); // => throws error
 If you don't want Zod to throw errors when validation fails, use `.safeParse`. This method returns an object containing either the successfully parsed data or a ZodError instance containing detailed information about the validation problems.
 
 ```ts
-stringSchema.safeParse(12);
+string.safeParse(12);
 // => { success: false; error: ZodError }
 
-stringSchema.safeParse('billie');
+string.safeParse('billie');
 // => { success: true; data: 'billie' }
 ```
 
 The result is a _discriminated union_, so you can handle errors very conveniently:
 
 ```ts
-const result = stringSchema.safeParse('billie');
+const result = string.safeParse('billie');
 if (!result.success) {
   // handle error then return
   result.error;

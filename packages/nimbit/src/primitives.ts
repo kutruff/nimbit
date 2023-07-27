@@ -66,10 +66,10 @@ export const never: NeverT = new Typ<'never', never, never>('never', undefined a
 
 export function createType<TKind extends string, TType>(
   kind: TKind,
-  parse?: (value: TType) => ParseResult<TType>
+  safeParser?: (value: TType) => ParseResult<TType>
 ): Typ<TKind, TType, TType> {
   const instance = new Typ<TKind, TType, TType>(kind, undefined as TType, kind);
-  instance.parse = parse || ((value: TType) => (typeof value === kind ? pass(value) : fail()));
+  instance.safeParse = safeParser || ((value: TType) => (typeof value === kind ? pass(value) : fail()));
   return instance;
 }
 

@@ -28,19 +28,19 @@ export class RecordType<TKey, TValue, T> extends Typ<'record', [TKey, TValue], T
     super('record', [key, value], name);
   }
 
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     if (typeof value !== 'object' || value === null) {
       return fail();
     }
 
     const result = {} as any;
-    for (const key of Reflect.ownKeys(value)) {      
-      const keyResult = (this.key as any).parse(key, opts);
-      const valueResult = (this.value as any).parse((value as any)[key], opts);
+    for (const key of Reflect.ownKeys(value)) {
+      const keyResult = (this.key as any).safeParse(key, opts);
+      const valueResult = (this.value as any).safeParse((value as any)[key], opts);
       if (!keyResult.success || !valueResult.success) {
         return fail();
       }
-      result[keyResult.value] = valueResult.value;
+      result[keyResult.data] = valueResult.data;
     }
     return pass(result);
   }

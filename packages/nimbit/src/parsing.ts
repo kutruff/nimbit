@@ -7,15 +7,15 @@ export type TypeConverter<TSource, TDestinationType> = (
 ) => ParseResult<TDestinationType>;
 
 export function pass<T>(value: T): ParseResult<T> {
-  return ({ success: true as const, value });
+  return { success: true as const, data: value };
 }
 
 export function fail(message?: string, error?: unknown) {
-  return ({
+  return {
     success: false as const,
     message,
     error
-  });
+  };
 }
 
 // // TODO: see if wrapping throw is useful
@@ -63,7 +63,7 @@ export function fail(message?: string, error?: unknown) {
 //   /^(([a-f0-9]{1,4}:){7}|::([a-f0-9]{1,4}:){0,6}|([a-f0-9]{1,4}:){1}:([a-f0-9]{1,4}:){0,5}|([a-f0-9]{1,4}:){2}:([a-f0-9]{1,4}:){0,4}|([a-f0-9]{1,4}:){3}:([a-f0-9]{1,4}:){0,3}|([a-f0-9]{1,4}:){4}:([a-f0-9]{1,4}:){0,2}|([a-f0-9]{1,4}:){5}:([a-f0-9]{1,4}:){0,1})([a-f0-9]{1,4}|(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2})))$/
 // );
 
-export type ParseResult<T> = { success: true; value: T } | { success: false; message?: string; error?: unknown };
+export type ParseResult<T> = { success: true; data: T } | { success: false; message?: string; error?: unknown };
 
 export class ParseContext {
   path: string[] = [];

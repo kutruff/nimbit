@@ -13,18 +13,18 @@ export class SetType<TValue, T> extends Typ<'set', TValue, T> {
     super('set', value, name);
   }
 
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
     if (!(value instanceof Set)) {
       return fail();
     }
     const input = value as Set<unknown>;
     const parsed = new Set();
     for (const element of input) {
-      const result = (this.value as any).parse(element, opts);
+      const result = (this.value as any).safeParse(element, opts);
       if (!result.success) {
         return fail();
       }
-      parsed.add(result.value);
+      parsed.add(result.data);
     }
     return pass(parsed as T);
   }

@@ -20,20 +20,20 @@ describe('SetType', () => {
     type Target = t.Infer<typeof Target>;
 
     const instance: Target = new Set<string>(['hello', 'world']);
-    const result = Target.parse(instance);
+    const result = Target.safeParse(instance);
     expect(result.success).toEqual(true);
     if (result.success) {
-      expect(result.value).toEqual(instance);
+      expect(result.data).toEqual(instance);
     }
   });
-  
+
   it('parse fails when values are not correct types', () => {
     const Target = t.set(t.string);
     type Target = t.Infer<typeof Target>;
 
     const instance = new Set<number>([1, 2]);
 
-    const result = Target.parse(instance as any);
+    const result = Target.safeParse(instance as any);
     expect(result.success).toEqual(false);
   });
 });

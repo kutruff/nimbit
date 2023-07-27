@@ -70,7 +70,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     return clone;
   }
 
-  parse(value: unknown, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
     //TODO: turn this into a global that users can add to to add their own custom types.
     if (typeof value !== 'object' || Array.isArray(value) || value === null) {
       return fail();
@@ -80,9 +80,9 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
 
     const shape = this.shape as any;
 
-    if (this.propertyPolicy === PropertyPolicy.strict) {      
+    if (this.propertyPolicy === PropertyPolicy.strict) {
       const valueKeys = getKeys(value);
-      for (const key of valueKeys) {        
+      for (const key of valueKeys) {
         if (!Object.hasOwn(shape, key)) {
           return fail();
         }
@@ -92,12 +92,12 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     const result: any = this.propertyPolicy === PropertyPolicy.passthrough ? { ...value } : {};
 
     for (const key of getKeys(shape)) {
-      const propResult = shape[key].parse((value as any)[key], opts);
+      const propResult = shape[key].safeParse((value as any)[key], opts);
 
       if (!propResult.success) {
         return fail();
       }
-      result[key] = propResult.value;
+      result[key] = propResult.data;
     }
     return pass(result);
   }

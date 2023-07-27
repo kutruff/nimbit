@@ -18,7 +18,7 @@ export class LazyType<T> extends Typ<'lazy', () => Typ<unknown, unknown, T>, T> 
     return this._subType;
   }
 
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
-    return this.subType.parse(value, opts);
+  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+    return this.subType.safeParse(value, opts);
   }
 }
