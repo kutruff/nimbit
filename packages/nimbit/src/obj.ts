@@ -10,8 +10,8 @@ import {
   fail,
   failWrongType,
   isBasicObject,
-  keyMap,
   pass,
+  propertyMap,
   Typ,
   type _type,
   type Constructor,
@@ -76,7 +76,7 @@ function addPropertyError(map: PropertyErrorMap | undefined, key: PropertyKey, e
 export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   private _k?: ObjectKeyMap<TShape>;
   get k(): ObjectKeyMap<TShape> {
-    if (!this._k) this._k = keyMap(this.shape as any);
+    if (!this._k) this._k = propertyMap(this.shape as any) as ObjectKeyMap<TShape>;
     return this._k;
   }
   catchallType?: Typ<unknown, unknown, unknown>;

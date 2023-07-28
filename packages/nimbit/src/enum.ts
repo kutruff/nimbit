@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  createMapOfTupleKeys,
   failWrongType,
   pass,
+  propertyMap,
   Typ,
   type MapOfTupleKeys,
   type ParseResult,
@@ -14,8 +14,8 @@ import {
 // prettier-ignore
 export function enumm<TEnumValues extends readonly [TValue, ...TValue[]], TValue extends string>(name: string, values: TEnumValues): EnumType<Writeable<TEnumValues>, MapOfTupleKeys<TEnumValues>>;
 // prettier-ignore
-export function enumm<TEnumValues extends [TValue, ...TValue[]], TValue extends string>(name: string, values: TEnumValues): EnumType<TEnumValues, MapOfTupleKeys<TEnumValues>> {
-  return new EnumType(values, createMapOfTupleKeys(values), name);
+export function enumm<TEnumValues extends [TValue, ...TValue[]], TValue extends string>(name: string, values: TEnumValues): EnumType<TEnumValues, MapOfTupleKeys<TEnumValues>> {  
+  return new EnumType(values, propertyMap(values), name);
 }
 
 export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> extends Typ<

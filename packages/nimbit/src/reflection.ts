@@ -9,19 +9,22 @@ export function getKeys<T extends object>(obj: T): ObjectKeys<T>[] {
   return Reflect.ownKeys(obj) as any;
 }
 
-export function keyMap<T extends object>(type: T): ObjectKeyMap<T> {
-  return getKeys(type).reduce((acc, x) => ({ ...acc, [x]: x }), {}) as any;
+export function propertyMap<TTuple extends readonly [TValue, ...TValue[]], TValue extends PropertyKey>(
+  tuple: TTuple
+): MapOfTupleKeys<TTuple>;
+export function propertyMap<T extends object>(type: T): ObjectKeyMap<T>;
+export function propertyMap<T extends object>(type: T | Array<PropertyKey>): any {
+  // return getKeys(type).reduce((acc, x) => ({ ...acc, [x]: x }), {}) as any;
+  return arrayToMap(Array.isArray(type) ? type : getKeys(type));
+}
+
+function arrayToMap(array: PropertyKey[]) {
+  return array.reduce((acc, x) => ({ ...acc, [x]: x }), {} as any);
 }
 
 export const EVIL_PROTO = '__proto__';
 
 export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleValuesToUnion<T>, PropertyKey>]: K };
-
-export function createMapOfTupleKeys<TTuple extends readonly [TValue, ...TValue[]], TValue extends PropertyKey>(
-  tuple: TTuple
-): MapOfTupleKeys<TTuple> {
-  return tuple.reduce((acc, cur) => ({ ...acc, [cur]: cur }), {} as MapOfTupleKeys<TTuple>);
-}
 
 //unfortunately typescript tuples with as const always end up readonly which isn't always what we want.
 export const asTuple = <T extends unknown[]>(...args: T): T => args;
