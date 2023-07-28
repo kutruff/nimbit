@@ -43,7 +43,6 @@ export class MapType<TKey, TValue, T> extends Typ<'map', [TKey, TValue], T> {
       if (keyResult.success && valueResult.success) {
         result.set(keyResult.data, valueResult.data);
       }
-
       i++;
     }
     return keyErrors.length === 0 && valueErrors.length === 0

@@ -38,7 +38,6 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
 
     const errors: ArrayErrorIndex = [];
     for (let i = 0; i < this.elements.length; i++) {
-      // const result = ctx.push(i, () => (this.elementTypes[i] as Typ).safeParse(valueAsArray[i]));
       const result = (this.elements[i] as Typ).safeParse(value[i]);
 
       if (result.success) {

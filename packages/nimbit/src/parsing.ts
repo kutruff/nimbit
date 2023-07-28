@@ -11,15 +11,20 @@ export function fail(error?: ParseError) {
   };
 }
 
-export type ParseResult<T> = { success: true; data: T } | { success: false; message?: string; error: ParseError };
+export type ParseSuccess<T> = {
+  success: true;
+  data: T;
+};
+
+export type ParseFail = {
+  success: false;
+  message?: string;
+  error: ParseError;
+};
+
+export type ParseResult<T> = ParseSuccess<T> | ParseFail;
 
 export type ParseError = ParseErrorTypes[keyof ParseErrorTypes];
-
-export interface WrongTypeError {
-  kind: 'wrong-type';
-  expected: string;
-  actual: string;
-}
 
 export interface ParseErrorTypes {
   WrongType: WrongTypeError;
@@ -28,21 +33,6 @@ export interface ParseErrorTypes {
   Array: ArrayError;
   Map: MapError;
 }
-
-export function failWrongType(expected: string, actual: unknown) {
-  return fail({ kind: 'wrong-type', expected, actual: typeof actual });
-}
-
-// declare module '../message' {
-//   // Where you define MessageTypes
-//   interface ParseErrorTypes {
-//     WrongType: WrongTypeError;
-//   }
-// }
-
-// export interface NimbitError<TKind> {
-//   kind: TKind;
-// }
 
 export interface GeneralError {
   kind: 'general';
@@ -62,15 +52,35 @@ export interface MapError {
 
 export type ArrayErrorIndex = Array<[index: number, value: ParseError]>;
 
-export function recordIfFailed(errorIndex: ArrayErrorIndex, i: number, result: ParseResult<unknown>) {
-  if (!result.success) {
-    errorIndex.push([i, result.error]);
-  }
+export interface WrongTypeError {
+  kind: 'wrong-type';
+  expected: string;
+  actual: string;
+}
+
+export function failWrongType(expected: string, actual: unknown) {
+  return fail({ kind: 'wrong-type', expected, actual: typeof actual });
 }
 
 export interface ArrayError {
   kind: 'array' | 'tuple' | 'set';
   errors: ArrayErrorIndex;
+}
+// declare module '../message' {
+//   // Where you define MessageTypes
+//   interface ParseErrorTypes {
+//     WrongType: WrongTypeError;
+//   }
+// }
+
+// export interface NimbitError<TKind> {
+//   kind: TKind;
+// }
+
+export function recordIfFailed(errorIndex: ArrayErrorIndex, i: number, result: ParseResult<unknown>) {
+  if (!result.success) {
+    errorIndex.push([i, result.error]);
+  }
 }
 
 // export interface Issue {

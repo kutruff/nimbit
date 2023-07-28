@@ -10,6 +10,7 @@ import {
   type Writeable
 } from '.';
 
+//TODO: why is an overload required here....
 // prettier-ignore
 export function enumm<TEnumValues extends readonly [TValue, ...TValue[]], TValue extends string>(name: string, values: TEnumValues): EnumType<Writeable<TEnumValues>, MapOfTupleKeys<TEnumValues>>;
 // prettier-ignore

@@ -2,7 +2,7 @@ import {
   fail,
   failWrongType,
   pass,
-  recordIfFailed as recordArrayResult,
+  recordIfFailed,
   Typ,
   type ArrayErrorIndex,
   type ParseResult,
@@ -32,7 +32,7 @@ export class ArrayType<TValue, T> extends Typ<'array', TValue, T> {
       if (result.success) {
         parsed.push(result.data);
       }
-      recordArrayResult(errors, i, result);
+      recordIfFailed(errors, i, result);
     }
 
     return errors.length === 0 ? pass(parsed as T) : fail({ kind: 'array', errors });

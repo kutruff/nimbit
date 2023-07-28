@@ -29,7 +29,6 @@ export class SetType<TValue, T> extends Typ<'set', TValue, T> {
 
     const errors: ArrayErrorIndex = [];
     for (const element of value) {
-      // const result = ctx.push(i, () => (this.value as Typ).safeParse(element));
       const result = (this.value as Typ).safeParse(element);
       if (result.success) {
         parsed.add(result.data);

@@ -125,7 +125,6 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
       const valueKeys = Reflect.ownKeys(value);
       for (const key of valueKeys) {
         if (!Object.hasOwn(shape, key)) {
-          // const propResult = ctx.push(key, () => this.catchallType!.safeParse((value as any)[key]));
           const propResult = this.catchallType.safeParse((value as any)[key]);
 
           if (propResult.success) {

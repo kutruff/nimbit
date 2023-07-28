@@ -13,10 +13,7 @@ export class LazyType<T> extends Typ<'lazy', () => Typ<unknown, unknown, T>, T> 
 
   private _subType?: Typ<unknown, unknown, T>;
   public get subType(): Typ<unknown, unknown, T> {
-    if (!this._subType) {
-      this._subType = this.shape();
-    }
-    return this._subType;
+    return (this._subType = this._subType ?? this.shape());
   }
 
   safeParse(value: unknown): ParseResult<T> {
