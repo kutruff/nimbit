@@ -1,26 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-
 import {
   excludeKinds,
   fail,
   never,
   nul,
-  Resolve,
   Typ,
   undef,
-  unknown,
-  UnknownT,
   type _type,
-  type Constructor,
   type ElementType,
   type ExcludeType,
   type IsLengthOneTuple,
   type ParseError,
   type ParseResult,
-  type TsType,
-  type Type
+  type TsType
 } from '.';
 
 export interface IUnionType<TMembers> {

@@ -14,8 +14,8 @@ describe('Tuples', () => {
       expectTypesSupportAssignment<typeof Target, ExpectedDefinitionType>();
 
       expect(Target.kind).toEqual('tuple');
-      expect(Target.elementTypes.length).toEqual(3);
-      expect(Target.elementTypes).toEqual([t.string, t.number, t.boolean]);
+      expect(Target.elements.length).toEqual(3);
+      expect(Target.elements).toEqual([t.string, t.number, t.boolean]);
     });
   });
 
