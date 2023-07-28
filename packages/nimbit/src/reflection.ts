@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { type TupleKeysToUnion } from '.';
+import { type TupleValuesToUnion } from '.';
 
 export type ObjectKeys<T extends object> = Extract<keyof T, string | symbol>;
 export type ObjectKeyMap<T> = { [K in keyof T]: K };
@@ -15,7 +15,7 @@ export function keyMap<T extends object>(type: T): ObjectKeyMap<T> {
 
 export const EVIL_PROTO = '__proto__';
 
-export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K };
+export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleValuesToUnion<T>, PropertyKey>]: K };
 
 export function createMapOfTupleKeys<TTuple extends readonly [TValue, ...TValue[]], TValue extends PropertyKey>(
   tuple: TTuple

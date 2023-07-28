@@ -16,7 +16,7 @@ import {
   type FlattenUnionMembers,
   type ObjType,
   type ObjTypShape,
-  type TupleKeysToUnion,
+  type TupleValuesToUnion,
   type Typ,
   type UnionType
 } from '.';
@@ -89,20 +89,20 @@ export type Intersect<A, B> = [A, B] extends [
   ? UnionType<
       TuplifyUnion<
         Intersect<
-          TupleKeysToUnion<FlattenUnionMembers<A['members']>>,
-          TupleKeysToUnion<FlattenUnionMembers<B['members']>>
+          TupleValuesToUnion<FlattenUnionMembers<A['members']>>,
+          TupleValuesToUnion<FlattenUnionMembers<B['members']>>
         >
       >,
       A[typeof _type] & B[typeof _type]
     >
   : [A, B] extends [infer A extends Typ<unknown, unknown, unknown>, infer B extends UnionType<unknown[], unknown>]
   ? UnionType<
-      TuplifyUnion<Intersect<A, TupleKeysToUnion<FlattenUnionMembers<B['members']>>>>,
+      TuplifyUnion<Intersect<A, TupleValuesToUnion<FlattenUnionMembers<B['members']>>>>,
       A[typeof _type] & B[typeof _type]
     >
   : [A, B] extends [infer A extends UnionType<unknown[], unknown>, infer B extends Typ<unknown, unknown, unknown>]
   ? UnionType<
-      TuplifyUnion<Intersect<TupleKeysToUnion<FlattenUnionMembers<A['members']>>, B>>,
+      TuplifyUnion<Intersect<TupleValuesToUnion<FlattenUnionMembers<A['members']>>, B>>,
       A[typeof _type] & B[typeof _type]
     >
   : [A, B] extends [infer A extends ObjType<unknown, unknown>, infer B extends ObjType<unknown, unknown>]

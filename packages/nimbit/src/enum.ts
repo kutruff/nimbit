@@ -6,7 +6,7 @@ import {
   Typ,
   type MapOfTupleKeys,
   type ParseResult,
-  type TupleKeysToUnion,
+  type TupleValuesToUnion,
   type Writeable
 } from '.';
 
@@ -21,7 +21,7 @@ export function enumm<TEnumValues extends [TValue, ...TValue[]], TValue extends 
 export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> extends Typ<
   'enum',
   TEnumValues,
-  TupleKeysToUnion<TEnumValues>
+  TupleValuesToUnion<TEnumValues>
 > {
   enum: TMapOfEnumKeyToValue;
   //TODO: may want to turn array into a Set for efficiency?
@@ -30,7 +30,7 @@ export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> exten
     this.enum = enumMap;
   }
 
-  safeParse(value: unknown): ParseResult<TupleKeysToUnion<TEnumValues>> {
+  safeParse(value: unknown): ParseResult<TupleValuesToUnion<TEnumValues>> {
     for (const element of this.shape) {
       if (value === element) {
         return pass(element as any);

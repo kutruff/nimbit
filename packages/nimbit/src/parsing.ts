@@ -73,10 +73,6 @@ export interface ArrayError {
 //   }
 // }
 
-// export interface NimbitError<TKind> {
-//   kind: TKind;
-// }
-
 export function recordIfFailed(errorIndex: ArrayErrorIndex, i: number, result: ParseResult<unknown>) {
   if (!result.success) {
     errorIndex.push([i, result.error]);

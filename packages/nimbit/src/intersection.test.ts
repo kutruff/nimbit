@@ -54,8 +54,8 @@ describe.skip('Type operations', () => {
 
         const result = intersection(t.union(t.number, t.string), t.union(t.number, t.string));
         type Flatmembers = t.FlattenUnionMembers<[...typeof A.members, ...typeof B.members]>;
-        type AMembersUnion = t.TupleKeysToUnion<t.FlattenUnionMembers<typeof A.members>>;
-        type BMembersUnion = t.TupleKeysToUnion<t.FlattenUnionMembers<typeof B.members>>;
+        type AMembersUnion = t.TupleValuesToUnion<t.FlattenUnionMembers<typeof A.members>>;
+        type BMembersUnion = t.TupleValuesToUnion<t.FlattenUnionMembers<typeof B.members>>;
 
         type afadf = t.UnionFlattenedOrSingle<typeof t.number>;
         const res = A.unwrap();

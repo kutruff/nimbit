@@ -19,7 +19,7 @@ import {
   type Resolve,
   type ShapeDefinitionToObjType,
   type ToUnionMemberList,
-  type TupleKeysToUnion,
+  type TupleValuesToUnion,
   type Typ,
   type UndefinedT,
   type UnionFlattenedOrSingle,
@@ -34,11 +34,7 @@ export function merge<TObjA extends ObjType<unknown, unknown>, TObjB extends Obj
   objA: TObjA,
   objB: TObjB
 ): ObjType<Extend<TObjA['shape'], TObjB['shape']>, Extend<TObjA[typeof _type], TObjB[typeof _type]>> {
-  return obj(
-    { ...(objA as any).shape, ...(objB as any).shape },
-    undefined,
-    objB.propertyPolicy
-  ) as any;
+  return obj({ ...(objA as any).shape, ...(objB as any).shape }, undefined, objB.propertyPolicy) as any;
 }
 
 //TODO: figure out why this resolve is required for assignment checks in the unit test
@@ -147,7 +143,7 @@ export type TupleExtract<T, TExtract, Acc extends any[] = []> = T extends [infer
 
 type ExcludeFlattenedUnionMembers<T, U extends Typ[]> = TupleExclude<
   FlattenUnionMembers<[T]>,
-  ToBaseKind<TupleKeysToUnion<FlattenUnionMembers<U>>>
+  ToBaseKind<TupleValuesToUnion<FlattenUnionMembers<U>>>
 >;
 
 export type ExcludeFlattenedType<
@@ -158,7 +154,7 @@ export type ExcludeFlattenedType<
 
 type ExcludeUnionMembers<T, U extends Typ[]> = TupleExclude<
   ToUnionMemberList<T>,
-  ToBaseKind<TupleKeysToUnion<FlattenUnionMembers<U>>>
+  ToBaseKind<TupleValuesToUnion<FlattenUnionMembers<U>>>
 >;
 
 export type ExcludeType<T, U extends Typ[], TUnionExcluded = ExcludeUnionMembers<T, U>> = TUnionExcluded extends []
@@ -200,7 +196,7 @@ function excludeTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, type
 
 type ExtractFlattenedUnionMembers<T, U extends Typ[]> = TupleExtract<
   FlattenUnionMembers<[T]>,
-  TupleKeysToUnion<FlattenUnionMembers<U>>
+  TupleValuesToUnion<FlattenUnionMembers<U>>
 >;
 
 export type ExtractFlattenedType<
@@ -211,7 +207,7 @@ export type ExtractFlattenedType<
 
 export type ExtractUnionMembers<T, U extends Typ[]> = TupleExtract<
   ToUnionMemberList<T>,
-  TupleKeysToUnion<FlattenUnionMembers<U>>
+  TupleValuesToUnion<FlattenUnionMembers<U>>
 >;
 
 export type ExtractType<T, U extends Typ[], TUnionExtracted = ExtractUnionMembers<T, U>> = TUnionExtracted extends []

@@ -34,10 +34,9 @@ export type IsLengthOneTuple<T> = T extends []
   ? Head
   : never;
 
-export type TupleKeysToUnion<T extends readonly unknown[], Acc = never> = T extends readonly [infer U, ...infer TRest]
-  ? TupleKeysToUnion<TRest, Acc | U>
+export type TupleValuesToUnion<T extends readonly unknown[], Acc = never> = T extends readonly [infer U, ...infer TRest]
+  ? TupleValuesToUnion<TRest, Acc | U>
   : Acc;
-
 
 //This and other things taken from Zod.
 export type Identity<T> = T;

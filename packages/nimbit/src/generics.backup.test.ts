@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { type ElementType, type Literal, type MakeUndefinedOptional, type TupleKeysToUnion, type Writeable } from '.';
+import { type ElementType, type Literal, type MakeUndefinedOptional, type TupleValuesToUnion, type Writeable } from '.';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type AnyFunc = (...args: unknown[]) => unknown;
@@ -99,9 +99,9 @@ type TupleToObject<Type extends readonly any[]> = {
   [Key in Type[number]]: Key;
 };
 
-export type TupOrArrayElements<T extends readonly unknown[]> = TupleKeysToUnion<T> extends never
+export type TupOrArrayElements<T extends readonly unknown[]> = TupleValuesToUnion<T> extends never
   ? ElementType<Writeable<T>>
-  : TupleKeysToUnion<T>;
+  : TupleValuesToUnion<T>;
 
 // type TupleToObject2<T> = { [K in keyof T as Exclude<K, keyof any[]>]: T[K] };
 
