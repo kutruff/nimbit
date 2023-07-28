@@ -6,8 +6,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   cloneObject,
+  EVIL_PROTO,
   fail,
-  getKeys,
+  failWrongType,
   isBasicObject,
   keyMap,
   pass,
@@ -16,7 +17,7 @@ import {
   type Constructor,
   type MakeUndefinedOptional,
   type ObjectKeyMap,
-  type ParseOptions,
+  type ParseError,
   type ParseResult,
   type Resolve,
   type Type
@@ -44,7 +45,33 @@ export const PropertyPolicy = {
   passthrough: 2
 } as const;
 
-export type PropertyPolicy = (typeof PropertyPolicy)[keyof typeof PropertyPolicy];
+export type PropPolicy = (typeof PropertyPolicy)[keyof typeof PropertyPolicy];
+
+type PropertyErrorMap = Map<PropertyKey, ParseError>;
+
+export interface ObjectError {
+  kind: 'object';
+  errors: PropertyErrorMap;
+}
+
+export interface StrictnessError {
+  kind: 'strictness';
+}
+
+//TODO see if external imports get picked up
+declare module '.' {
+  // Where you define MessageTypes
+  export interface ParseErrorTypes {
+    Object: ObjectError;
+    Strictness: StrictnessError;
+  }
+}
+
+function addPropertyError(map: PropertyErrorMap | undefined, key: PropertyKey, error: ParseError): PropertyErrorMap {
+  map = map ?? new Map();
+  map.set(key, error);
+  return map;
+}
 
 export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   private _k?: ObjectKeyMap<TShape>;
@@ -54,7 +81,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   }
   catchallType?: Typ<unknown, unknown, unknown>;
 
-  constructor(shape: TShape, name?: string, public propertyPolicy?: PropertyPolicy) {
+  constructor(shape: TShape, name?: string, public propertyPolicy?: PropPolicy) {
     super('object', shape, name);
   }
 
@@ -76,56 +103,62 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     return clone;
   }
 
-  changePropertyPolicy(policy: PropertyPolicy): typeof this {
+  changePropertyPolicy(policy: PropPolicy): typeof this {
     const clone = cloneObject(this);
     clone.propertyPolicy = policy;
     return clone;
   }
 
-  safeParse(value: unknown, opts: ParseOptions = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown): ParseResult<T> {
     //TODO: turn this into a global that users can add to to add their own custom types.
     //TODO: do we need to check for array here?
     if (!isBasicObject(value)) {
-      return fail();
+      return failWrongType(this.kind, value);
     }
 
     const shape = this.shape as any;
 
     let result: any = {};
+    let errorMap: PropertyErrorMap | undefined = undefined;
 
     if (this.catchallType) {
       const valueKeys = Reflect.ownKeys(value);
       for (const key of valueKeys) {
         if (!Object.hasOwn(shape, key)) {
-          const propResult = this.catchallType.safeParse((value as any)[key], opts);
-          if (!propResult.success) {
-            return fail();
+          // const propResult = ctx.push(key, () => this.catchallType!.safeParse((value as any)[key]));
+          const propResult = this.catchallType.safeParse((value as any)[key]);
+
+          if (propResult.success) {
+            result[key] = propResult.data;
+          } else {
+            errorMap = addPropertyError(errorMap, key, propResult.error);
           }
-          result[key] = propResult.data;
         }
       }
     } else if (this.propertyPolicy === PropertyPolicy.strict) {
       const valueKeys = Reflect.ownKeys(value);
       for (const key of valueKeys) {
         if (!Object.hasOwn(shape, key)) {
-          return fail();
+          errorMap = addPropertyError(errorMap, key, { kind: 'strictness' });
         }
       }
     } else if (this.propertyPolicy == PropertyPolicy.passthrough) {
-      if (Object.hasOwn(value, '__proto__')) {
-        return fail();
+      if (Object.hasOwn(value, EVIL_PROTO)) {
+        errorMap = addPropertyError(errorMap, EVIL_PROTO, { kind: 'strictness' });
+      } else {
+        result = { ...value };
       }
-      result = { ...value };
     }
 
     for (const key of Reflect.ownKeys(shape)) {
-      const propResult = shape[key].safeParse((value as any)[key], opts);
-      if (!propResult.success) {
-        return fail();
+      const propResult = shape[key].safeParse((value as any)[key]);
+      if (propResult.success) {
+        result[key] = propResult.data;
+      } else {
+        errorMap = addPropertyError(errorMap, key, propResult.error);
       }
-      result[key] = propResult.data;
     }
-    return pass(result);
+    return errorMap === undefined ? pass(result) : fail({ kind: 'object', errors: errorMap });
   }
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
@@ -161,7 +194,7 @@ const constructorsToObj = new WeakMap();
 export function obj<TShapeDefinition extends ObjShapeDefinition>(
   shapeDefinition: TShapeDefinition,
   name?: string,
-  policy: PropertyPolicy = PropertyPolicy.strip
+  policy: PropPolicy = PropertyPolicy.strip
 ): ShapeDefinitionToObjType<TShapeDefinition> {
   const resultObj = new ObjType({}, name, policy) as any;
 

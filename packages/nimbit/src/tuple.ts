@@ -1,8 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
+
+import {
+  fail,
+  failWrongType,
+  pass,
+  recordIfFailed,
+  Typ,
+  type ArrayErrorIndex,
+  type ParseResult,
+  type TsType,
+  type Type
+} from '.';
+
+declare global {
+  interface Array<T> {
+    toObservable(): number;
+  }
+}
 
 export type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
   infer U,
@@ -18,28 +32,28 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
   TElements,
   InferTupleKeys<TElements>
 > {
-  constructor(public elementTypes: TElements, name?: string) {
-    super('tuple', elementTypes, name);
+  constructor(public elements: TElements, name?: string) {
+    super('tuple', elements, name);
   }
 
-  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<InferTupleKeys<TElements>> {
-    if (!Array.isArray(value) || value.length !== this.elementTypes.length) {
-      return fail();
+  safeParse(value: unknown): ParseResult<InferTupleKeys<TElements>> {
+    if (!Array.isArray(value) || value.length !== this.elements.length) {
+      return failWrongType(this.kind, value);
     }
-    const valueAsArray = value as unknown[];
-    const parsedTuple = [];
-    parsedTuple.length = this.elementTypes.length;
+    const parsed = [];
 
-    for (let i = 0; i < this.elementTypes.length; i++) {
-      const result = (this.elementTypes[i] as any).safeParse(valueAsArray[i], opts);
+    const errors: ArrayErrorIndex = [];
+    for (let i = 0; i < this.elements.length; i++) {
+      // const result = ctx.push(i, () => (this.elementTypes[i] as Typ).safeParse(valueAsArray[i]));
+      const result = (this.elements[i] as Typ).safeParse(value[i]);
 
-      if (!result.success) {
-        return fail();
+      if (result.success) {
+        parsed.push(result.data);
       }
-      parsedTuple[i] = result.data;
+      recordIfFailed(errors, i, result);
     }
 
-    return pass(parsedTuple as any);
+    return errors.length === 0 ? pass(parsed as any) : fail({ kind: 'tuple', errors });
   }
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {

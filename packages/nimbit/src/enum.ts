@@ -2,6 +2,7 @@
 import {
   createMapOfTupleKeys,
   fail,
+  failWrongType,
   pass,
   Typ,
   type MapOfTupleKeys,
@@ -35,7 +36,7 @@ export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> exten
         return pass(element as any);
       }
     }
-    return fail();
+    return failWrongType(this.name ?? this.kind, value);
   }
 
   // areEqual(other: Type<unknown, unknown>): boolean {

@@ -16,10 +16,6 @@ import {
   type UnionType
 } from '.';
 
-export interface ParseOptions {
-  strict?: boolean;
-}
-
 //Need this symbol / property definition so that type inference will actual use the T parameter during type inference
 //https://github.com/Microsoft/TypeScript/issues/29657#issuecomment-460728148
 export const _type: unique symbol = Symbol('type');
@@ -37,12 +33,7 @@ export type TsType<T extends Type<unknown, unknown>> = T[typeof _type];
 export type Infer<T extends Type<unknown, unknown>> = Resolve<T[typeof _type]>;
 
 export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type<TKind, T> {
-  static defaultOpts: ParseOptions = {};
-
   [_type]!: T;
-
-  //TODO: union types may not be needed anymore.
-  // unionTypes: Array<Typ<TKind, TShape, T>> = [];
 
   //TODO: potential optimization for dealing with union types. If nothing has modified the default parse() we can then flatten unions.
   // otherwise we may just be able to use strict object equality and use the instance
@@ -50,18 +41,11 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
 
   constructor(public kind: TKind, public shape: TShape, public name?: string) {}
 
-  //TODO: figure out how best to have reflection for union types be more manageable.
-  // //Helper to unwrap the shape of a single union type... Could be dangerous as it bypasses any wrapping union.
-  // get s(): TShape {
-  //   return this.unionTypes.length === 1 ? this.unionTypes[0]!.s : this.shape;
-  // }
-
   // errorMessageOnFail(value: T, opts: ParseOptions): string | undefined {
   //   return undefined;
   // }
 
-  isUnion(): boolean {
-    // return this.unionTypes.length > 0;
+  isUnion(): boolean {    
     return false;
   }
 
@@ -80,19 +64,18 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown): ParseResult<T> {
     return fail();
   }
 
-  parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
-    const result = this.safeParse(value, opts);
+  parse(value: unknown): ParseResult<T> {
+    const result = this.safeParse(value);
     if (result.success) {
       return result;
     }
 
     throw new Error(result.message ?? 'parse failed');
   }
-
 
   // // eslint-disable-next-line @typescript-eslint/no-unused-vars
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
@@ -101,26 +84,26 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
 
   default(defaultValue: T): typeof this {
     const [clone, originalParse] = overrideSafeParse(this);
-    clone.safeParse = function (value: T | undefined, opts = Typ.defaultOpts) {
-      return value === undefined ? pass(defaultValue as any) : originalParse(value, opts);
+    clone.safeParse = function (value: T | undefined) {
+      return value === undefined ? pass(defaultValue as any) : originalParse(value);
     };
     return clone;
   }
 
   catch(valueOnError: T): typeof this {
     const [clone, originalParse] = overrideSafeParse(this);
-    clone.safeParse = function (value: T | undefined, opts = Typ.defaultOpts) {
-      const result = originalParse(value, opts);
+    clone.safeParse = function (value: T | undefined) {
+      const result = originalParse(value);
       return result.success ? result : pass(valueOnError as any);
     };
     return clone;
   }
 
-  where(predicate: (value: T) => boolean, errorMessage?: string): typeof this {
+  where(predicate: (value: T) => boolean, message?: string): typeof this {
     const [clone, originalParse] = overrideSafeParse(this);
-    clone.safeParse = function (value: T, opts = Typ.defaultOpts) {
-      const result = originalParse(value, opts);
-      return result.success && predicate(result.data) ? result : fail(errorMessage);
+    clone.safeParse = function (value: T) {
+      const result = originalParse(value);
+      return !result.success ? result : predicate(result.data) ? result : fail({ kind: 'condition', message });
     };
     return clone;
   }
@@ -139,17 +122,17 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   ): TDestination {
     const [clone, destinationParse] = overrideSafeParse(destination);
     const source = this;
-    clone.safeParse = function (value: T, opts: ParseOptions = Typ.defaultOpts) {
-      const sourceResult = source.safeParse(value, opts);
+    clone.safeParse = function (value: T) {
+      const sourceResult = source.safeParse(value);
       if (!sourceResult.success) {
         return sourceResult;
       }
 
       if (converter) {
-        const convertedResult = converter(sourceResult.data, opts);
-        return convertedResult.success ? destinationParse(convertedResult.data, opts) : convertedResult;
+        const convertedResult = converter(sourceResult.data);
+        return convertedResult.success ? destinationParse(convertedResult.data) : convertedResult;
       }
-      return destinationParse(sourceResult.data, opts);
+      return destinationParse(sourceResult.data);
     };
 
     return clone;
@@ -162,9 +145,9 @@ export function coerce<TDestination extends Typ<unknown, unknown>, TSourceInput>
 ): TDestination {
   const [clone, originalParse] = overrideSafeParse(destination);
 
-  clone.safeParse = function (value: TSourceInput, opts = Typ.defaultOpts) {
-    const lastResult = converter(value, opts);
-    return lastResult.success ? originalParse(lastResult.data, opts) : lastResult;
+  clone.safeParse = function (value: TSourceInput) {
+    const lastResult = converter(value);
+    return lastResult.success ? originalParse(lastResult.data) : lastResult;
   };
   return clone;
 }

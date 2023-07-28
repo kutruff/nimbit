@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import {
   excludeKinds,
   fail,
@@ -18,6 +17,7 @@ import {
   type ElementType,
   type ExcludeType,
   type IsLengthOneTuple,
+  type ParseError,
   type ParseResult,
   type TsType,
   type Type
@@ -62,6 +62,19 @@ export type UnionOrSingle<T, TMembers = ToUnionMemberList<T>> = IsLengthOneTuple
     : never
   : IsLengthOneTuple<TMembers>;
 
+export interface UnionParseError {
+  kind: 'union';
+  errors: ParseError[];
+}
+
+//TODO see if external imports get picked up
+declare module '.' {
+  // Where you define MessageTypes
+  export interface ParseErrorTypes {
+    Union: UnionParseError;
+  }
+}
+
 export class UnionType<TMembers, T> extends Typ<'union', TMembers, T> implements IUnionType<TMembers> {
   //Note that members and shape are really the same object
   constructor(public members: TMembers, name?: string) {
@@ -78,20 +91,47 @@ export class UnionType<TMembers, T> extends Typ<'union', TMembers, T> implements
     return excludeKinds(this, undef, nul) as any;
   }
 
-  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
-    for (const member of this.shape as Array<unknown>) {
-      const result = (member as any).safeParse(value, opts);
+  safeParse(value: unknown): ParseResult<T> {
+    const errors: ParseError[] = [];
+
+    for (const member of this.shape as Array<Typ<unknown, unknown, T>>) {
+      const result = member.safeParse(value);
       if (result.success) {
         return result;
       }
-      // failedResults.push(result);
+      errors.push(result.error);
     }
-    return fail();
+
+    return fail({ kind: 'union', errors });
   }
 }
 
 export function union<T extends Typ<unknown, unknown, unknown>[]>(...args: T): CreateUnionFromTypes<T> {
   return new UnionType(args) as any;
+}
+
+export function unionIfNeeded<T extends Typ<unknown, unknown>[]>(types: T): UnionOrSingle<T> {
+  return (types.length > 1 ? union(...types) : types.length === 1 ? types[0] : never) as any;
+}
+
+export function* flatIterateUnion(type: Typ): IterableIterator<Typ> {
+  if (type.isUnion()) {
+    for (const member of (type as UnionType<Typ[], unknown>).members) {
+      yield* flatIterateUnion(member);
+    }
+  } else {
+    yield type;
+  }
+}
+
+export function flattenUnionMembers<T extends UnionType<unknown[], unknown>>(union: T): FlattenUnionMembers<T> {
+  return [...flatIterateUnion(union)] as any;
+}
+
+export function flattenUnion<T extends UnionType<unknown[], unknown>>(
+  unionToFlatten: T
+): UnionType<FlattenUnionMembers<T>, TsType<T>> {
+  return union(...flattenUnionMembers(unionToFlatten));
 }
 
 // // export type UnionDefinition =
@@ -206,9 +246,9 @@ export function union<T extends Typ<unknown, unknown, unknown>[]>(...args: T): C
 //     return excludeKinds(this, undef, nul) as any;
 //   }
 
-//   parse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+//   parse(value: unknown): ParseResult<T> {
 //     // for (const member of this.shape as Array<unknown>) {
-//     //   const result = (member as any).safeParse(value, opts);
+//     //   const result = (member as any).safeParse(value);
 //     //   if (result.success) {
 //     //     return result;
 //     //   }
@@ -223,27 +263,3 @@ export function union<T extends Typ<unknown, unknown, unknown>[]>(...args: T): C
 
 // //   return new UnionType(unionDefMembers.members) as any;
 // // }
-
-export function unionIfNeeded<T extends Typ<unknown, unknown>[]>(types: T): UnionOrSingle<T> {
-  return (types.length > 1 ? union(...types) : types.length === 1 ? types[0] : never) as any;
-}
-
-export function* flatIterateUnion(type: Typ): IterableIterator<Typ> {
-  if (type.isUnion()) {
-    for (const member of (type as UnionType<Typ[], unknown>).members) {
-      yield* flatIterateUnion(member);
-    }
-  } else {
-    yield type;
-  }
-}
-
-export function flattenUnionMembers<T extends UnionType<unknown[], unknown>>(union: T): FlattenUnionMembers<T> {
-  return [...flatIterateUnion(union)] as any;
-}
-
-export function flattenUnion<T extends UnionType<unknown[], unknown>>(
-  unionToFlatten: T
-): UnionType<FlattenUnionMembers<T>, TsType<T>> {
-  return union(...flattenUnionMembers(unionToFlatten));
-}

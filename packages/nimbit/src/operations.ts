@@ -31,13 +31,13 @@ export type Extend<TA, TB> = Resolve<Omit<TA, keyof TB> & TB>;
 
 //TODO: figure out why this resolve is required for assignment checks in the unit test
 export function merge<TObjA extends ObjType<unknown, unknown>, TObjB extends ObjType<unknown, unknown>>(
-  objectTypeA: TObjA,
-  objectTypeB: TObjB
+  objA: TObjA,
+  objB: TObjB
 ): ObjType<Extend<TObjA['shape'], TObjB['shape']>, Extend<TObjA[typeof _type], TObjB[typeof _type]>> {
   return obj(
-    { ...(objectTypeA as any).shape, ...(objectTypeB as any).shape },
+    { ...(objA as any).shape, ...(objB as any).shape },
     undefined,
-    objectTypeB.propertyPolicy
+    objB.propertyPolicy
   ) as any;
 }
 
@@ -47,10 +47,10 @@ export function extend<
   TShapeDefinition extends ObjShapeDefinition,
   TObjB extends ObjType<unknown, unknown> = ShapeDefinitionToObjType<TShapeDefinition>
 >(
-  objectTypeA: TObjA,
+  objType: TObjA,
   shape: TShapeDefinition
 ): ObjType<Extend<TObjA['shape'], TObjB['shape']>, Extend<TObjA[typeof _type], TObjB[typeof _type]>> {
-  return obj({ ...(objectTypeA as any).shape, ...shape }) as any;
+  return obj({ ...(objType as any).shape, ...shape }) as any;
 }
 
 export type PartialType<T> = {
@@ -181,21 +181,21 @@ export function excludeKinds<T extends Typ, U extends Typ[]>(typeT: T, ...typesU
 function excludeTypesFromTypes<T extends Typ[], U extends Typ[]>(typesT: T, typesU: U) {
   const flatTypesU = typesU.flatMap(x => [...flatIterateUnion(x)]);
   // return unionIfNeeded(typesT.filter(typeT => typesUFlattened.find(typeU => areEqual(typeT, typeU)) === undefined));
-  const notExcluded = [];
+  const result = [];
   for (const elementT of typesT) {
-    let didFindMatchingMember = false;
+    let didFindMatch = false;
     for (const typeU of flatTypesU) {
       // if (areEqual(elementT, typeU)) {
       if (elementT.kind === typeU.kind) {
-        didFindMatchingMember = true;
+        didFindMatch = true;
         break;
       }
     }
-    if (!didFindMatchingMember) {
-      notExcluded.push(elementT);
+    if (!didFindMatch) {
+      result.push(elementT);
     }
   }
-  return unionIfNeeded(notExcluded) as any;
+  return unionIfNeeded(result) as any;
 }
 
 type ExtractFlattenedUnionMembers<T, U extends Typ[]> = TupleExtract<

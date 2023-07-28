@@ -1,31 +1,103 @@
-import { type ParseOptions } from './types';
-
-export type TypeConverter<TSource, TDestinationType> = (
-  value: TSource,
-  opts?: ParseOptions
-) => ParseResult<TDestinationType>;
+export type TypeConverter<TSource, TDestinationType> = (value: TSource) => ParseResult<TDestinationType>;
 
 export function pass<T>(value: T): ParseResult<T> {
   return { success: true as const, data: value };
 }
 
-export function fail(message?: string, error?: unknown) {
+export function fail(error?: ParseError) {
   return {
     success: false as const,
-    message,
-    error
+    error: error ?? { kind: 'general', message: undefined }
   };
 }
 
-export type ParseResult<T> = { success: true; data: T } | { success: false; message?: string; error?: unknown };
+export type ParseResult<T> = { success: true; data: T } | { success: false; message?: string; error: ParseError };
 
-export class ParseContext {
-  path: string[] = [];
+export type ParseError = ParseErrorTypes[keyof ParseErrorTypes];
 
-  push(key: string) {
-    this.path.push(key);
+export interface WrongTypeError {
+  kind: 'wrong-type';
+  expected: string;
+  actual: string;
+}
+
+export interface ParseErrorTypes {
+  WrongType: WrongTypeError;
+  General: GeneralError;
+  Condition: ConditionError;
+  Array: ArrayError;
+  Map: MapError;
+}
+
+export function failWrongType(expected: string, actual: unknown) {
+  return fail({ kind: 'wrong-type', expected, actual: typeof actual });
+}
+
+// declare module '../message' {
+//   // Where you define MessageTypes
+//   interface ParseErrorTypes {
+//     WrongType: WrongTypeError;
+//   }
+// }
+
+// export interface NimbitError<TKind> {
+//   kind: TKind;
+// }
+
+export interface GeneralError {
+  kind: 'general';
+  message?: string;
+}
+
+export interface ConditionError {
+  kind: 'condition';
+  message?: string;
+}
+
+export interface MapError {
+  kind: 'map' | 'record';
+  keyErrors: ArrayErrorIndex;
+  valueErrors: ArrayErrorIndex;
+}
+
+export type ArrayErrorIndex = Array<[index: number, value: ParseError]>;
+
+export function recordIfFailed(errorIndex: ArrayErrorIndex, i: number, result: ParseResult<unknown>) {
+  if (!result.success) {
+    errorIndex.push([i, result.error]);
   }
 }
+
+export interface ArrayError {
+  kind: 'array' | 'tuple' | 'set';
+  errors: ArrayErrorIndex;
+}
+
+// export interface Issue {
+//   path: PropertyKey[];
+//   error: ParseError;
+// }
+
+// export class ParseContext {
+//   path: PropertyKey[] = [];
+//   issues: Issue[] = [];
+
+//   push<T>(key: PropertyKey, func: () => T) {
+//     try {
+//       this.path.push(key);
+//       return func();
+//     } finally {
+//       this.path.pop();
+//     }
+//   }
+//   pop() {
+//     this.path.pop();
+//   }
+
+//   addIssue(error: ParseError) {
+//     this.issues.push({ path: this.path.slice(), error });
+//   }
+// }
 
 // // TODO: see if wrapping throw is useful
 // export const tryPass = <T>(action: () => T): ParseResult<T> => {

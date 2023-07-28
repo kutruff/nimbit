@@ -1,8 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
+import {
+  fail,
+  failWrongType,
+  pass,
+  recordIfFailed as recordArrayResult,
+  Typ,
+  type ArrayErrorIndex,
+  type ParseResult,
+  type TsType,
+  type Type
+} from '.';
 
 export function array<TValue extends Type<unknown, unknown>>(value: TValue) {
   return new ArrayType<TValue, Array<TsType<TValue>>>(value);
@@ -13,20 +19,23 @@ export class ArrayType<TValue, T> extends Typ<'array', TValue, T> {
     super('array', element, name);
   }
 
-  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown): ParseResult<T> {
     if (!Array.isArray(value)) {
-      return fail();
+      return failWrongType(this.kind, value);
     }
-    const valueAsArray = value as unknown[];
-    const parsedArray = [];
-    for (const element of valueAsArray) {
-      const result = (this.shape as any).safeParse(element, opts);
-      if (!result.success) {
-        return fail();
+    const parsed = [];
+    const errors: ArrayErrorIndex = [];
+
+    for (let i = 0; i < value.length; i++) {
+      const result = (this.shape as Typ).safeParse(value[i]);
+
+      if (result.success) {
+        parsed.push(result.data);
       }
-      parsedArray.push(result.data);
+      recordArrayResult(errors, i, result);
     }
-    return pass(parsedArray as T);
+
+    return errors.length === 0 ? pass(parsed as T) : fail({ kind: 'array', errors });
   }
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {

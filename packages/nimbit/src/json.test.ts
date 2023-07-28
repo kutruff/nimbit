@@ -18,5 +18,6 @@ describe('json', () => {
         expect(result.data).toEqual(expected);
       }
     });
+    it.todo('test recrusive json parsing');
   });
 });

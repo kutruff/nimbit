@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { fail, pass, Typ, type ParseResult } from '.';
+import { failWrongType, pass, Typ, type ParseResult } from '.';
 
 export type EnumLike = { [k: string]: string | number; [num: number]: string };
 
@@ -21,10 +21,13 @@ export class NativeEnumType<TEnum> extends Typ<'nativeEnum', TEnum, TEnum[keyof 
       const enumValue = shape[key]!;
 
       if (enumValue === value) {
-        return typeof shape[enumValue] !== 'number' ? pass(enumValue as TEnum[keyof TEnum]) : fail();
+        if (typeof shape[enumValue] !== 'number') {
+          return pass(enumValue as TEnum[keyof TEnum]);
+        }
+        break;
       }
     }
 
-    return fail();
+    return failWrongType(this.name || this.kind, value);
   }
 }

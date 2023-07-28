@@ -4,13 +4,13 @@
 
 # _Nimbit_
 
-[![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit)
+[![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=size)](https://bundlephobia.com/result?p=nimbit@latest)
 
 A very tiny TypeScript type definition, validation, and reflection library. Your types are always introspectable no matter what validations or transformations you add to them.
 
-The library heavily mirrors Zod's excellent design, and has all the best parts of Zod. However, but is very tiny, produces less noise in your code, and always guarantees reflection. The documentation here intentionally follows Zod's documentation part to help you transition from Zod to Nimbit.
+The library heavily mirrors Zod's excellent design, and has all the best parts of Zod. However, it produces less noise in your code, and always guarantees reflection. Helper methods are left for userland as well like Superstruct's philosophy. The documentation here intentionally follows Zod's documentation in part to help you transition from Zod to Nimbit.
 
-This is in alpha. Still working on validation.
+This is in alpha. Still working on error reporting.
 
 ```bash
 npm install nimbit
@@ -22,9 +22,9 @@ This comparison strives to be as accurate and as unbiased as possible. If you us
 
 NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 
-|                                       [Nimbit](https://github.com/kutruff/nimbit)                                       |                                     [Zod](https://github.com/colinhacks/zod)                                      |
-| :---------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
-| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
+|                                              [Nimbit](https://github.com/kutruff/nimbit)                                              |                                     [Zod](https://github.com/colinhacks/zod)                                      |
+| :-----------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
+| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=size)](https://bundlephobia.com/result?p=nimbit@latest) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
 
 |                                                  | [Nimbit](https://github.com/kutruff/nimbit) | [Zod](https://github.com/colinhacks/zod) |
 | :----------------------------------------------- | :-----------------------------------------: | :--------------------------------------: |
@@ -189,7 +189,7 @@ mySchema.parse(12); // => throws error
 Creating an object schema
 
 ```ts
-import { obj, string } from 'nimbit';
+import { obj, string, type Infer } from 'nimbit';
 
 const User = obj({
   username: string
@@ -198,7 +198,7 @@ const User = obj({
 User.parse({ username: 'Ludwig' }); // {username: "Ludwig"}}
 
 // extract the inferred type
-type User = t.Infer<typeof User>;
+type User = Infer<typeof User>;
 // { username: string }
 ```
 
@@ -278,9 +278,9 @@ asNumber.parse('12'); // => 12
 asNumber.parse('hi'); // => throws
 ```
 
-The first argument is the Nimmbit output type of your coercion. This paradigm is important to keep all types defined by Nimbit to be reflective and maintain strong typing throughout your code.
+The first argument is the Nimbit output type of your coercion. This paradigm is important to keep all types defined by Nimbit to be reflective and maintain strong typing throughout your code.
 
-If the coercion succeeds you just need to return `pass(result)`. If the coercion fails, return `fail()`. You can also return `fail(message)` to provide a custom error message.
+If the coercion succeeds you just need to return `pass(result)`. If the coercion fails, return `fail()`. You can also return `fail()` to provide a custom error message.
 
 After that you can use `asNumber` any place you would use a `string`.
 
@@ -618,9 +618,9 @@ You can also retrieve the list of options as a tuple with the `.shape` property:
 FishEnum.options; // ["Salmon", "Tuna", "Trout"];
 ```
 
-## (TODO) Native enums
+## Native enums
 
-Zod enums are the recommended approach to defining and validating enums. But if you need to validate against an enum from a third-party library (or you don't want to rewrite your existing enums) you can use `z.nativeEnum()`.
+Enums created with `enumm()` are the recommended approach to defining and validating enums. But if you need to validate against an enum from a third-party library (or you don't want to rewrite your existing enums) you can use `nativeEnum()`.
 
 **Numeric enums**
 
@@ -630,8 +630,8 @@ enum Fruits {
   Banana
 }
 
-const FruitEnum = z.nativeEnum(Fruits);
-type FruitEnum = z.infer<typeof FruitEnum>; // Fruits
+const FruitEnum = nativeEnum(Fruits);
+type FruitEnum = Infer<typeof FruitEnum>; // Fruits
 
 FruitEnum.parse(Fruits.Apple); // passes
 FruitEnum.parse(Fruits.Banana); // passes
@@ -649,8 +649,8 @@ enum Fruits {
   Cantaloupe // you can mix numerical and string enums
 }
 
-const FruitEnum = z.nativeEnum(Fruits);
-type FruitEnum = z.infer<typeof FruitEnum>; // Fruits
+const FruitEnum = nativeEnum(Fruits);
+type FruitEnum = Infer<typeof FruitEnum>; // Fruits
 
 FruitEnum.parse(Fruits.Apple); // passes
 FruitEnum.parse(Fruits.Cantaloupe); // passes
@@ -671,8 +671,8 @@ const Fruits = {
   Cantaloupe: 3
 } as const;
 
-const FruitEnum = z.nativeEnum(Fruits);
-type FruitEnum = z.infer<typeof FruitEnum>; // "apple" | "banana" | 3
+const FruitEnum = nativeEnum(Fruits);
+type FruitEnum = Infer<typeof FruitEnum>; // "apple" | "banana" | 3
 
 FruitEnum.parse('apple'); // passes
 FruitEnum.parse('banana'); // passes
@@ -714,7 +714,7 @@ const optionalString = string.opt();
 optionalString.unwrap() === stringSchema; // true
 ```
 
-NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExcludeKind()` if you wish to remove a type from all nested unions.
+NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExcludeKinds()` if you wish to remove a type from all nested unions.
 
 ```ts
 const optionalString = string.opt().opt();
@@ -722,7 +722,7 @@ optionalString.unwrap() === stringSchema; // false!
 optionalString.unwrap().unwrap() === stringSchema; // true!
 
 exclude(optionalString, undef) === stringSchema; // false!
-flatExcludeKind(optionalString, undef) === stringSchema; // true!
+flatExcludeKinds(optionalString, undef) === stringSchema; // true!
 ```
 
 ## Nullables
@@ -1261,25 +1261,6 @@ In general, use `merge` and `extend`.
 
 ## FlatExclude
 
-<!-- Intersections in Zod are not smart. Whatever data you pass into `.parse()` gets passed into the two intersected schemas. Because Zod object schemas don't allow any unknown keys by default, there are some unintuitive behavior surrounding intersections of object schemas. -->
-
-<!--
-
-``` ts
-const A = z.object({
-  a: z.string(),
-});
-
-const B = z.object({
-  b: z.string(),
-});
-
-const AB = z.intersection(A, B);
-
-type Teacher = z.infer<typeof Teacher>;
-// { id:string; name:string };
-```  -->
-
 ## Recursive Objects
 
 One of the biggest advantages of Nimbit is a new approach to recursive types. In Nimbit, recursive types are defined as naturally as typical objects, but instead you first define your object's shape as a class before passing it to `obj()`.
@@ -1635,7 +1616,7 @@ ZodError {
 The `.refine` method is actually syntactic sugar atop a more versatile (and verbose) method called `superRefine`. Here's an example:
 
 ```ts
-const Strings = z.array(z.string()).superRefine((val, ctx) => {
+const Strings = z.array(z.string()).superRefine(val => {
   if (val.length > 3) {
     ctx.addIssue({
       code: z.ZodIssueCode.too_big,
@@ -1664,7 +1645,7 @@ Normally refinements always create issues with a `ZodIssueCode.custom` error cod
 By default, parsing will continue even after a refinement check fails. For instance, if you chain together multiple refinements, they will all be executed. However, it may be desirable to _abort early_ to prevent later refinements from being executed. To achieve this, pass the `fatal` flag to `ctx.addIssue` and return `z.NEVER`.
 
 ```ts
-const schema = z.number().superRefine((val, ctx) => {
+const schema = z.number().superRefine(val => {
   if (val < 10) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -1695,7 +1676,7 @@ const schema = z
     second: z.number()
   })
   .nullable()
-  .superRefine((arg, ctx): arg is { first: string; second: number } => {
+  .superRefine((arg): arg is { first: string; second: number } => {
     if (!arg) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom, // customize your issue
@@ -1741,7 +1722,7 @@ The `.transform` method can simultaneously validate and transform the value. Thi
 As with `.superRefine`, the transform function receives a `ctx` object with an `addIssue` method that can be used to register validation issues.
 
 ```ts
-const numberInString = z.string().transform((val, ctx) => {
+const numberInString = z.string().transform(val => {
   const parsed = parseInt(val);
   if (isNaN(parsed)) {
     ctx.addIssue({

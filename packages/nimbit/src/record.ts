@@ -1,19 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   areEqual,
+  EVIL_PROTO,
   fail,
+  failWrongType,
+  isBasicObject,
+  MapError,
   pass,
+  recordIfFailed,
   Typ,
+  type ArrayErrorIndex,
   type ComparisonCache,
   type NumberT,
   type ParseResult,
   type StringT,
   type SymbolT,
-  type TsType,
-  isBasicObject
+  type TsType
 } from '.';
 
 export function record<TKey extends StringT | NumberT | SymbolT, TValue extends Typ<unknown, unknown>>(
@@ -29,21 +34,31 @@ export class RecordType<TKey, TValue, T> extends Typ<'record', [TKey, TValue], T
     super('record', [key, value], name);
   }
 
-  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
-    if (!isBasicObject(value) || Object.hasOwn(value, '__proto__')) {
-      return fail();
+  safeParse(value: unknown): ParseResult<T> {
+    if (!isBasicObject(value) || Object.hasOwn(value, EVIL_PROTO)) {
+      return failWrongType(this.kind, value);
     }
 
-    const result = {} as any;
+    const parsed = {} as any;
+
+    const keyErrors: ArrayErrorIndex = [];
+    const valueErrors: ArrayErrorIndex = [];
+    let i = 0;
     for (const key of Reflect.ownKeys(value)) {
-      const keyResult = (this.key as any).safeParse(key, opts);
-      const valueResult = (this.value as any).safeParse((value as any)[key], opts);
-      if (!keyResult.success || !valueResult.success) {
-        return fail();
+      const keyResult = (this.key as Typ).safeParse(key);
+
+      recordIfFailed(keyErrors, i, keyResult);
+      const valueResult = (this.value as Typ).safeParse((value as any)[key]);
+      recordIfFailed(valueErrors, i, valueResult);
+
+      if (keyResult.success && valueResult.success) {
+        parsed[keyResult.data as PropertyKey] = valueResult.data;
       }
-      result[keyResult.data] = valueResult.data;
+      i++;
     }
-    return pass(result);
+    return keyErrors.length === 0 && valueErrors.length === 0
+      ? pass(parsed)
+      : fail({ kind: 'record', keyErrors, valueErrors });
   }
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {

@@ -1,8 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { fail, pass, Typ, type ParseResult, type TsType, type Type } from '.';
+import {
+  fail,
+  failWrongType,
+  pass,
+  recordIfFailed,
+  Typ,
+  type ArrayErrorIndex,
+  type ParseResult,
+  type TsType,
+  type Type
+} from '.';
 
 export function set<TValue extends Type<unknown, unknown>>(value: TValue) {
   return new SetType<TValue, Set<TsType<TValue>>>(value);
@@ -13,20 +19,26 @@ export class SetType<TValue, T> extends Typ<'set', TValue, T> {
     super('set', value, name);
   }
 
-  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown): ParseResult<T> {
     if (!(value instanceof Set)) {
-      return fail();
+      return failWrongType(this.kind, value);
     }
-    const input = value as Set<unknown>;
+
     const parsed = new Set();
-    for (const element of input) {
-      const result = (this.value as any).safeParse(element, opts);
-      if (!result.success) {
-        return fail();
+    let i = 0;
+
+    const errors: ArrayErrorIndex = [];
+    for (const element of value) {
+      // const result = ctx.push(i, () => (this.value as Typ).safeParse(element));
+      const result = (this.value as Typ).safeParse(element);
+      if (result.success) {
+        parsed.add(result.data);
       }
-      parsed.add(result.data);
+      recordIfFailed(errors, i, result);
+      i++;
     }
-    return pass(parsed as T);
+
+    return errors.length === 0 ? pass(parsed as T) : fail({ kind: 'set', errors });
   }
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {

@@ -2,7 +2,9 @@ import {
   array,
   boolean,
   coerce,
+  EVIL_PROTO,
   fail,
+  failWrongType,
   nul,
   number,
   pass,
@@ -18,7 +20,7 @@ import { record } from './record';
 const Literals = union(string, number, boolean, nul);
 type JsonLiterals = Infer<typeof Literals>;
 
-type json = JsonLiterals | json[] | { [key: string]: json };
+export type json = JsonLiterals | json[] | { [key: string]: json };
 
 const jsonSchema: LazyType<json> = lazy(() => union(Literals, array(jsonSchema), record(string, jsonSchema)));
 
@@ -27,9 +29,9 @@ export const json = coerce(jsonSchema, jsonParse);
 export function jsonParse(x: string): ParseResult<json> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return pass(JSON.parse(x, (key, value) => (key === '__proto__' ? undefined : value)));
+    return pass(JSON.parse(x, (key, value) => (key === EVIL_PROTO ? undefined : value)));
   } catch (err) {
-    return fail();
+    return failWrongType('json', x);
   }
 }
 

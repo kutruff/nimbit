@@ -1,8 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { areEqual, fail, pass, Typ, type ComparisonCache, type ParseResult, type TsType, type Type } from '.';
+import {
+  fail,
+  failWrongType,
+  pass,
+  recordIfFailed,
+  Typ,
+  type ArrayErrorIndex,
+  type ParseResult,
+  type TsType,
+  type Type
+} from '.';
 
 export function map<TKey extends Type<unknown, unknown>, TValue extends Type<unknown, unknown>>(
   key: TKey,
@@ -17,22 +23,32 @@ export class MapType<TKey, TValue, T> extends Typ<'map', [TKey, TValue], T> {
     super('map', [key, value], name);
   }
 
-  safeParse(value: unknown, opts = Typ.defaultOpts): ParseResult<T> {
+  safeParse(value: unknown): ParseResult<T> {
     if (!(value instanceof Map)) {
-      return fail();
+      return failWrongType(this.kind, value);
     }
 
-    const valueAsMap = value as Map<unknown, unknown>;
-    const parsedMap = new Map();
-    for (const [key, value] of valueAsMap) {
-      const keyResult = (this.shape[0] as any).safeParse(key, opts);
-      const valueResult = (this.shape[1] as any).safeParse(value, opts);
-      if (!keyResult.success || !valueResult.success) {
-        return fail();
+    const keyErrors: ArrayErrorIndex = [];
+    const valueErrors: ArrayErrorIndex = [];
+
+    const result = new Map();
+    let i = 0;
+    for (const [key, elementValue] of value) {
+      const keyResult = (this.shape[0] as Typ).safeParse(key);
+      recordIfFailed(keyErrors, i, keyResult);
+
+      const valueResult = (this.shape[1] as Typ).safeParse(elementValue);
+      recordIfFailed(valueErrors, i, valueResult);
+
+      if (keyResult.success && valueResult.success) {
+        result.set(keyResult.data, valueResult.data);
       }
-      parsedMap.set(keyResult.data, valueResult.data);
+
+      i++;
     }
-    return pass(parsedMap as T);
+    return keyErrors.length === 0 && valueErrors.length === 0
+      ? pass(result as T)
+      : fail({ kind: 'map', keyErrors, valueErrors });
   }
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {

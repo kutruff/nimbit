@@ -1,4 +1,4 @@
-import { _type, fail, pass, Typ, type Literal, type ParseResult } from '.';
+import { _type, fail, failWrongType, pass, Typ, type Literal, type ParseResult } from '.';
 
 export class LiteralType<TLiteralValue> extends Typ<'literal', TLiteralValue, TLiteralValue> {
   constructor(public value: TLiteralValue, name?: string) {
@@ -7,7 +7,7 @@ export class LiteralType<TLiteralValue> extends Typ<'literal', TLiteralValue, TL
 
   safeParse(value: unknown): ParseResult<TLiteralValue> {
     //does not handle new String() on purpose.
-    return value === this.shape ? pass(this.shape) : fail();
+    return value === this.shape ? pass(this.shape) : failWrongType(this.kind, value);
   }
 
   // areEqual(other: Typ<unknown, unknown>): boolean {

@@ -13,6 +13,8 @@ export function keyMap<T extends object>(type: T): ObjectKeyMap<T> {
   return getKeys(type).reduce((acc, x) => ({ ...acc, [x]: x }), {}) as any;
 }
 
+export const EVIL_PROTO = '__proto__';
+
 export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleKeysToUnion<T>, PropertyKey>]: K };
 
 export function createMapOfTupleKeys<TTuple extends readonly [TValue, ...TValue[]], TValue extends PropertyKey>(
@@ -25,13 +27,13 @@ export function createMapOfTupleKeys<TTuple extends readonly [TValue, ...TValue[
 export const asTuple = <T extends unknown[]>(...args: T): T => args;
 
 //TODO: may want to add middleware here to allow for custom types
-export function isBasicObject(data: unknown): data is object {
+export function isBasicObject(value: unknown): value is object {
   return (
-    typeof data === 'object' &&
-    data !== null &&
-    !Array.isArray(data) &&
-    !(data instanceof Date) &&
-    !(data instanceof Map) &&
-    !(data instanceof Set)
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(value instanceof Date) &&
+    !(value instanceof Map) &&
+    !(value instanceof Set)
   );
 }
