@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -7,13 +8,11 @@
 /* eslint no-use-before-define: 0 */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  areEqual,
   flatIterateUnion,
   never,
   obj,
   unionIfNeeded,
   type _type,
-  type ComparisonCache,
   type FlattenUnionMembers,
   type ObjType,
   type ObjTypShape,
@@ -21,6 +20,7 @@ import {
   type Typ,
   type UnionType
 } from '.';
+import { areEqual, type ComparisonCache } from './areEqual';
 
 // export type Intersect<A, B> = [A, B] extends [
 //   infer A extends UnionType<unknown[], unknown>,

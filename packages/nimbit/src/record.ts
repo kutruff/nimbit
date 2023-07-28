@@ -3,17 +3,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
-  areEqual,
   EVIL_PROTO,
   fail,
   failWrongType,
   isBasicObject,
-  MapError,
   pass,
   recordIfFailed,
   Typ,
   type ArrayErrorIndex,
-  type ComparisonCache,
   type NumberT,
   type ParseResult,
   type StringT,

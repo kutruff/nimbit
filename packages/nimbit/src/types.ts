@@ -45,7 +45,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   //   return undefined;
   // }
 
-  isUnion(): boolean {    
+  isUnion(): boolean {
     return false;
   }
 
@@ -74,7 +74,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
       return result;
     }
 
-    throw new Error(result.message ?? 'parse failed');
+    throw result.error;
   }
 
   // // eslint-disable-next-line @typescript-eslint/no-unused-vars

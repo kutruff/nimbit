@@ -3,7 +3,6 @@ import {
   boolean,
   coerce,
   EVIL_PROTO,
-  fail,
   failWrongType,
   nul,
   number,

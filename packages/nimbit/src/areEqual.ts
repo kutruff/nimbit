@@ -1,12 +1,13 @@
-import { flatIterateUnion, type Typ, type Type } from '.';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { type Typ, type Type } from '.';
 
 export type ComparisonCache = WeakMap<Type, WeakMap<Type, boolean>>;
 
 //TODO: change name to extends since order matters, or should there be areEqual and extends?
 export const areEqual = (a: Typ, b: Typ, cache?: ComparisonCache): boolean => {
-  return true;
-  // if (a === b) return true;
+  if (a === b) return true;
 
+  return true;
   // cache ??= new WeakMap();
 
   // if (!a.isUnion() && !b.isUnion() && a.kind !== b.kind) {

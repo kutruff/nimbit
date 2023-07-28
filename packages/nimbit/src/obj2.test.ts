@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from '.';
+import { areEqual } from './areEqual';
 import { intersection } from './intersection';
 import { expectType, expectTypesSupportAssignment, type TypeEqual } from './test/utilities';
 
@@ -243,7 +244,7 @@ describe.skip('obj2', () => {
     if (!Array.isArray(unionType.shape)) {
       return t.never as any;
     }
-    const result = unionType.shape.filter(x => !types.find(k => t.areEqual(x, k)));
+    const result = unionType.shape.filter(x => !types.find(k => areEqual(x, k)));
     return t.union(...result) as any;
   }
 

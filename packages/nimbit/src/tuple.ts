@@ -12,12 +12,6 @@ import {
   type Type
 } from '.';
 
-declare global {
-  interface Array<T> {
-    toObservable(): number;
-  }
-}
-
 export type InferTupleKeys<T extends readonly unknown[], Acc extends readonly unknown[] = []> = T extends readonly [
   infer U,
   ...infer TRest

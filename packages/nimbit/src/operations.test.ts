@@ -276,7 +276,7 @@ describe('Type operations', () => {
       const result = t.pick(target, 'prop0');
       const resultadf = t.pick(target, ...getKeys({ prop0: true, prop1: 1 }));
       type ResultTsType = t.Infer<typeof result>;
-      expect(t.areEqual(result.shape.prop0, t.string)).toEqual(true);
+      expect(result.shape.prop0).toEqual(t.string);
       expect(result.shape).not.toHaveProperty('prop1');
     });
 
@@ -284,7 +284,7 @@ describe('Type operations', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
       const result = t.pick(target, ...getKeys({ prop1: 1 }));
       type ResultTsType = t.Infer<typeof result>;
-      expect(t.areEqual(result.shape.prop1, t.bigint)).toEqual(true);
+      expect(result.shape.prop1).toEqual(t.bigint);
       expect(result.shape).not.toHaveProperty('prop0');
     });
   });
@@ -297,7 +297,7 @@ describe('Type operations', () => {
 
       expectType<TypeEqual<Result, { prop1: bigint }>>(true);
 
-      expect(t.areEqual(Result.shape.prop1, t.bigint)).toEqual(true);
+      expect(Result.shape.prop1).toEqual(t.bigint);
       expect(Result.shape).not.toHaveProperty('prop0');
     });
   });
