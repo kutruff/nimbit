@@ -4,7 +4,7 @@
     Ultra-tiny TypeScript schema validation with static type inference and guaranteed reflection.
   </p>
   <p align="center">            
-    <a href="https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=bundle%20size"><img src="https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=size"" alt="Nimbit Size" /></a>
+    <a href="https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=bundle%20size"><img src="https://img.shields.io/bundlephobia/minzip/nimbit?label=size"" alt="Nimbit Size" /></a>
     <a href="https://github.com/kutruff/nimbit/actions?query=branch%3Amain"><img src="https://github.com/kutruff/nimbit/actions/workflows/ci.yml/badge.svg?event=push&branch=main" alt="Nimbit CI status" /></a>
   </p>
 </p>
@@ -35,9 +35,9 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
 
 Nimbit is in alpha.
 
-|                                              [Nimbit](https://github.com/kutruff/nimbit)                                              |                                     [Zod](https://github.com/colinhacks/zod)                                      |
-| :-----------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
-| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=size)](https://bundlephobia.com/result?p=nimbit@latest) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
+|                                       [Nimbit](https://github.com/kutruff/nimbit)                                       |                                     [Zod](https://github.com/colinhacks/zod)                                      |
+| :---------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
+| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
 
 <!-- ## Library Features and Comparison
 
@@ -66,13 +66,13 @@ NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 The documentation here is a modified snap of Zod's documentation to help compare Nimbit to Zod.
 
 - [Introduction](#introduction)
-  * [Requirements](#requirements)
-  * [From `npm`](#from-npm)
+  - [Requirements](#requirements)
+  - [From `npm`](#from-npm)
 - [Basic usage](#basic-usage)
 - [Primitives](#primitives)
 - [Basic Coercion](#basic-coercion)
-  * [`where()` - basic validation](#where---basic-validation)
-  * [User defined coercion and parsing with `to`](#user-defined-coercion-and-parsing-with-to)
+  - [`where()` - basic validation](#where---basic-validation)
+  - [User defined coercion and parsing with `to`](#user-defined-coercion-and-parsing-with-to)
 - [Literals](#literals)
 - [Enums](#enums)
 - [Native enums](#native-enums)
@@ -80,19 +80,19 @@ The documentation here is a modified snap of Zod's documentation to help compare
 - [Nullables](#nullables)
 - [Nullish](#nullish)
 - [Objects](#objects)
-  * [`.shape`](#shape)
-  * [`.k`](#k)
-  * [`.extend`](#extend)
-  * [`.merge`](#merge)
-  * [`.pick/.omit`](#pickomit)
-  * [`.partial`](#partial)
-  * [`.required`](#required)
-  * [`.passthrough`](#passthrough)
-  * [`.strict`](#strict)
-  * [`.strip`](#strip)
-  * [`.catchall`](#catchall)
+  - [`.shape`](#shape)
+  - [`.k`](#k)
+  - [`.extend`](#extend)
+  - [`.merge`](#merge)
+  - [`.pick/.omit`](#pickomit)
+  - [`.partial`](#partial)
+  - [`.required`](#required)
+  - [`.passthrough`](#passthrough)
+  - [`.strict`](#strict)
+  - [`.strip`](#strip)
+  - [`.catchall`](#catchall)
 - [Arrays](#arrays)
-  * [`.element`](#element)
+  - [`.element`](#element)
 - [Unions](#unions)
 - [Records](#records)
 - [Maps](#maps)
@@ -103,26 +103,26 @@ The documentation here is a modified snap of Zod's documentation to help compare
 - [Exclude](#exclude)
 - [FlatExclude](#flatexclude)
 - [Recursive Objects](#recursive-objects)
-  * [Other Recursive Types / JSON](#other-recursive-types--json)
-  * [Cyclical objects](#cyclical-objects)
+  - [Other Recursive Types / JSON](#other-recursive-types--json)
+  - [Cyclical objects](#cyclical-objects)
 - [Promises](#promises)
 - [Functions](#functions)
 - [Custom Types](#custom-types)
 - [Type methods](#type-methods)
-  * [`.parse`](#parse)
-  * [`.safeParse`](#safeparse)
-  * [`.where`](#where)
-  * [`.tweak`](#tweak)
-  * [`.default`](#default)
-  * [`.catch`](#catch)
-  * [`.opt`](#opt)
-  * [`.nullable`](#nullable)
-  * [`.nullish`](#nullish-1)
-  * [`.brand`](#brand)
-  * [`.to`](#to)
-  * [Error handling](#error-handling)
-  * [Error formatting](#error-formatting)
-    + [`visitErrors`](#visiterrors)
+  - [`.parse`](#parse)
+  - [`.safeParse`](#safeparse)
+  - [`.where`](#where)
+  - [`.tweak`](#tweak)
+  - [`.default`](#default)
+  - [`.catch`](#catch)
+  - [`.opt`](#opt)
+  - [`.nullable`](#nullable)
+  - [`.nullish`](#nullish-1)
+  - [`.brand`](#brand)
+  - [`.to`](#to)
+  - [Error handling](#error-handling)
+  - [Error formatting](#error-formatting)
+    - [`visitErrors`](#visiterrors)
 
 ## Introduction
 
