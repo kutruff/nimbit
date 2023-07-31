@@ -6,7 +6,7 @@
 import {
   _result,
   fail,
-  failWrongType,
+  failInvalidType,
   nul,
   pass,
   undef,
@@ -168,95 +168,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
 
     return clone;
   }
-
-  // to2(converter: (value: T) => T, error?: ErrorParameter<T>): typeof this;
-  // to2(converter: TypeConverter<T, T>): typeof this;
-  // to2<TDestination extends Typ<unknown, unknown>>(
-  //   destination: TDestination,
-  //   converter: (value: T) => TsType<TDestination>,
-  //   error?: ErrorParameter<TsType<TDestination>>
-  // ): TDestination;
-  // to2<TDestination extends Typ<unknown, unknown>>(
-  //   destination: TDestination,
-  //   converter?: TypeConverter<T, TsType<TDestination>>
-  // ): TDestination;
-  // to2<TDestination extends Typ<unknown, unknown>>(
-  //   arg0: ((value: T) => T) | TypeConverter<T, T> | TDestination,
-  //   arg1?: ErrorParameter<T> | ((value: T) => TsType<TDestination>) | TypeConverter<T, TsType<TDestination>>,
-  //   arg2?: ErrorParameter<TsType<TDestination>>
-  // ): TDestination | this {
-  //   let destination: typeof this | TDestination;
-  //   let converter:
-  //     | ((value: T) => T)
-  //     | TypeConverter<T, T>
-  //     | ((value: T) => TsType<TDestination>)
-  //     | TypeConverter<T, TsType<TDestination>>
-  //     | undefined = undefined;
-
-  //   let error: ErrorParameter<T> | ErrorParameter<TsType<TDestination>> | undefined;
-
-  //   // let destination;
-  //   // let converter;
-  //   // let error;
-
-  //   if (typeof arg0 === 'function') {
-  //     destination = this;
-  //     converter = arg0 as ((value: T) => T) | TypeConverter<T, T>;
-  //     error = arg1 as ErrorParameter<T> | undefined;
-  //   } else {
-  //     destination = arg0;
-  //     converter = arg1 as ((value: T) => TsType<TDestination>) | TypeConverter<T, TsType<TDestination>> | undefined;
-  //     error = arg2;
-  //   }
-
-  //   const [clone, destinationParse] = overrideSafeParse(destination);
-  //   const source = this;
-
-  //   clone.safeParse = function (value: T) {
-  //     const sourceResult = source.safeParse(value);
-  //     if (!sourceResult.success) {
-  //       return sourceResult;
-  //     }
-
-  //     if (converter) {
-  //       try {
-  //         const convertedResult = converter(sourceResult.data);
-  //         if ((convertedResult as any)[parseResult] === 1) {
-  //           const asParseResult = convertedResult as ParseResult<unknown>;
-  //           return asParseResult.success ? destinationParse(asParseResult.data) : asParseResult;
-  //         } else {
-  //           return destinationParse(convertedResult as T | TsType<TDestination>);
-  //         }
-  //       } catch (e) {
-  //         return fail(
-  //           error === undefined
-  //             ? { kind: 'thrown', error: e }
-  //             : typeof error === 'string'
-  //             ? { kind: 'general', message: error }
-  //             : error(value)
-  //         );
-  //       }
-  //       // if (convertedResult[parseResult] === 1) {
-  //       //   const asParseResult = convertedResult as ParseResult<unknown>;
-  //       //   return asParseResult.success ? destinationParse(asParseResult.data) : asParseResult;
-  //       // } else {
-  //       // }
-  //     }
-  //     return destinationParse(sourceResult.data);
-  //   };
-
-  //   return clone;
-  // }
 }
-
-// export function to<TDestination extends Typ<unknown, unknown>, T>(
-//   destination: TDestination,
-//   transformer: (value: T) => TsType<TDestination>,
-//   customError?: string | ((value: T) => ParseError)
-// ): TDestination {
-//   // return coerce(destination, tryPass(transformer, customError));
-//   return {} as any;
-// }
 
 export function createType<TKind extends string, TType>(
   kind: TKind,
@@ -264,7 +176,7 @@ export function createType<TKind extends string, TType>(
 ): Typ<TKind, TType, TType> {
   const instance = new Typ<TKind, TType, TType>(kind, undefined as TType, kind);
   instance.safeParse =
-    safeParser || ((value: TType) => (typeof value === kind ? pass(value) : failWrongType(kind, value)));
+    safeParser || ((value: TType) => (typeof value === kind ? pass(value) : failInvalidType(kind, value)));
   return instance;
 }
 
@@ -287,28 +199,6 @@ export function to<T, TDestination extends Typ<unknown, unknown>>(
 ): TDestination {
   return unknown.to(destination, converter as any, customError as any);
 }
-
-// export function to<TDestination extends Typ<unknown, unknown>, T>(
-//   destination: TDestination,
-//   transformer: (value: T) => TsType<TDestination>,
-//   customError?: string | ((value: T) => ParseError)
-// ): TDestination {
-//   // return coerce(destination, tryPass(transformer, customError));
-//   return {} as any;
-// }
-
-// export function coerce<TDestination extends Typ<unknown, unknown>, T>(
-//   destination: TDestination,
-//   converter: TypeConverter<T, TsType<TDestination>>
-// ): TDestination {
-//   const [clone, originalParse] = overrideSafeParse(destination);
-
-//   clone.safeParse = function (value: T) {
-//     const lastResult = converter(value);
-//     return lastResult.success ? originalParse(lastResult.data) : lastResult;
-//   };
-//   return clone;
-// }
 
 export function overrideSafeParse<TType extends Typ<unknown, unknown, unknown>>(
   obj: TType

@@ -1,6 +1,6 @@
 import {
   fail,
-  failWrongType,
+  failInvalidType,
   pass,
   recordIfFailed,
   Typ,
@@ -25,7 +25,7 @@ export class MapType<TKey, TValue, T> extends Typ<'map', [TKey, TValue], T> {
 
   safeParse(value: unknown): ParseResult<T> {
     if (!(value instanceof Map)) {
-      return failWrongType(this.kind, value);
+      return failInvalidType(this.kind, value);
     }
 
     const keyErrors: ArrayErrorIndex = [];

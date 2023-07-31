@@ -8,7 +8,7 @@ import {
   cloneObject,
   EVIL_PROTO,
   fail,
-  failWrongType,
+  failInvalidType,
   isBasicObject,
   pass,
   propertyMap,
@@ -19,6 +19,7 @@ import {
   type ObjectKeyMap,
   type ParseError,
   type ParseResult,
+  type PropertyErrorMap,
   type Resolve,
   type Type
 } from '.';
@@ -46,26 +47,6 @@ export const PropertyPolicy = {
 } as const;
 
 export type PropPolicy = (typeof PropertyPolicy)[keyof typeof PropertyPolicy];
-
-type PropertyErrorMap = Map<PropertyKey, ParseError>;
-
-export interface ObjectError {
-  kind: 'object';
-  errors: PropertyErrorMap;
-}
-
-export interface StrictnessError {
-  kind: 'strictness';
-}
-
-//TODO see if external imports get picked up
-declare module '.' {
-  // Where you define MessageTypes
-  export interface ParseErrorTypes {
-    Object: ObjectError;
-    Strictness: StrictnessError;
-  }
-}
 
 function addPropertyError(map: PropertyErrorMap | undefined, key: PropertyKey, error: ParseError): PropertyErrorMap {
   map = map ?? new Map();
@@ -113,7 +94,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     //TODO: turn this into a global that users can add to to add their own custom types.
     //TODO: do we need to check for array here?
     if (!isBasicObject(value)) {
-      return failWrongType(this.kind, value);
+      return failInvalidType(this.kind, value);
     }
 
     const shape = this.shape as any;

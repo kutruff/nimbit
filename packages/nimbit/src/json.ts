@@ -2,7 +2,7 @@ import {
   array,
   boolean,
   EVIL_PROTO,
-  failWrongType,
+  failInvalidType,
   nul,
   number,
   pass,
@@ -30,7 +30,7 @@ export function jsonParse(x: string): ParseResult<json> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return pass(JSON.parse(x, (key, value) => (key === EVIL_PROTO ? undefined : value)));
   } catch (err) {
-    return failWrongType('json', x);
+    return failInvalidType('json', x);
   }
 }
 

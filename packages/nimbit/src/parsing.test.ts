@@ -7,6 +7,7 @@ import {
   bigint,
   boolean,
   date,
+  invalidTypeError,
   never,
   nul,
   number,
@@ -14,8 +15,7 @@ import {
   string,
   symbol,
   undef,
-  unknown,
-  wrongTypeError
+  unknown
 } from '.';
 import * as t from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
@@ -418,13 +418,13 @@ describe('TypeConverter', () => {
       .to(number, x => Number(x))
       .where(
         x => !isNaN(x),
-        x => wrongTypeError('asNumber', x)
+        x => invalidTypeError('asNumber', x)
       );
     const result = target.safeParse('hello');
 
     expect(result.success).toEqual(false);
     if (!result.success) {
-      expect(result.error).toEqual({ kind: 'wrong-type', expected: 'asNumber', actual: 'hello' });
+      expect(result.error).toEqual({ kind: 'invalid_type', expected: 'asNumber', actual: 'hello' });
     }
   });
 
@@ -602,7 +602,7 @@ describe('TypeConverter', () => {
     t.string.to(
       t.number,
       x => 100,
-      v => t.wrongTypeError(v, 'number')
+      v => t.invalidTypeError(v, 'number')
     );
     // const DateLike = t.date.from(t.union(t.number, t.string, t.date), coerceToDate);
     // const DateLike2 = t.date.from(DateLike);
@@ -632,5 +632,29 @@ describe('TypeConverter', () => {
     type ExpectedAShape = { prop: string; self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
+  });
+
+  it('where() works with recursive types', () => {
+    const TestObj = t.obj({
+      strProp: t.string,
+      nested: t.obj({
+        nestedA: t.number,
+        nestedB: t.string
+      })
+    });
+
+    const result = TestObj.safeParse({
+      strProp: 1337,
+      nested: {
+        nestedA: 'wrong',
+        nestedB: 7n
+      }
+    });
+    
+
+    expect(result.success).toEqual(false);
+    if (!result.success) {
+      console.log(t.formatError(result.error));
+    }
   });
 });

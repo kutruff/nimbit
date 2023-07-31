@@ -4,7 +4,7 @@
 import {
   EVIL_PROTO,
   fail,
-  failWrongType,
+  failInvalidType,
   isBasicObject,
   pass,
   recordIfFailed,
@@ -32,7 +32,7 @@ export class RecordType<TKey, TValue, T> extends Typ<'record', [TKey, TValue], T
 
   safeParse(value: unknown): ParseResult<T> {
     if (!isBasicObject(value) || Object.hasOwn(value, EVIL_PROTO)) {
-      return failWrongType(this.kind, value);
+      return failInvalidType(this.kind, value);
     }
 
     const parsed = {} as any;

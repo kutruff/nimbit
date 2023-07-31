@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  failWrongType,
+  failInvalidType,
   pass,
   propertyMap,
   Typ,
@@ -36,7 +36,7 @@ export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> exten
         return pass(element as any);
       }
     }
-    return failWrongType(this.name ?? this.kind, value);
+    return failInvalidType(this.name ?? this.kind, value);
   }
 
   // areEqual(other: Type<unknown, unknown>): boolean {

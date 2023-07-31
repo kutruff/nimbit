@@ -2,7 +2,7 @@
 
 import {
   fail,
-  failWrongType,
+  failInvalidType,
   pass,
   recordIfFailed,
   Typ,
@@ -32,7 +32,7 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
 
   safeParse(value: unknown): ParseResult<InferTupleKeys<TElements>> {
     if (!Array.isArray(value) || value.length !== this.elements.length) {
-      return failWrongType(this.kind, value);
+      return failInvalidType(this.kind, value);
     }
     const parsed = [];
 

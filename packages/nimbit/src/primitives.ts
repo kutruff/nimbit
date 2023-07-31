@@ -2,16 +2,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { createType, failWrongType, pass, to, Typ, unknown, wrongTypeError } from '.';
+import { createType, failInvalidType, invalidTypeError, pass, to, Typ, unknown } from '.';
 
 export interface NullT extends Typ<'null', null, null> {}
 export const nul: NullT = createType('null', (value: null) =>
-  value === null ? pass(value) : failWrongType('null', value)
+  value === null ? pass(value) : failInvalidType('null', value)
 );
 
 export interface UndefinedT extends Typ<'undefined', undefined, undefined> {}
 export const undef: UndefinedT = createType('undefined', (value: undefined) =>
-  value === undefined ? pass(value) : failWrongType('undefined', value)
+  value === undefined ? pass(value) : failInvalidType('undefined', value)
 );
 
 export interface AnyT extends Typ<'any', any, any> {}
@@ -29,9 +29,8 @@ export const number: NumberT = createType('number');
 
 export const asNumber = to(number, (x: unknown) => {
   const result = Number(x);
-  return !isNaN(result) ? pass(result) : failWrongType('asNumber', x);
+  return !isNaN(result) ? pass(result) : failInvalidType('asNumber', x);
 });
-
 
 export interface BooleanT extends Typ<'boolean', boolean, boolean> {}
 export const boolean: BooleanT = createType('boolean');
@@ -44,7 +43,7 @@ export const bigint: BigIntT = createType('bigint');
 export const asBigint = to(
   bigint,
   (value: string | number | bigint | boolean) => BigInt(value as any),
-  value => wrongTypeError('asBigint', value)
+  value => invalidTypeError('asBigint', value)
 );
 
 export interface SymbolT extends Typ<'symbol', symbol, symbol> {}
@@ -52,12 +51,12 @@ export const symbol: SymbolT = createType('symbol');
 
 export interface DateT extends Typ<'date', Date, Date> {}
 export const date: DateT = createType('date', (value: Date) =>
-  value instanceof Date && !isNaN(value.getTime()) ? pass(value) : failWrongType('date', value)
+  value instanceof Date && !isNaN(value.getTime()) ? pass(value) : failInvalidType('date', value)
 );
 
 export const asDate = to(date, (value: string | number | Date) => {
   const result = new Date(value);
-  return !isNaN(result.getTime()) ? pass(result) : failWrongType('asDate', value);
+  return !isNaN(result.getTime()) ? pass(result) : failInvalidType('asDate', value);
 });
 
 export interface NeverT extends Typ<'never', never, never> {}

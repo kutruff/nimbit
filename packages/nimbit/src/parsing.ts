@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 export type TypeConverter<TSource, TDestinationType> = (value: TSource) => ParseResult<TDestinationType>;
 
 export function pass<T>(value: T): ParseResult<T> {
@@ -21,41 +22,44 @@ export type ParseSuccess<T> = {
 export type ParseFail = {
   [_result]: 1;
   success: false;
-  // message?: string;
   error: ParseError;
 };
-
-// export interface ErrorWithChildren<T> = {
-//   //Any property that begins with "child" will be traversed by the visitor.
-// };
 
 export type ParseResult<T> = ParseSuccess<T> | ParseFail;
 
 export type ParseError = ParseErrorTypes[keyof ParseErrorTypes];
 
 export interface ParseErrorTypes {
-  WrongType: WrongTypeError;
+  InvalidType: InvalidTypeError;
   General: GeneralError;
   Condition: ConditionError;
   Union: UnionParseError;
   Array: ArrayError;
   Map: MapError;
   Thrown: ThrownError;
-  Set: SetParseError;
+  Strictness: StrictnessError;
+  Object: ObjectError;
 }
 
-export interface WrongTypeError {
-  kind: 'wrong-type';
+export type PropertyErrorMap = Map<PropertyKey, ParseError>;
+
+export interface ObjectError {
+  kind: 'object';
+  errors: PropertyErrorMap;
+}
+
+export interface StrictnessError {
+  kind: 'strictness';
+}
+
+export interface InvalidTypeError {
+  kind: 'invalid_type';
   expected: string;
-  message?: string;
   actual: unknown;
-}
-export interface UnionParseError {
-  kind: 'union';
-  errors: ParseError[];
+  message?: string;
 }
 
-export interface SetParseError {
+export interface UnionParseError {
   kind: 'union';
   errors: ParseError[];
 }
@@ -89,12 +93,13 @@ export interface ArrayError {
   kind: 'array' | 'tuple' | 'set';
   errors: ArrayErrorIndex;
 }
-export function failWrongType(expected: string, actual: unknown, message?: string) {
-  return fail(wrongTypeError(expected, actual, message));
+
+export function failInvalidType(expected: string, actual: unknown, message?: string) {
+  return fail(invalidTypeError(expected, actual, message));
 }
 
-export function wrongTypeError(expected: string, actual: unknown, message?: string): WrongTypeError {
-  return { kind: 'wrong-type', expected, actual, message };
+export function invalidTypeError(expected: string, actual: unknown, message?: string): InvalidTypeError {
+  return { kind: 'invalid_type', expected, actual, message };
 }
 
 // declare module '../message' {
@@ -108,6 +113,46 @@ export function recordIfFailed(errors: ArrayErrorIndex, i: number, result: Parse
   if (!result.success) {
     errors.push([i, result.error]);
   }
+}
+
+export function* visitErrors(error: ParseError, path: string[] = []): IterableIterator<[ParseError, string[]]> {
+  yield [error, path];
+
+  switch (error.kind) {
+    case 'object':
+      for (const [key, value] of error.errors) {
+        yield* visitErrors(value, [...path, key.toString()]);
+      }
+      break;
+    case 'union':
+      for (let i = 0; i < error.errors.length; i++) {
+        yield* visitErrors(error.errors[i]!, [...path, 'union', i.toString()]);
+      }
+      break;
+    case 'array':
+    case 'tuple':
+    case 'set':
+      for (const [i, value] of error.errors) {
+        yield* visitErrors(value, [...path, i.toString()]);
+      }
+      break;
+    case 'map':
+    case 'record':
+      for (const [i, value] of error.keyErrors) {
+        yield* visitErrors(value, [...path, 'key', i.toString()]);
+      }
+      for (const [i, value] of error.valueErrors) {
+        yield* visitErrors(value, [...path, 'value', i.toString()]);
+      }
+      break;
+  }
+}
+
+export function formatError(error: ParseError) {
+  return [...visitErrors(error)]
+    .map(([err, path]) => path.toString() + ': ' + err.kind + ', ' + ((err as any).message || ''))
+    .join('\n');
+
 }
 
 // export interface Issue {

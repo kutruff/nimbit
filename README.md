@@ -65,112 +65,68 @@ NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 
 The documentation here is a modified snap of Zod's documentation to help compare Nimbit to Zod.
 
-- [Table of contents](#table-of-contents)
 - [Introduction](#introduction)
-- [Installation](#installation)
-  - [Requirements](#requirements)
-  - [From `npm` (Node/Bun)](#from-npm-nodebun)
-  - [From `deno.land/x` (Deno)](#from-denolandx-deno)
+  * [Requirements](#requirements)
+  * [From `npm`](#from-npm)
 - [Basic usage](#basic-usage)
 - [Primitives](#primitives)
-- [Coercion for primitives](#coercion-for-primitives)
+- [Basic Coercion](#basic-coercion)
+  * [`where()` - basic validation](#where---basic-validation)
+  * [User defined coercion and parsing with `to`](#user-defined-coercion-and-parsing-with-to)
 - [Literals](#literals)
-- [Strings](#strings)
-  - [ISO datetimes](#iso-datetimes)
-  - [IP addresses](#ip-addresses)
-- [Numbers](#numbers)
-- [BigInts](#bigints)
-- [NaNs](#nans)
-- [Booleans](#booleans)
-- [Dates](#dates)
-- [Zod enums](#zod-enums)
+- [Enums](#enums)
 - [Native enums](#native-enums)
 - [Optionals](#optionals)
 - [Nullables](#nullables)
+- [Nullish](#nullish)
 - [Objects](#objects)
-  - [`.shape`](#shape)
-  - [`.keyof`](#keyof)
-  - [`.extend`](#extend)
-  - [`.merge`](#merge)
-  - [`.pick/.omit`](#pickomit)
-  - [`.partial`](#partial)
-  - [`.deepPartial`](#deeppartial)
-  - [`.required`](#required)
-  - [`.passthrough`](#passthrough)
-  - [`.strict`](#strict)
-  - [`.strip`](#strip)
-  - [`.catchall`](#catchall)
+  * [`.shape`](#shape)
+  * [`.k`](#k)
+  * [`.extend`](#extend)
+  * [`.merge`](#merge)
+  * [`.pick/.omit`](#pickomit)
+  * [`.partial`](#partial)
+  * [`.required`](#required)
+  * [`.passthrough`](#passthrough)
+  * [`.strict`](#strict)
+  * [`.strip`](#strip)
+  * [`.catchall`](#catchall)
 - [Arrays](#arrays)
-  - [`.element`](#element)
-  - [`.nonempty`](#nonempty)
-  - [`.min/.max/.length`](#minmaxlength)
-- [Tuples](#tuples)
+  * [`.element`](#element)
 - [Unions](#unions)
-- [Discriminated unions](#discriminated-unions)
 - [Records](#records)
-  - [Record key type](#record-key-type)
 - [Maps](#maps)
 - [Sets](#sets)
 - [Intersections](#intersections)
-- [Recursive types](#recursive-types)
-  - [ZodType with ZodEffects](#zodtype-with-zodeffects)
-  - [JSON type](#json-type)
-  - [Cyclical objects](#cyclical-objects)
+- [Extract](#extract)
+- [FlatExtract](#flatextract)
+- [Exclude](#exclude)
+- [FlatExclude](#flatexclude)
+- [Recursive Objects](#recursive-objects)
+  * [Other Recursive Types / JSON](#other-recursive-types--json)
+  * [Cyclical objects](#cyclical-objects)
 - [Promises](#promises)
-- [Instanceof](#instanceof)
 - [Functions](#functions)
-- [Preprocess](#preprocess)
-- [Custom schemas](#custom-schemas)
-- [Schema methods](#schema-methods)
-  - [`.parse`](#parse)
-  - [`.parseAsync`](#parseasync)
-  - [`.safeParse`](#safeparse)
-  - [`.safeParseAsync`](#safeparseasync)
-  - [`.refine`](#refine)
-    - [Arguments](#arguments)
-    - [Customize error path](#customize-error-path)
-    - [Asynchronous refinements](#asynchronous-refinements)
-    - [Relationship to transforms](#relationship-to-transforms)
-  - [`.superRefine`](#superrefine)
-    - [Abort early](#abort-early)
-    - [Type refinements](#type-refinements)
-  - [`.transform`](#transform)
-    - [Chaining order](#chaining-order)
-    - [Validating during transform](#validating-during-transform)
-    - [Relationship to refinements](#relationship-to-refinements)
-    - [Async transforms](#async-transforms)
-  - [`.default`](#default)
-  - [`.describe`](#describe)
-  - [`.catch`](#catch)
-  - [`.optional`](#optional)
-  - [`.nullable`](#nullable)
-  - [`.nullish`](#nullish)
-  - [`.array`](#array)
-  - [`.promise`](#promise)
-  - [`.or`](#or)
-  - [`.and`](#and)
-  - [`.brand`](#brand)
-  - [`.pipe()`](#pipe)
-    - [You can use `.pipe()` to fix common issues with `z.coerce`.](#you-can-use-pipe-to-fix-common-issues-with-zcoerce)
-- [Guides and concepts](#guides-and-concepts)
-  - [Type inference](#type-inference)
-  - [Writing generic functions](#writing-generic-functions)
-    - [Constraining allowable inputs](#constraining-allowable-inputs)
-  - [Error handling](#error-handling)
-  - [Error formatting](#error-formatting)
-- [Comparison](#comparison)
-  - [Joi](#joi)
-  - [Yup](#yup)
-  - [io-ts](#io-ts)
-  - [Runtypes](#runtypes)
-  - [Ow](#ow)
-- [Changelog](#changelog)
+- [Custom Types](#custom-types)
+- [Type methods](#type-methods)
+  * [`.parse`](#parse)
+  * [`.safeParse`](#safeparse)
+  * [`.where`](#where)
+  * [`.tweak`](#tweak)
+  * [`.default`](#default)
+  * [`.catch`](#catch)
+  * [`.opt`](#opt)
+  * [`.nullable`](#nullable)
+  * [`.nullish`](#nullish-1)
+  * [`.brand`](#brand)
+  * [`.to`](#to)
+  * [Error handling](#error-handling)
+  * [Error formatting](#error-formatting)
+    + [`visitErrors`](#visiterrors)
 
 ## Introduction
 
 Nimbit is a TypeScript-first schema declaration and validation library just like Zod. However, it is extremely small and strives to keep as much functinality and typing in userland as possible. Furthermore, Nimbit ensures all types are always guaranteed to be reflected upon no matter what.
-
-## Installation
 
 ### Requirements
 
@@ -191,9 +147,9 @@ Nimbit is a TypeScript-first schema declaration and validation library just like
 ### From `npm`
 
 ```sh
-npm install zod       # npm
-yarn add zod          # yarn
-pnpm add zod          # pnpm
+npm install nimbit      # npm
+yarn add nimbit          # yarn
+pnpm add nimbit          # pnpm
 ```
 
 ## Basic usage
@@ -352,10 +308,10 @@ const asNumber = unknown
   .to(number, x => Number(x))
   .where(
     x => !isNaN(x),
-    x => wrongTypeError('asNumber', x, `failed to convert ${x} to a number.`)
+    x => invalidTypeError('asNumber', x, `failed to convert ${x} to a number.`)
   );
 asNumber.safeParse('Hello');
-// => {success: false, error: {kind: 'wrong-type', expected: 'asType', actual: 'Hello', message: 'failed to convert Hello to a number', }}
+// => {success: false, error: {kind: 'invalid_type', expected: 'asType', actual: 'Hello', message: 'failed to convert Hello to a number', }}
 ```
 
 Now, since this is going to be used a lot let's just skip the pipelining of `to()` and do it in a single step:
@@ -418,247 +374,6 @@ const terrific = literal(terrificSymbol);
 tuna.value; // "tuna"
 ```
 
-## Strings (TODO: decide if these will be in the library or in a separate library)
-
-Zod includes a handful of string-specific validations.
-
-```ts
-//TODO: decide if these will be included.
-// validations
-z.string().max(5);
-z.string().min(5);
-z.string().length(5);
-z.string().email();
-z.string().url();
-z.string().emoji();
-z.string().uuid();
-z.string().cuid();
-z.string().cuid2();
-z.string().ulid();
-z.string().regex(regex);
-z.string().includes(string);
-z.string().startsWith(string);
-z.string().endsWith(string);
-z.string().datetime(); // defaults to UTC, see below for options
-z.string().ip(); // defaults to IPv4 and IPv6, see below for options
-
-// transformations
-z.string().trim(); // trim whitespace
-z.string().toLowerCase(); // toLowerCase
-z.string().toUpperCase(); // toUpperCase
-```
-
-> Check out [validator.js](https://github.com/validatorjs/validator.js) for a bunch of other useful string validation functions that can be used in conjunction with [Refinements](#refine).
-
-You can customize some common error messages when creating a string schema.
-
-```ts
-const name = z.string({
-  required_error: 'Name is required',
-  invalid_type_error: 'Name must be a string'
-});
-```
-
-When using validation methods, you can pass in an additional argument to provide a custom error message.
-
-```ts
-z.string().min(5, { message: 'Must be 5 or more characters long' });
-z.string().max(5, { message: 'Must be 5 or fewer characters long' });
-z.string().length(5, { message: 'Must be exactly 5 characters long' });
-z.string().email({ message: 'Invalid email address' });
-z.string().url({ message: 'Invalid url' });
-z.string().emoji({ message: 'Contains non-emoji characters' });
-z.string().uuid({ message: 'Invalid UUID' });
-z.string().includes('tuna', { message: 'Must include tuna' });
-z.string().startsWith('https://', { message: 'Must provide secure URL' });
-z.string().endsWith('.com', { message: 'Only .com domains allowed' });
-z.string().datetime({ message: 'Invalid datetime string! Must be UTC.' });
-z.string().ip({ message: 'Invalid IP address' });
-```
-
-### ISO datetimes
-
-The `z.string().datetime()` method defaults to UTC validation: no timezone offsets with arbitrary sub-second decimal precision.
-
-```ts
-const datetime = z.string().datetime();
-
-datetime.parse('2020-01-01T00:00:00Z'); // pass
-datetime.parse('2020-01-01T00:00:00.123Z'); // pass
-datetime.parse('2020-01-01T00:00:00.123456Z'); // pass (arbitrary precision)
-datetime.parse('2020-01-01T00:00:00+02:00'); // fail (no offsets allowed)
-```
-
-Timezone offsets can be allowed by setting the `offset` option to `true`.
-
-```ts
-const datetime = z.string().datetime({ offset: true });
-
-datetime.parse('2020-01-01T00:00:00+02:00'); // pass
-datetime.parse('2020-01-01T00:00:00.123+02:00'); // pass (millis optional)
-datetime.parse('2020-01-01T00:00:00.123+0200'); // pass (millis optional)
-datetime.parse('2020-01-01T00:00:00.123+02'); // pass (only offset hours)
-datetime.parse('2020-01-01T00:00:00Z'); // pass (Z still supported)
-```
-
-You can additionally constrain the allowable `precision`. By default, arbitrary sub-second precision is supported (but optional).
-
-```ts
-const datetime = z.string().datetime({ precision: 3 });
-
-datetime.parse('2020-01-01T00:00:00.123Z'); // pass
-datetime.parse('2020-01-01T00:00:00Z'); // fail
-datetime.parse('2020-01-01T00:00:00.123456Z'); // fail
-```
-
-### IP addresses
-
-The `z.string().ip()` method by default validate IPv4 and IPv6.
-
-```ts
-const ip = z.string().ip();
-
-ip.parse('192.168.1.1'); // pass
-ip.parse('84d5:51a0:9114:1855:4cfa:f2d7:1f12:7003'); // pass
-ip.parse('84d5:51a0:9114:1855:4cfa:f2d7:1f12:192.168.1.1'); // pass
-
-ip.parse('256.1.1.1'); // fail
-ip.parse('84d5:51a0:9114:gggg:4cfa:f2d7:1f12:7003'); // fail
-```
-
-You can additionally set the IP `version`.
-
-```ts
-const ipv4 = z.string().ip({ version: 'v4' });
-ipv4.parse('84d5:51a0:9114:1855:4cfa:f2d7:1f12:7003'); // fail
-
-const ipv6 = z.string().ip({ version: 'v6' });
-ipv6.parse('192.168.1.1'); // fail
-```
-
-## Numbers
-
-You can customize certain error messages when creating a number schema.
-
-```ts
-const age = z.number({
-  required_error: 'Age is required',
-  invalid_type_error: 'Age must be a number'
-});
-```
-
-Zod includes a handful of number-specific validations.
-
-```ts
-z.number().gt(5);
-z.number().gte(5); // alias .min(5)
-z.number().lt(5);
-z.number().lte(5); // alias .max(5)
-
-z.number().int(); // value must be an integer
-
-z.number().positive(); //     > 0
-z.number().nonnegative(); //  >= 0
-z.number().negative(); //     < 0
-z.number().nonpositive(); //  <= 0
-
-z.number().multipleOf(5); // Evenly divisible by 5. Alias .step(5)
-
-z.number().finite(); // value must be finite, not Infinity or -Infinity
-z.number().safe(); // value must be between Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER
-```
-
-Optionally, you can pass in a second argument to provide a custom error message.
-
-```ts
-z.number().lte(5, { message: 'this👏is👏too👏big' });
-```
-
-## BigInts
-
-Zod includes a handful of bigint-specific validations.
-
-```ts
-z.bigint().gt(5n);
-z.bigint().gte(5n); // alias `.min(5n)`
-z.bigint().lt(5n);
-z.bigint().lte(5n); // alias `.max(5n)`
-
-z.bigint().positive(); // > 0n
-z.bigint().nonnegative(); // >= 0n
-z.bigint().negative(); // < 0n
-z.bigint().nonpositive(); // <= 0n
-
-z.bigint().multipleOf(5n); // Evenly divisible by 5n.
-```
-
-## NaNs
-
-You can customize certain error messages when creating a nan schema.
-
-```ts
-const isNaN = z.nan({
-  required_error: 'isNaN is required',
-  invalid_type_error: 'isNaN must be not a number'
-});
-```
-
-## Booleans
-
-You can customize certain error messages when creating a boolean schema.
-
-```ts
-const isActive = z.boolean({
-  required_error: 'isActive is required',
-  invalid_type_error: 'isActive must be a boolean'
-});
-```
-
-## Dates
-
-Use z.date() to validate `Date` instances.
-
-```ts
-z.date().safeParse(new Date()); // success: true
-z.date().safeParse('2022-01-12T00:00:00.000Z'); // success: false
-```
-
-You can customize certain error messages when creating a date schema.
-
-```ts
-const myDateSchema = z.date({
-  required_error: 'Please select a date and time',
-  invalid_type_error: "That's not a date!"
-});
-```
-
-Zod provides a handful of date-specific validations.
-
-```ts
-z.date().min(new Date('1900-01-01'), { message: 'Too old' });
-z.date().max(new Date(), { message: 'Too young!' });
-```
-
-**Coercion to Date**
-
-Since [zod 3.20](https://github.com/colinhacks/zod/releases/tag/v3.20), use [`z.coerce.date()`](#coercion-for-primitives) to pass the input through `new Date(input)`.
-
-```ts
-const dateSchema = z.coerce.date();
-type DateSchema = z.infer<typeof dateSchema>;
-// type DateSchema = Date
-
-/* valid dates */
-console.log(dateSchema.safeParse('2023-01-10T00:00:00.000Z').success); // true
-console.log(dateSchema.safeParse('2023-01-10').success); // true
-console.log(dateSchema.safeParse('1/10/23').success); // true
-console.log(dateSchema.safeParse(new Date('1/10/23')).success); // true
-
-/* invalid dates */
-console.log(dateSchema.safeParse('2023-13-10').success); // false
-console.log(dateSchema.safeParse('0000-00-00').success); // false
-```
-
 ## Enums
 
 ```ts
@@ -683,7 +398,7 @@ const FishEnum = enum(fish);
 
 **Autocompletion**
 
-To get autocompletion with a Zod enum, use the `.enum` property of your schema:
+To get autocompletion with an `enumm` type, use the `.enum` property of your schema:
 
 ```ts
 FishEnum.enum.Salmon; // => autocompletes
@@ -976,36 +691,6 @@ const optionalEmail = partial(User, 'email');
 const optionalEmail = partial(User, ...getKeys({email: 1}));
 ```
 
-<!-- ### `.deepPartial` (TODO)
-
-The `.partial` method is shallow — it only applies one level deep. There is also a "deep" version:
-
-```ts
-const user = z.object({
-  username: z.string(),
-  location: z.object({
-    latitude: z.number(),
-    longitude: z.number()
-  }),
-  strings: z.array(z.object({ value: z.string() }))
-});
-
-const deepPartialUser = user.deepPartial();
-
-/*
-{
-  username?: string | undefined,
-  location?: {
-    latitude?: number | undefined;
-    longitude?: number | undefined;
-  } | undefined,
-  strings?: { value?: string}[]
-}
-*/
-```
-
-> Important limitation: deep partials only work as expected in hierarchies of objects, arrays, and tuples. -->
-
 ### `.required`
 
 Contrary to the `.partial` method, the `.required` method makes all properties required.
@@ -1040,7 +725,7 @@ const requiredEmail = required(User, User.k.email);
 
 //alternative ways of picking properties by name
 const requiredEmail = required(User, 'email');
-const requiredEmail = required(User, ...getKeys({email: 1})); 
+const requiredEmail = required(User, ...getKeys({email: 1}));
 ```
 
 ### `.passthrough`
@@ -1076,9 +761,8 @@ By default object schemas strip out unrecognized keys during parsing. You can _d
 
 ```ts
 const person = obj({
-    name: string
-  })
-  .strict();
+  name: string
+}).strict();
 
 person.parse({
   name: 'bob dylan',
@@ -1097,9 +781,8 @@ You can pass a "catchall" schema into an object schema. All unknown keys will be
 
 ```ts
 const person = obj({
-    name: string
-  })
-  .catchall(number);
+  name: string
+}).catchall(number);
 
 person.parse({
   name: 'bob dylan',
@@ -1129,63 +812,6 @@ Use `.element` to access the schema for an element of the array.
 stringArray.element; // => string schema
 ```
 
-### `.nonempty`
-
-If you want to ensure that an array contains at least one element, use `.nonempty()`.
-
-```ts
-const nonEmptyStrings = z.string().array().nonempty();
-// the inferred type is now
-// [string, ...string[]]
-
-nonEmptyStrings.parse([]); // throws: "Array cannot be empty"
-nonEmptyStrings.parse(['Ariana Grande']); // passes
-```
-
-You can optionally specify a custom error message:
-
-```ts
-// optional custom error message
-const nonEmptyStrings = z.string().array().nonempty({
-  message: "Can't be empty!"
-});
-```
-
-### `.min/.max/.length`
-
-```ts
-z.string().array().min(5); // must contain 5 or more items
-z.string().array().max(5); // must contain 5 or fewer items
-z.string().array().length(5); // must contain 5 items exactly
-```
-
-Unlike `.nonempty()` these methods do not change the inferred type.
-
-## Tuples
-
-Unlike arrays, tuples have a fixed number of elements and each element can have a different type.
-
-```ts
-const athleteSchema = tuple([
-  string, // name
-  number, // jersey number
-  obj({
-    pointsScored: number
-  }) // statistics
-]);
-
-type Athlete = Infer<typeof athleteSchema>;
-// type Athlete = [string, number, { pointsScored: number }]
-```
-
-A variadic ("rest") argument can be added with the `.rest` method.
-
-```ts
-const variadicTuple = z.tuple([z.string()]).rest(z.number());
-const result = variadicTuple.parse(['hello', 1, 2, 3]);
-// => [string, ...number[]];
-```
-
 ## Unions
 
 The `union()` method is for composing "OR" types. In Nimbit, unions are much richer than other libaries as they support reflection and the
@@ -1197,7 +823,7 @@ stringOrNumber.parse('foo'); // passes
 stringOrNumber.parse(14); // passes
 ```
 
-The lib will test the input against each of the "options" in order and return the first value that validates successfully.
+The library will test the input against each of the "options" in order and return the first value that validates successfully.
 
 **Optional string validation:**
 
@@ -1206,6 +832,7 @@ To validate an optional form input, you can union the desired string validation 
 This example validates an input that is optional but needs to contain a [valid URL](#strings):
 
 ```ts
+const isUrl = /*...*/
 const optionalUrl = union(string.where(isUrl).nullish(), literal(''));
 
 optionalUrl.parse(undefined).success; // true
@@ -1265,25 +892,6 @@ NoEmptyKeysSchema.parse({ count: 1 }); // => { 'count': 1 }
 NoEmptyKeysSchema.parse({ '': 1 }); // fails
 ```
 
-**A note on numerical keys** (TODO)
-
-While `z.record(keyType, valueType)` is able to accept numerical key types and TypeScript's built-in Record type is `Record<KeyType, ValueType>`, it's hard to represent the TypeScript type `Record<number, any>` in Zod.
-
-As it turns out, TypeScript's behavior surrounding `[k: number]` is a little unintuitive:
-
-```ts
-const testMap: { [k: number]: string } = {
-  1: 'one'
-};
-
-for (const key in testMap) {
-  console.log(`${key}: ${typeof key}`);
-}
-// prints: `1: string`
-```
-
-As you can see, JavaScript automatically casts all object keys to strings under the hood. Since Zod is trying to bridge the gap between static and runtime types, it doesn't make sense to provide a way of creating a record schema with numerical keys, since there's no such thing as a numerical key in runtime JavaScript.
-
 ## Maps
 
 ```ts
@@ -1299,15 +907,6 @@ type StringNumberMap = Infer<typeof stringNumberMap>;
 const numberSet = set(number);
 type NumberSet = Infer<typeof numberSet>;
 // type NumberSet = Set<number>
-```
-
-Set schemas can be further constrained with the following utility methods.
-
-```ts
-z.set(z.string()).nonempty(); // must contain at least one item
-z.set(z.string()).min(5); // must contain 5 or more items
-z.set(z.string()).max(5); // must contain 5 or fewer items
-z.set(z.string()).size(5); // must contain 5 items exactly
 ```
 
 ## Intersections
@@ -1398,7 +997,7 @@ One caveat of using classes to define your object shemas is that you must mark t
 
 Unfortunately, recursive unions, and records are not as straightforward. For that you use `lazy()` which lets you use a type as you define it. The only problem is that you must provide the TypeScript types manually.
 
-If you want to validate any JSON value, you can use the snippet below.
+If you want to validate any JSON value, you can use the snippet below. (It also has a trivial guard against prototype poisoning.)
 
 ```ts
 import {
@@ -1406,14 +1005,14 @@ import {
   boolean,
   EVIL_PROTO,
   failWrongType,
+  lazy,
   nul,
   number,
   pass,
+  record,
   string,
   to,
   union,
-  lazy,
-  record,
   type Infer,
   type LazyType,
   type ParseResult
@@ -1438,9 +1037,9 @@ export function jsonParse(x: string): ParseResult<json> {
 json.parse('{"a":1}'); //passes and returns { a: 1 }
 ```
 
-### Cyclical objects (TODO: Add support in parsing context)
+### Cyclical objects
 
-Despite supporting recursive schemas, passing cyclical data into Zod will cause an infinite loop.
+TODO: Add support in parsing
 
 ## Promises
 
@@ -1453,31 +1052,6 @@ TBD whether to support
 ## Custom Types
 
 TODO: document `createType()` and deriving from `Typ` after a round of feedback.
-
-<!-- You can create a custom Type for any TypeScript type by  `z.custom()`. This is useful for creating schemas for types that are not supported by Zod out of the box, such as template string literals.
-
-```ts
-const px = z.custom<`${number}px`>(val => {
-  return /^\d+px$/.test(val as string);
-});
-
-type px = z.infer<typeof px>; // `${number}px`
-
-px.parse('42px'); // "42px"
-px.parse('42vw'); // throws;
-```
-
-If you don't provide a validation function, Zod will allow any value. This can be dangerous!
-
-```ts
-z.custom<{ arg: string }>(); // performs no validation
-```
-
-You can customize the error message and other options by passing a second argument. This parameter works the same way as the params parameter of [`.refine`](#refine).
-
-```ts
-z.custom<...>((val) => ..., "custom error message");
-``` -->
 
 ## Type methods
 
@@ -1586,18 +1160,6 @@ numberWithRandomDefault.parse(undefined); // => 0.1871840107401901
 numberWithRandomDefault.parse(undefined); // => 0.7223408162401552
 ```
 
-<!--
-### `.describe`
-
-Use `.describe()` to add a `description` property to the resulting schema. -->
-
-<!-- ```ts
-const documentedString = z.string().describe('A useful bit of text, if you know what to do with it.');
-documentedString.description; // A useful bit of text…
-```
-
-This can be useful for documenting a field, for example in a JSON Schema using a library like [`zod-to-json-schema`](https://github.com/StefanTerdell/zod-to-json-schema)). -->
-
 ### `.catch`
 
 Use `.catch()` to provide a "catch value" to be returned in the event of a parsing error.
@@ -1656,51 +1218,54 @@ See [The overview in the intro of `to`](#user-defined-coercion-and-parsing-with-
 
 ### Error handling
 
-Zod provides a subclass of Error called `ZodError`. ZodErrors contain an `issues` array containing detailed information about the validation problems.
+> Note work in progress.
+
+At the moment, there is a discriminated union called `ParseError` that is returned by `.safeParse()` and `.parse()` when an error occurs.
 
 ```ts
-const result = z
-  .object({
-    name: z.string()
-  })
-  .safeParse({ name: 12 });
+const result = obj({
+  name: string()
+}).safeParse({ name: 12 });
 
 if (!result.success) {
-  result.error.issues;
+  result.error;
   /* [
       {
-        "code": "invalid_type",
+        "kind": "invalid_type",
         "expected": "string",
-        "received": "number",
-        "path": [ "name" ],
-        "message": "Expected string, received number"
+        "actual": 12,              
       }
   ] */
 }
 ```
 
-> For detailed information about the possible error codes and how to customize error messages, check out the dedicated error handling guide: [ERROR_HANDLING.md](ERROR_HANDLING.md)
-
-Zod's error reporting emphasizes _completeness_ and _correctness_. If you are looking to present a useful error message to the end user, you should either override Zod's error messages using an error map (described in detail in the Error Handling guide) or use a third-party library like [`zod-validation-error`](https://github.com/causaly/zod-validation-error)
-
 ### Error formatting
 
-You can use the `.format()` method to convert this error into a nested object.
+#### `visitErrors`
+
+The errors are in a hiearchary of `ParseError` objects. You can use `visitErrors` to traverse the errors and format them as you wish.
 
 ```ts
-const result = z
-  .object({
-    name: z.string()
+const TestObj = t.obj({
+  strProp: t.string,
+  nested: t.obj({
+    nestedA: t.number,
+    nestedB: t.string
   })
-  .safeParse({ name: 12 });
+});
+
+const result = TestObj.safeParse({
+  strProp: 1337,
+  nested: {
+    nestedA: 'wrong',
+    nestedB: 7n
+  }
+});
 
 if (!result.success) {
-  const formatted = result.error.format();
-  /* {
-    name: { _errors: [ 'Expected string, received number' ] }
-  } */
-
-  formatted.name?._errors;
-  // => ["Expected string, received number"]
+  for (const [error, path] of visitErrors(result.error)) {
+    console.log(error.kind);
+    console.log(error.path);
+  }
 }
 ```

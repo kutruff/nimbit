@@ -1,15 +1,14 @@
 import {
   fail,
-  failWrongType,
+  failInvalidType,
   pass,
   recordIfFailed,
   Typ,
   type ArrayErrorIndex,
   type ParseResult,
   type TsType,
-  type Type,
+  type Type
 } from '.';
-
 
 export function set<TValue extends Type<unknown, unknown>>(value: TValue) {
   return new SetType<TValue, Set<TsType<TValue>>>(value);
@@ -22,7 +21,7 @@ export class SetType<TValue, T> extends Typ<'set', TValue, T> {
 
   safeParse(value: unknown): ParseResult<T> {
     if (!(value instanceof Set)) {
-      return failWrongType(this.kind, value);
+      return failInvalidType(this.kind, value);
     }
 
     const parsed = new Set();

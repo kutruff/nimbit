@@ -1,6 +1,6 @@
 import {
   fail,
-  failWrongType,
+  failInvalidType,
   pass,
   recordIfFailed,
   Typ,
@@ -21,7 +21,7 @@ export class ArrayType<TValue, T> extends Typ<'array', TValue, T> {
 
   safeParse(value: unknown): ParseResult<T> {
     if (!Array.isArray(value)) {
-      return failWrongType(this.kind, value);
+      return failInvalidType(this.kind, value);
     }
     const parsed = [];
     const errors: ArrayErrorIndex = [];
