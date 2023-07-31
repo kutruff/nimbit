@@ -9,6 +9,8 @@ export function getKeys<T extends object>(obj: T): ObjectKeys<T>[] {
   return Reflect.ownKeys(obj) as any;
 }
 
+export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleValuesToUnion<T>, PropertyKey>]: K };
+
 export function propertyMap<TTuple extends readonly [TValue, ...TValue[]], TValue extends PropertyKey>(
   tuple: TTuple
 ): MapOfTupleKeys<TTuple>;
@@ -23,8 +25,6 @@ function arrayToMap(array: PropertyKey[]) {
 }
 
 export const EVIL_PROTO = '__proto__';
-
-export type MapOfTupleKeys<T extends readonly unknown[]> = { [K in Extract<TupleValuesToUnion<T>, PropertyKey>]: K };
 
 //unfortunately typescript tuples with as const always end up readonly which isn't always what we want.
 export const asTuple = <T extends unknown[]>(...args: T): T => args;

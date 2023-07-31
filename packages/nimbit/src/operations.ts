@@ -55,6 +55,7 @@ export type PartialType<T> = {
     : never;
 };
 
+//TODO: add object pick syntax for {a: 1, b: 1}
 export function partial<TShape, T>(objType: ObjType<TShape, T>): ObjType<PartialType<TShape>, Partial<T>>;
 export function partial<TShape, K extends keyof TShape & keyof T, T>(
   objType: ObjType<TShape, T>,

@@ -42,8 +42,8 @@ export class RecordType<TKey, TValue, T> extends Typ<'record', [TKey, TValue], T
     let i = 0;
     for (const key of Reflect.ownKeys(value)) {
       const keyResult = (this.key as Typ).safeParse(key);
-
       recordIfFailed(keyErrors, i, keyResult);
+
       const valueResult = (this.value as Typ).safeParse((value as any)[key]);
       recordIfFailed(valueErrors, i, valueResult);
 

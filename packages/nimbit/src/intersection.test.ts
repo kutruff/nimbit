@@ -3,6 +3,7 @@
 import { type ParseResult } from '.';
 import * as t from '.';
 import { intersection } from './intersection';
+import { json } from './json';
 import { expectType, expectTypesSupportAssignment, type TypeEqual, type TypeOf } from './test/utilities';
 
 describe.skip('Type operations', () => {
@@ -19,10 +20,10 @@ describe.skip('Type operations', () => {
         expectType<TypeEqual<result, number & number>>(true);
         expect(result).toEqual(t.number);
 
-        const resultd = t.json.to(t.obj({ prop: t.string }));
-        const resultdd = t.json.to(t.string);
+        const resultd = json.to(t.obj({ prop: t.string }));
+        const resultdd = json.to(t.string);
         const inp = t.obj({ propa: t.string, prop2: t.string });
-        // const resultdddsf = t.number.to(t.string);
+        // const resultdddsf = t.number.coerce(t.string);
         const resadfaua = t.flatExcludeKinds(resultd, inp);
         //  expectType<TypeOf<typeof resultd, t.Typ>>(true);
         expectType<TypeOf<t.Typ, typeof resultd>>(true);
@@ -33,7 +34,7 @@ describe.skip('Type operations', () => {
         const asadfaua = t.flatExcludeKinds(resultd, t.string);
 
         const resua = t.flatExcludeKinds(resultd, t.string);
-        // t.string.to(t.obj({ prop: t.string }));
+        // t.string.coerce(t.obj({ prop: t.string }));
         const resultdfghdeaf = t.flatExcludeKinds(resultd, t.string);
         const resultdeaf = t.flatExcludeKinds(t.union(t.number, t.undef), t.string);
         type resulted = t.Infer<typeof resultd>;

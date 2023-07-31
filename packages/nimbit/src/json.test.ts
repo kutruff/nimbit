@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as t from '.';
+import { json } from './json';
 
 describe('json', () => {
   describe('parse()', () => {
@@ -12,7 +13,7 @@ describe('json', () => {
       const res = t.unknown.safeParse(1);
       expect(res.success).toEqual(true);
 
-      const result = t.json.safeParse(a);
+      const result = json.safeParse(a);
       expect(result.success).toEqual(true);
       if (result.success) {
         expect(result.data).toEqual(expected);

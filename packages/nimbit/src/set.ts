@@ -7,8 +7,9 @@ import {
   type ArrayErrorIndex,
   type ParseResult,
   type TsType,
-  type Type
+  type Type,
 } from '.';
+
 
 export function set<TValue extends Type<unknown, unknown>>(value: TValue) {
   return new SetType<TValue, Set<TsType<TValue>>>(value);
@@ -26,7 +27,6 @@ export class SetType<TValue, T> extends Typ<'set', TValue, T> {
 
     const parsed = new Set();
     let i = 0;
-
     const errors: ArrayErrorIndex = [];
     for (const element of value) {
       const result = (this.value as Typ).safeParse(element);

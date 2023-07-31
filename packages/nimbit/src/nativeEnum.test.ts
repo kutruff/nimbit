@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from './index';
-import { expectTypesSupportAssignment } from './test/utilities';
+
 
 describe('Native enums', () => {
   it('supports just string enums', () => {

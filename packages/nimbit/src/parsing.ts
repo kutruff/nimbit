@@ -1,26 +1,33 @@
 export type TypeConverter<TSource, TDestinationType> = (value: TSource) => ParseResult<TDestinationType>;
 
 export function pass<T>(value: T): ParseResult<T> {
-  return { success: true as const, data: value };
+  return { [_result]: 1, success: true as const, data: value } as const;
 }
 
 export function fail(error?: ParseError) {
   return {
-    success: false as const,
+    [_result]: 1,
+    success: false,
     error: error ?? { kind: 'general', message: undefined }
-  };
+  } as const;
 }
-
+export const _result: unique symbol = Symbol();
 export type ParseSuccess<T> = {
+  [_result]: 1;
   success: true;
   data: T;
 };
 
 export type ParseFail = {
+  [_result]: 1;
   success: false;
-  message?: string;
+  // message?: string;
   error: ParseError;
 };
+
+// export interface ErrorWithChildren<T> = {
+//   //Any property that begins with "child" will be traversed by the visitor.
+// };
 
 export type ParseResult<T> = ParseSuccess<T> | ParseFail;
 
@@ -30,8 +37,27 @@ export interface ParseErrorTypes {
   WrongType: WrongTypeError;
   General: GeneralError;
   Condition: ConditionError;
+  Union: UnionParseError;
   Array: ArrayError;
   Map: MapError;
+  Thrown: ThrownError;
+  Set: SetParseError;
+}
+
+export interface WrongTypeError {
+  kind: 'wrong-type';
+  expected: string;
+  message?: string;
+  actual: unknown;
+}
+export interface UnionParseError {
+  kind: 'union';
+  errors: ParseError[];
+}
+
+export interface SetParseError {
+  kind: 'union';
+  errors: ParseError[];
 }
 
 export interface GeneralError {
@@ -39,8 +65,15 @@ export interface GeneralError {
   message?: string;
 }
 
+export interface ThrownError {
+  kind: 'thrown';
+  error: unknown;
+  message?: string;
+}
+
 export interface ConditionError {
   kind: 'condition';
+  actual: unknown;
   message?: string;
 }
 
@@ -52,20 +85,18 @@ export interface MapError {
 
 export type ArrayErrorIndex = Array<[index: number, value: ParseError]>;
 
-export interface WrongTypeError {
-  kind: 'wrong-type';
-  expected: string;
-  actual: string;
-}
-
-export function failWrongType(expected: string, actual: unknown) {
-  return fail({ kind: 'wrong-type', expected, actual: typeof actual });
-}
-
 export interface ArrayError {
   kind: 'array' | 'tuple' | 'set';
   errors: ArrayErrorIndex;
 }
+export function failWrongType(expected: string, actual: unknown, message?: string) {
+  return fail(wrongTypeError(expected, actual, message));
+}
+
+export function wrongTypeError(expected: string, actual: unknown, message?: string): WrongTypeError {
+  return { kind: 'wrong-type', expected, actual, message };
+}
+
 // declare module '../message' {
 //   // Where you define MessageTypes
 //   interface ParseErrorTypes {
@@ -73,9 +104,9 @@ export interface ArrayError {
 //   }
 // }
 
-export function recordIfFailed(errorIndex: ArrayErrorIndex, i: number, result: ParseResult<unknown>) {
+export function recordIfFailed(errors: ArrayErrorIndex, i: number, result: ParseResult<unknown>) {
   if (!result.success) {
-    errorIndex.push([i, result.error]);
+    errors.push([i, result.error]);
   }
 }
 
@@ -105,14 +136,51 @@ export function recordIfFailed(errorIndex: ArrayErrorIndex, i: number, result: P
 //   }
 // }
 
-// // TODO: see if wrapping throw is useful
-// export const tryPass = <T>(action: () => T): ParseResult<T> => {
+// TODO: see if wrapping throw is useful
+// export function tryPass<T>(action: () => T): ParseResult<T> {
 //   try {
 //     return pass(action());
 //   } catch (error) {
-//     return fail(undefined, error);
+//     return fail({ kind: 'thrown', error });
 //   }
-// };
+// }
+
+//TODO: add Targs to this
+
+// export function resolveError<T>(value: T, defaultError: ParseError, error: ErrorParameter<T> | undefined): ParseError {
+//   return error === undefined || typeof error === 'string' ? defaultError : error(value);
+// }
+
+// export function failWithErrorParams<T>(
+//   errorParams: ErrorParameter<T> | undefined,
+//   value: T,
+//   defaultError: (value: T, message?: string) => ParseError
+// ): ParseFail {
+//   if (errorParams === undefined || typeof errorParams === 'string') {
+//     return fail(defaultError(value, errorParams));
+//   } else {
+//     const result = errorParams(value);
+
+//     return fail(typeof result === 'string' ? { kind: 'general', message: result } : result);
+//   }
+//   // return fail(
+//   //   errorParams === undefined || typeof errorParams === 'string' ? defaultError(value, errorParams) : errorParams(value)
+//   // );
+// }
+
+// export function resolveParseError<T>(error: ErrorParameter<T> | undefined, value: T): ParseError | undefined {
+//   return error === undefined || typeof error === 'string' ? undefined : error(value);
+// }
+
+// export function tryPass<T, R>(action: (value: T) => R, customError?: ErrorParameter<T>): (value: T) => ParseResult<R> {
+//   return (value: T) => {
+//     try {
+//       return pass(action(value));
+//     } catch (error) {
+//       return failWithErrorParams(customError, value, (_value, message) => ({ kind: 'thrown', error, message }));
+//     }
+//   };
+// }
 
 // export const passIf = <T>(value: T, isSuccess: boolean): ParseResult<T> => (isSuccess ? pass(value) : fail());
 

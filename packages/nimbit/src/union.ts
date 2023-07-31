@@ -55,19 +55,6 @@ export type UnionOrSingle<T, TMembers = ToUnionMemberList<T>> = IsLengthOneTuple
     : never
   : IsLengthOneTuple<TMembers>;
 
-export interface UnionParseError {
-  kind: 'union';
-  errors: ParseError[];
-}
-
-//TODO see if external imports get picked up
-declare module '.' {
-  // Where you define MessageTypes
-  export interface ParseErrorTypes {
-    Union: UnionParseError;
-  }
-}
-
 export class UnionType<TMembers, T> extends Typ<'union', TMembers, T> implements IUnionType<TMembers> {
   //Note that members and shape are really the same object
   constructor(public members: TMembers, name?: string) {

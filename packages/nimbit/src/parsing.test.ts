@@ -2,9 +2,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { any, bigint, boolean, date, never, nul, number, pass, string, symbol, undef, unknown } from '.';
+import {
+  any,
+  bigint,
+  boolean,
+  date,
+  never,
+  nul,
+  number,
+  pass,
+  string,
+  symbol,
+  undef,
+  unknown,
+  wrongTypeError
+} from '.';
 import * as t from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
+
+//TODO: refactor parsing tests and account for error conditions.
 
 describe('Typ parsing', () => {
   describe('catch()', () => {
@@ -262,7 +278,7 @@ describe('TypeConverter', () => {
   });
 
   // it('supports to as method', () => {
-  //   const target = t.string.to(x => ({ success: true, value: x + 'hello' }));
+  //   const target = t.string.to2(x => ({ success: true, value: x + 'hello' }));
 
   //   const result = target.parse('24');
 
@@ -274,8 +290,8 @@ describe('TypeConverter', () => {
 
   // it('to() chains left to right', () => {
   //   const target = t.string
-  //     .to(x => ({ success: true, value: x + 'hello' }))
-  //     .to(x => ({ success: true, value: x + 'there' }));
+  //     .to2(x => ({ success: true, value: x + 'hello' }))
+  //     .to2(x => ({ success: true, value: x + 'there' }));
 
   //   const result = target.parse('24');
 
@@ -290,22 +306,22 @@ describe('TypeConverter', () => {
   //   //   .from(
   //   //     t
   //   //       .from(t.string, t.string, x => ({ success: true, value: x + 'from1' }))
-  //   //       .to(x => ({ success: true, value: x + 'to1 ' })),
+  //   //       .to2(x => ({ success: true, value: x + 'to1 ' })),
   //   //     t.string,
   //   //     x => ({ success: true, value: x + 'from2' })
   //   //   )
-  //   //   .to(x => ({ success: true, value: x + 'to2 ' }));
+  //   //   .to2(x => ({ success: true, value: x + 'to2 ' }));
 
   //   const target = t
   //     .feed(x => ({ success: true, value: x + 'from2' }), t.string)
 
-  //     .to(x => ({ success: true, value: x + 'to2 ' }));
+  //     .to2(x => ({ success: true, value: x + 'to2 ' }));
 
-  //   // .to(x => ({ success: true, value: x + 'to2 ' }))
+  //   // .to2(x => ({ success: true, value: x + 'to2 ' }))
   //   // .from(x => ({ success: true, value: x + 'from1 ' }))
-  //   // .to(x => ({ success: true, value: x + 'to3 ' }))
+  //   // .to2(x => ({ success: true, value: x + 'to3 ' }))
   //   // .from(x => ({ success: true, value: x + 'from2 ' }))
-  //   // .to(x => ({ success: true, value: x + 'to4 ' }))
+  //   // .to2(x => ({ success: true, value: x + 'to4 ' }))
   //   // .from(x => ({ success: true, value: x + 'from3 ' }));
 
   //   const result = target.parse('24');
@@ -318,12 +334,12 @@ describe('TypeConverter', () => {
 
   // it('from() first then to() chains', () => {
   //   const target = t.string
-  //     .to(x => ({ success: true, value: x + 'to1 ' }))
-  //     .to(x => ({ success: true, value: x + 'to2 ' }))
+  //     .to2(x => ({ success: true, value: x + 'to1 ' }))
+  //     .to2(x => ({ success: true, value: x + 'to2 ' }))
   //     .from(x => ({ success: true, value: x + 'from1 ' }))
-  //     .to(x => ({ success: true, value: x + 'to3 ' }))
+  //     .to2(x => ({ success: true, value: x + 'to3 ' }))
   //     .from(x => ({ success: true, value: x + 'from2 ' }))
-  //     .to(x => ({ success: true, value: x + 'to4 ' }))
+  //     .to2(x => ({ success: true, value: x + 'to4 ' }))
   //     .from(x => ({ success: true, value: x + 'from3 ' }));
 
   //   const result = target.parse('24');
@@ -336,12 +352,12 @@ describe('TypeConverter', () => {
 
   // it('complex chain', () => {
   //   const target = t.string
-  //     // .to(x => ({ success: true, value: x + 'to1 ' }))
-  //     // .to(x => ({ success: true, value: x + 'to2 ' }))
+  //     // .to2(x => ({ success: true, value: x + 'to1 ' }))
+  //     // .to2(x => ({ success: true, value: x + 'to2 ' }))
   //     // .from(x => ({ success: true, value: x + 'from1 ' }))
-  //     // .to(x => ({ success: true, value: x + 'to3 ' }))
+  //     // .to2(x => ({ success: true, value: x + 'to3 ' }))
   //     // .from(x => ({ success: true, value: x + 'from2 ' }))
-  //     .to(t.number, parseNumber)
+  //     .to2(t.number, parseNumber)
   //     .from(x => {
   //       console.log(x, typeof x);
   //       return { success: true, value: x as string };
@@ -384,6 +400,44 @@ describe('TypeConverter', () => {
     expect(result.success).toEqual(true);
     if (result.success) {
       expect(result.data).toEqual(new Date(1232131));
+    }
+  });
+
+  it('to() basic coercion condition failure', () => {
+    const target = unknown.to(number, x => Number(x)).where(x => !isNaN(x));
+
+    const result = target.safeParse('hello');
+    expect(result.success).toEqual(false);
+    if (!result.success) {
+      expect(result.error).toEqual({ kind: 'condition', actual: 'hello' });
+    }
+  });
+
+  it('to() basic coercion custom error', () => {
+    const target = unknown
+      .to(number, x => Number(x))
+      .where(
+        x => !isNaN(x),
+        x => wrongTypeError('asNumber', x)
+      );
+    const result = target.safeParse('hello');
+
+    expect(result.success).toEqual(false);
+    if (!result.success) {
+      expect(result.error).toEqual({ kind: 'wrong-type', expected: 'asNumber', actual: 'hello' });
+    }
+  });
+
+  it('to() coercion with thrown error', () => {
+    const target = unknown.to(number, x => {
+      throw Error('bad value');
+    });
+
+    const result = target.safeParse('hello');
+
+    expect(result.success).toEqual(false);
+    if (!result.success) {
+      expect(result.error).toEqual({ kind: 'thrown', error: Error('bad value') });
     }
   });
 
@@ -468,6 +522,12 @@ describe('TypeConverter', () => {
     type A = t.Infer<typeof A>;
     const target = A.to(t.obj({ prop: A }), x => pass({ prop: x }));
 
+    const thing = t.string.to(
+      t.number,
+      x => x.length,
+      val => ({ kind: 'general', message: val.toString() })
+    );
+
     type adfadgagdag = t.Infer<typeof target>;
     const result2 = target.safeParse({
       literalProp: 'world',
@@ -488,6 +548,31 @@ describe('TypeConverter', () => {
     class ADef {
       self? = t.obj(ADef).opt();
     }
+
+    expect(
+      t.string
+        .to(
+          t.number,
+          x => {
+            throw new Error();
+          },
+          "it didn't work"
+        )
+        .safeParse('hello')
+    ).toMatchObject({ success: false, error: { kind: 'thrown', message: "it didn't work" } });
+
+    expect(
+      t.string
+        .tweak(x => {
+          throw new Error();
+        }, "it didn't work")
+        .safeParse('hello')
+    ).toMatchObject({ success: false, error: { kind: 'thrown', message: "it didn't work" } });
+
+    expect(t.string.tweak(x => x + '_', "it didn't work").safeParse('hello')).toMatchObject({
+      success: true,
+      data: 'hello_'
+    });
 
     const A = t.obj(ADef);
     type A = t.Infer<typeof A>;
@@ -512,8 +597,13 @@ describe('TypeConverter', () => {
 
   it('feed() allows coercions', () => {
     const AnotherDateLike = t.unknown.to(t.date); //, x => coerceToDate(x as any));
-    const DateLike = t.coerce(t.date, coerceToDate);
+    const DateLike = t.to(t.date, coerceToDate);
 
+    t.string.to(
+      t.number,
+      x => 100,
+      v => t.wrongTypeError(v, 'number')
+    );
     // const DateLike = t.date.from(t.union(t.number, t.string, t.date), coerceToDate);
     // const DateLike2 = t.date.from(DateLike);
 

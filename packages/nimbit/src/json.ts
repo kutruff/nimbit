@@ -1,13 +1,13 @@
 import {
   array,
   boolean,
-  coerce,
   EVIL_PROTO,
   failWrongType,
   nul,
   number,
   pass,
   string,
+  to,
   union,
   type Infer,
   type LazyType,
@@ -23,7 +23,7 @@ export type json = JsonLiterals | json[] | { [key: string]: json };
 
 const jsonSchema: LazyType<json> = lazy(() => union(Literals, array(jsonSchema), record(string, jsonSchema)));
 
-export const json = coerce(jsonSchema, jsonParse);
+export const json = to(jsonSchema, jsonParse);
 
 export function jsonParse(x: string): ParseResult<json> {
   try {
