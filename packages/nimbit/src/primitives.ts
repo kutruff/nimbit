@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { createType, failInvalidType, invalidTypeError, pass, to, Typ, unknown } from '.';
+import { createType, failInvalidType, invalidTypeError, pass, to, Typ } from '.';
 
 export interface NullT extends Typ<'null', null, null> {}
 export const nul: NullT = createType('null', (value: null) =>

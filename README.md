@@ -65,64 +65,63 @@ NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 
 The documentation here is a modified snap of Zod's documentation to help compare Nimbit to Zod.
 
+**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing)
+
 - [Introduction](#introduction)
-  - [Requirements](#requirements)
-  - [From `npm`](#from-npm)
+  * [Requirements](#requirements)
+  * [From `npm`](#from-npm)
 - [Basic usage](#basic-usage)
 - [Primitives](#primitives)
 - [Basic Coercion](#basic-coercion)
-  - [`where()` - basic validation](#where---basic-validation)
-  - [User defined coercion and parsing with `to`](#user-defined-coercion-and-parsing-with-to)
+  * [`where()` for basic validation](#where-for-basic-validation)
+  * [`to()` for user defined coercion and parsing](#to-for-user-defined-coercion-and-parsing)
+- [Objects](#objects)
+  * [`.shape`](#shape)
+  * [`.k`](#k)
+  * [`.passthrough()`](#passthrough)
+  * [`.strict`](#strict)
+  * [`.strip()`](#strip)
+  * [`.catchall()`](#catchall)
+- [Type methods](#type-methods)
+  * [`.parse()`](#parse)
+  * [`.safeParse()`](#safeparse)
+  * [`.where()`](#where)
+  * [`.tweak()`](#tweak)
+  * [`.default()`](#default)
+  * [`.catch()`](#catch)
+  * [`.opt()`](#opt)
+  * [`.nullable()`](#nullable)
+  * [`.nullish()`](#nullish)
+- [Manipulating Types](#manipulating-types)
+  * [`extend()`](#extend)
+  * [`merge()`](#merge)
+  * [`pick()/omit()`](#pickomit)
+  * [`partial()`](#partial)
+  * [`required()`](#required)
 - [Literals](#literals)
 - [Enums](#enums)
 - [Native enums](#native-enums)
-- [Optionals](#optionals)
-- [Nullables](#nullables)
-- [Nullish](#nullish)
-- [Objects](#objects)
-  - [`.shape`](#shape)
-  - [`.k`](#k)
-  - [`.extend`](#extend)
-  - [`.merge`](#merge)
-  - [`.pick/.omit`](#pickomit)
-  - [`.partial`](#partial)
-  - [`.required`](#required)
-  - [`.passthrough`](#passthrough)
-  - [`.strict`](#strict)
-  - [`.strip`](#strip)
-  - [`.catchall`](#catchall)
 - [Arrays](#arrays)
-  - [`.element`](#element)
+  * [`.element`](#element)
 - [Unions](#unions)
 - [Records](#records)
 - [Maps](#maps)
 - [Sets](#sets)
-- [Intersections](#intersections)
-- [Extract](#extract)
-- [FlatExtract](#flatextract)
-- [Exclude](#exclude)
-- [FlatExclude](#flatexclude)
 - [Recursive Objects](#recursive-objects)
-  - [Other Recursive Types / JSON](#other-recursive-types--json)
-  - [Cyclical objects](#cyclical-objects)
-- [Promises](#promises)
-- [Functions](#functions)
-- [Custom Types](#custom-types)
-- [Type methods](#type-methods)
-  - [`.parse`](#parse)
-  - [`.safeParse`](#safeparse)
-  - [`.where`](#where)
-  - [`.tweak`](#tweak)
-  - [`.default`](#default)
-  - [`.catch`](#catch)
-  - [`.opt`](#opt)
-  - [`.nullable`](#nullable)
-  - [`.nullish`](#nullish-1)
-  - [`.brand`](#brand)
-  - [`.to`](#to)
+  * [Other Recursive Types / JSON](#other-recursive-types--json)
 - [Error handling](#error-handling)
-  - [Error formatting](#error-formatting)
-  - [`visitErrors`](#visiterrors)
+  * [`visitErrors()`](#visiterrors)
+- [Out of scope](#out-of-scope)
+  * [Intersections](#intersections)
+- [WIP](#wip)
+  * [`excludeKind()`](#excludekind)
+  * [`flatExcludeKind()`](#flatexcludekind)
+  * [Extract / FlatExtract](#extract--flatextract)
+  * [Cyclical objects](#cyclical-objects)
+  * [Promises](#promises)
+  * [Functions](#functions)
+  * [Custom Types](#custom-types)
+  * [`.brand()`](#brand)
 
 ## Introduction
 
@@ -245,7 +244,7 @@ asBoolean.parse(undefined); // => false
 asBoolean.parse(null); // => false
 ```
 
-### `where()` - basic validation
+### `where()` for basic validation
 
 Use the `where()` method and returning `true` if the data is valid.
 
@@ -263,7 +262,7 @@ myNumber.parse(''); // => throws error
 
 There are a few overloads to `where()` that let you customize the error message.
 
-### User defined coercion and parsing with `to`
+### `to()` for user defined coercion and parsing
 
 Nimbit has the versatile `to()` function for manipulating and transforming data between types in parsing pipelines.
 
@@ -354,6 +353,447 @@ const prefixedString = string.tweak(x => `_${x}`);
 
 prefixedString.parse('hello'); // => "_hello"
 prefixedString.parse(1); // => throws
+```
+
+## Objects
+
+```ts
+// all properties are required by default
+const Dog = obj({
+  name: string,
+  age: number,
+});
+
+// extract the inferred type like this
+type Dog = Infer<typeof Dog>;
+
+// equivalent to:
+type Dog = {
+  name: string;
+  age: number;
+};
+```
+
+### `.shape`
+
+Use `.shape` to access the schemas for a particular key.  Allows you to reflect against the type.
+
+```ts
+Dog.shape.name; // => string schema
+Dog.shape.age; // => number schema
+```
+
+### `.k`
+
+Use `.k` to get an autocompletable set of the shape's keys.
+
+```ts
+Dog.k; // => {name: "name", age: "age"]}
+```
+
+### `.passthrough()`
+
+By default object schemas strip out unrecognized keys during parsing.
+
+```ts
+const person = obj({
+  name: string
+});
+
+person.parse({
+  name: 'bob dylan',
+  extraKey: 61
+});
+// => { name: "bob dylan" }
+// extraKey has been stripped
+```
+
+Instead, if you want to pass through unknown keys, use `.passthrough()` .
+
+```ts
+person.passthrough().parse({
+  name: 'bob dylan',
+  extraKey: 61
+});
+// => { name: "bob dylan", extraKey: 61 }
+```
+
+### `.strict`
+
+By default object schemas strip out unrecognized keys during parsing. You can _disallow_ unknown keys with `.strict()` . If there are any unknown keys in the input, the library will throw an error.
+
+```ts
+const person = obj({
+  name: string
+}).strict();
+
+person.parse({
+  name: 'bob dylan',
+  extraKey: 61
+});
+// => throws ZodError
+```
+
+### `.strip()`
+
+You can use the `.strip` method to reset an object schema to the default behavior (stripping unrecognized keys).
+
+### `.catchall()`
+
+You can pass a "catchall" schema into an object schema. All unknown keys will be validated against it.
+
+```ts
+const person = obj({
+  name: string
+}).catchall(number);
+
+person.parse({
+  name: 'bob dylan',
+  validExtraKey: 61 // works fine
+});
+
+person.parse({
+  name: 'bob dylan',
+  validExtraKey: false // fails
+});
+// => throws error
+```
+
+Using `.catchall()` obviates `.passthrough()` , `.strip()` , or `.strict()`. All keys are now considered "known".
+
+## Type methods
+
+All types contain certain methods.
+
+### `.parse()`
+
+`.parse(data: unknown): T`
+
+Given any type, you can call its `.parse` method to check `data` is valid. If it is, a value is returned with full type information! Otherwise, an error is thrown.
+
+> IMPORTANT: The value returned by `.parse` will be almost always be a clone of the object you pass in.
+
+```ts
+const stringSchema = string;
+
+stringSchema.parse('fish'); // => returns "fish"
+stringSchema.parse(12); // throws error
+```
+
+### `.safeParse()`
+
+`.safeParse(data:unknown): { success: true; data: T; } | { success: false; error: ParseError; }`
+
+If you don't want to throw errors when validation fails, use `.safeParse`. This method returns an object containing either the successfully parsed data or a `ParseError` instance containing specific information about the error.
+
+```ts
+string.safeParse(12);
+// => { success: false; error: invalidTypeError }
+
+string.safeParse('billie');
+// => { success: true; data: 'billie' }
+```
+
+The result is a _discriminated union_, so you can handle errors very conveniently:
+
+```ts
+const result = string.safeParse('billie');
+if (!result.success) {
+  // handle error then return
+  result.error;
+} else {
+  // do something
+  result.data;
+}
+```
+
+### `.where()`
+
+`.where(condition: (value: T) => boolean, customError?: string | ((value: T) => ParseError | string))`
+
+`where()` lets you provide custom validation logic. You can return a more specific error message by returning a string, or providing a function that returns a string, or a rich `ParseError` object that you can customize.
+
+```ts
+const myNumber = number.where(x => x > 100);
+myNumber.parse(150); // => 150
+myNumber.parse(80); // => throws error
+```
+
+Simple error message:
+
+```ts
+const nonEmptyString = string.where(x => x !== '', 'string should not be empty);
+myNumber.parse('nice'); // => nice
+myNumber.parse(''); // => throws error
+```
+
+using the value for your error
+
+```ts
+const nonEmptyString = string.where(
+  x => x !== '',
+  value => `string: ${value} should not be empty`
+);
+myNumber.parse('nice'); // => nice
+myNumber.parse(''); // => throws error
+```
+
+### `.tweak()`
+
+To transform data after parsing, but not change its type:
+
+```ts
+const stringWithWorld = string.tweak(x => x + ' world');
+
+stringWithWorld.parse('hello'); // => "6"
+```
+
+### `.default()`
+
+As a convenience, you can provide a default value to be used if the input is `undefined`.
+
+```ts
+const stringWithDefault = string.default('tuna');
+
+stringWithDefault.parse(undefined); // => "tuna"
+```
+
+Optionally, you can pass a function into `.default` that will be re-executed whenever a default value needs to be generated:
+
+```ts
+const numberWithRandomDefault = number.default(Math.random);
+
+numberWithRandomDefault.parse(undefined); // => 0.4413456736055323
+numberWithRandomDefault.parse(undefined); // => 0.1871840107401901
+numberWithRandomDefault.parse(undefined); // => 0.7223408162401552
+```
+
+### `.catch()`
+
+Use `.catch()` to provide a "catch value" to be returned in the event of a parsing error.
+
+```ts
+const numberWithCatch = number.catch(42);
+
+numberWithCatch.parse(5); // => 5
+numberWithCatch.parse('tuna'); // => 42
+```
+
+Optionally, you can pass a function into `.catch` that will be re-executed whenever a default value needs to be generated. The caught error will be passed into this function.
+
+```ts
+const numberWithRandomCatch = number.catch(error => Math.random());
+
+numberWithRandomCatch.parse('sup'); // => 0.4413456736055323
+numberWithRandomCatch.parse('sup'); // => 0.1871840107401901
+numberWithRandomCatch.parse('sup'); // => 0.7223408162401552
+```
+
+### `.opt()`
+
+You can make any schema by calling `.opt()` on any type.
+
+```ts
+const stringOrUndefined = string.opt();
+type A = Infer<typeof stringOrUndefined>; // string | undefined;
+
+const user = obj({
+  username: string.opt
+});
+type C = Infer<typeof user>; // { username?: string | undefined };
+```
+
+`opt()` is simply a shorthand for creating a union of a type with the `undef` type and they are exactly equivalent.
+
+```ts
+const stringOrUndefined = union(string, undef);
+type A = Infer<typeof stringOrUndefined>; // string | undefined;
+```
+
+You can remove `undef` and `nul` from an optional / `union` by calling `unwrap()`.
+
+```ts
+const optionalString = string.opt();
+optionalString.unwrap() === stringSchema; // true
+```
+
+NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExcludeKinds()` if you wish to remove a type from all nested unions.
+
+```ts
+const optionalString = string.opt().opt();
+optionalString.unwrap() === stringSchema; // false!
+optionalString.unwrap().unwrap() === stringSchema; // true!
+
+exclude(optionalString, undef) === stringSchema; // false!
+flatExcludeKinds(optionalString, undef) === stringSchema; // true!
+```
+
+### `.nullable()`
+
+Similarly, you can create nullable types with `nullable()`. Again, this is a `union` of a type with `nul`
+
+```ts
+const nullableString = string.nullable();
+nullableString.parse('asdf'); // => "asdf"
+nullableString.parse(null); // => null
+```
+
+### `.nullish()`
+
+You can create types that are both optional and nullable with `nullish()`. Again, this is a `union` of a type with `nul` and `undef`
+
+```ts
+const nullishString = string.nullish();
+nullishString.parse('asdf'); // => "asdf"
+nullishString.parse(undefined); // => undefined
+nullishString.parse(null); // => null
+```
+
+## Manipulating Types
+
+### `extend()`
+
+You can add additional fields to an object schema with the `extend` function.
+
+```ts
+const DogWithBreed = extend(Dog, {
+  breed: string
+});
+```
+
+You can use `extend` to overwrite fields! Be careful with this power!
+
+### `merge()`
+
+Equivalent to `extend(A, B.shape)`.
+
+```ts
+const BaseTeacher = obj({ students: array(string) });
+const HasID = obj({ id: string });
+
+const Teacher = BaseTeacher.merge(HasID);
+type Teacher = Infer<typeof Teacher>; // => { students: string[], id: string }
+```
+
+> If the two schemas share keys, the properties of B overrides the property of A. The returned schema also inherits the "unknownKeys" policy (strip/strict/passthrough) and the catchall schema of B.
+
+### `pick()/omit()`
+
+You may use `pick()` and `omit()` to get a modified version of an `object` schema. Consider this Recipe schema:
+
+```ts
+const Recipe = obj({
+  id: string,
+  name: string,
+  ingredients: array(string)
+});
+```
+
+To only keep certain keys, use `pick()` .
+
+```ts
+const JustTheName = pick(Recipe, Recipe.k.name);
+type JustTheName = Infer<typeof JustTheName>;
+// => { name: string }
+```
+
+You could also just pass the property name directly.
+
+```ts
+const JustTheName = pick(Recipe, 'name');
+```
+
+There's also the `getKeys()` convenience function if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typed.
+
+```ts
+const JustTheName = pick(Recipe, ...getKeys({ id: 1, name: 1 }));
+```
+
+To remove certain keys, use `omit()` in the same fashion as `pick()`
+
+```ts
+const JustRecipeName = required(User, 'id', 'ingredients);
+type JustRecipeName = Infer<typeof JustRecipeName>;
+// => { name: string }
+
+//alternative ways of omitting properties by name
+const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
+const JustRecipeName = omit(Recipe, ...getKeys({id: 1, ingredients: 1}));
+```
+
+### `partial()`
+
+Just like built-in TypeScript utility type [Partial](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype), the `partial` function makes all properties optional.
+
+Starting from this object:
+
+```ts
+const User = obj({
+  email: string
+  username: string,
+});
+// { email: string; username: string }
+```
+
+We can create a partial version:
+
+```ts
+const partialUser = partial(User);
+// { email?: string | undefined; username?: string | undefined }
+```
+
+You can also specify which properties to make optional:
+
+```ts
+const optionalEmail = partial(User, User.k.email);
+
+/*
+{
+  email?: string | undefined;
+  username: string
+}
+*/
+
+//alternative ways of picking propertis to the above
+const optionalEmail = partial(User, 'email');
+const optionalEmail = partial(User, ...getKeys({email: 1}));
+```
+
+### `required()`
+
+Contrary to the `partial` function, the `required` function makes all properties required.
+
+Starting from this object:
+
+```ts
+const User = partial(obj({
+  email: string
+  username: string,
+}));
+// { email?: string | undefined; username?: string | undefined }
+```
+
+We can create a required version:
+
+```ts
+const requiredUser = required(User);
+// { email: string; username: string }
+```
+
+You can also specify which properties to make required:
+
+```ts
+const requiredEmail = required(User, User.k.email);
+/*
+{
+  email: string;
+  username?: string | undefined;
+}
+*/
+
+//alternative ways of picking properties by name
+const requiredEmail = required(User, 'email');
+const requiredEmail = required(User, ...getKeys({email: 1}));
 ```
 
 ## Literals
@@ -487,317 +927,6 @@ You can access the underlying object with the `.enum` property:
 FruitEnum.enum.Apple; // "apple"
 ```
 
-## Optionals
-
-You can make any schema by calling `.opt()` on any type.
-
-```ts
-const stringOrUndefined = string.opt();
-type A = Infer<typeof stringOrUndefined>; // string | undefined;
-
-const user = obj({
-  username: string.opt
-});
-type C = Infer<typeof user>; // { username?: string | undefined };
-```
-
-`opt()` is simply a shorthand for creating a union of a type with the `undef` type and they are exactly equivalent.
-
-```ts
-const stringOrUndefined = union(string, undef);
-type A = Infer<typeof stringOrUndefined>; // string | undefined;
-```
-
-You can remove `undef` and `nul` from an optional / `union` by calling `unwrap()`.
-
-```ts
-const optionalString = string.opt();
-optionalString.unwrap() === stringSchema; // true
-```
-
-NOTE: `unwrap()` is a shallow operation on a `union` as you can have nested unions. You can use `flatExcludeKinds()` if you wish to remove a type from all nested unions.
-
-```ts
-const optionalString = string.opt().opt();
-optionalString.unwrap() === stringSchema; // false!
-optionalString.unwrap().unwrap() === stringSchema; // true!
-
-exclude(optionalString, undef) === stringSchema; // false!
-flatExcludeKinds(optionalString, undef) === stringSchema; // true!
-```
-
-## Nullables
-
-Similarly, you can create nullable types with `nullable()`. Again, this is a `union` of a type with `nul`
-
-```ts
-const nullableString = string.nullable();
-nullableString.parse('asdf'); // => "asdf"
-nullableString.parse(null); // => null
-```
-
-## Nullish
-
-You can create types that are both optional and nullable with `nullish()`. Again, this is a `union` of a type with `nul` and `undef`
-
-```ts
-const nullishString = string.nullish();
-nullishString.parse('asdf'); // => "asdf"
-nullishString.parse(undefined); // => undefined
-nullishString.parse(null); // => null
-```
-
-## Objects
-
-```ts
-// all properties are required by default
-const Dog = obj({
-  name: string,
-  age: number,
-});
-
-// extract the inferred type like this
-type Dog = Infer<typeof Dog>;
-
-// equivalent to:
-type Dog = {
-  name: string;
-  age: number;
-};
-```
-
-### `.shape`
-
-Use `.shape` to access the schemas for a particular key.
-
-```ts
-Dog.shape.name; // => string schema
-Dog.shape.age; // => number schema
-```
-
-### `.k`
-
-Use `.k` to get an autocompletable set of the shape's keys.
-
-```ts
-Dog.k; // => {name: "name", age: "age"]}
-```
-
-### `.extend`
-
-You can add additional fields to an object schema with the `.extend` method.
-
-```ts
-const DogWithBreed = Dog.extend({
-  breed: string
-});
-```
-
-You can use `.extend` to overwrite fields! Be careful with this power!
-
-### `.merge`
-
-Equivalent to `A.extend(B.shape)`.
-
-```ts
-const BaseTeacher = obj({ students: array(string) });
-const HasID = obj({ id: string });
-
-const Teacher = BaseTeacher.merge(HasID);
-type Teacher = Infer<typeof Teacher>; // => { students: string[], id: string }
-```
-
-> If the two schemas share keys, the properties of B overrides the property of A. The returned schema also inherits the "unknownKeys" policy (strip/strict/passthrough) and the catchall schema of B.
-
-### `.pick/.omit`
-
-You may use `pick()` and `omit()` to get a modified version of an `object` schema. Consider this Recipe schema:
-
-```ts
-const Recipe = obj({
-  id: string,
-  name: string,
-  ingredients: array(string)
-});
-```
-
-To only keep certain keys, use `.pick` .
-
-```ts
-const JustTheName = pick(Recipe, Recipe.k.name);
-type JustTheName = Infer<typeof JustTheName>;
-// => { name: string }
-```
-
-You could also just pass the property name directly.
-
-```ts
-const JustTheName = pick(Recipe, 'name');
-```
-
-There's also the `getKeys()` convenience method if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typed.
-
-```ts
-const JustTheName = pick(Recipe, ...getKeys({ id: 1, name: 1 }));
-```
-
-To remove certain keys, use `.omit` in the same fashion as `pick()`
-
-```ts
-const JustRecipeName = required(User, 'id', 'ingredients);
-type JustRecipeName = Infer<typeof JustRecipeName>;
-// => { name: string }
-
-//alternative ways of omitting properties by name
-const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
-const JustRecipeName = omit(Recipe, ...getKeys({id: 1, ingredients: 1}));
-```
-
-### `.partial`
-
-Just like built-in TypeScript utility type [Partial](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype), the `.partial` method makes all properties optional.
-
-Starting from this object:
-
-```ts
-const User = obj({
-  email: string
-  username: string,
-});
-// { email: string; username: string }
-```
-
-We can create a partial version:
-
-```ts
-const partialUser = partial(User);
-// { email?: string | undefined; username?: string | undefined }
-```
-
-You can also specify which properties to make optional:
-
-```ts
-const optionalEmail = partial(User, User.k.email);
-
-/*
-{
-  email?: string | undefined;
-  username: string
-}
-*/
-
-//alternative ways of picking propertis to the above
-const optionalEmail = partial(User, 'email');
-const optionalEmail = partial(User, ...getKeys({email: 1}));
-```
-
-### `.required`
-
-Contrary to the `.partial` method, the `.required` method makes all properties required.
-
-Starting from this object:
-
-```ts
-const User = partial(obj({
-  email: string
-  username: string,
-}));
-// { email?: string | undefined; username?: string | undefined }
-```
-
-We can create a required version:
-
-```ts
-const requiredUser = required(User);
-// { email: string; username: string }
-```
-
-You can also specify which properties to make required:
-
-```ts
-const requiredEmail = required(User, User.k.email);
-/*
-{
-  email: string;
-  username?: string | undefined;
-}
-*/
-
-//alternative ways of picking properties by name
-const requiredEmail = required(User, 'email');
-const requiredEmail = required(User, ...getKeys({email: 1}));
-```
-
-### `.passthrough`
-
-By default object schemas strip out unrecognized keys during parsing.
-
-```ts
-const person = obj({
-  name: string
-});
-
-person.parse({
-  name: 'bob dylan',
-  extraKey: 61
-});
-// => { name: "bob dylan" }
-// extraKey has been stripped
-```
-
-Instead, if you want to pass through unknown keys, use `.passthrough()` .
-
-```ts
-person.passthrough().parse({
-  name: 'bob dylan',
-  extraKey: 61
-});
-// => { name: "bob dylan", extraKey: 61 }
-```
-
-### `.strict`
-
-By default object schemas strip out unrecognized keys during parsing. You can _disallow_ unknown keys with `.strict()` . If there are any unknown keys in the input, the library will throw an error.
-
-```ts
-const person = obj({
-  name: string
-}).strict();
-
-person.parse({
-  name: 'bob dylan',
-  extraKey: 61
-});
-// => throws ZodError
-```
-
-### `.strip`
-
-You can use the `.strip` method to reset an object schema to the default behavior (stripping unrecognized keys).
-
-### `.catchall`
-
-You can pass a "catchall" schema into an object schema. All unknown keys will be validated against it.
-
-```ts
-const person = obj({
-  name: string
-}).catchall(number);
-
-person.parse({
-  name: 'bob dylan',
-  validExtraKey: 61 // works fine
-});
-
-person.parse({
-  name: 'bob dylan',
-  validExtraKey: false // fails
-});
-// => throws error
-```
-
-Using `.catchall()` obviates `.passthrough()` , `.strip()` , or `.strict()`. All keys are now considered "known".
-
 ## Arrays
 
 ```ts
@@ -909,23 +1038,11 @@ type NumberSet = Infer<typeof numberSet>;
 // type NumberSet = Set<number>
 ```
 
-## Intersections
-
-Interesections are not in scope for Nimbit. They have limited use in the real world, and cause immense complications in implementing a type system library. Even though they are present in other libraries like Zod, they end up being somewhat of a dead end as you lose the ability to use pick and omit.
-
-In general, use `merge` and `extend`.
-
-## Extract
-
-## FlatExtract
-
-## Exclude
-
-## FlatExclude
-
 ## Recursive Objects
 
 One of the biggest advantages of Nimbit is a new approach to recursive types. In Nimbit, recursive types are defined as naturally as typical objects, but instead you first define your object's shape as a class before passing it to `obj()`.
+
+Unlike Zod, the TypeScript type is able to be inferred automatically, and there is no need to use `lazy()`.
 
 ```ts
 class CategoryDef {
@@ -1037,188 +1154,9 @@ export function jsonParse(x: string): ParseResult<json> {
 json.parse('{"a":1}'); //passes and returns { a: 1 }
 ```
 
-### Cyclical objects
-
-TODO: Add support in parsing
-
-## Promises
-
-TBD whether to support
-
-## Functions
-
-TBD whether to support
-
-## Custom Types
-
-TODO: document `createType()` and deriving from `Typ` after a round of feedback.
-
-## Type methods
-
-All types contain certain methods.
-
-### `.parse`
-
-`.parse(data: unknown): T`
-
-Given any type, you can call its `.parse` method to check `data` is valid. If it is, a value is returned with full type information! Otherwise, an error is thrown.
-
-> IMPORTANT: The value returned by `.parse` will be almost always be a clone of the object you pass in.
-
-```ts
-const stringSchema = string;
-
-stringSchema.parse('fish'); // => returns "fish"
-stringSchema.parse(12); // throws error
-```
-
-### `.safeParse`
-
-`.safeParse(data:unknown): { success: true; data: T; } | { success: false; error: ParseError; }`
-
-If you don't want to throw errors when validation fails, use `.safeParse`. This method returns an object containing either the successfully parsed data or a `ParseError` instance containing specific information about the error.
-
-```ts
-string.safeParse(12);
-// => { success: false; error: invalidTypeError }
-
-string.safeParse('billie');
-// => { success: true; data: 'billie' }
-```
-
-The result is a _discriminated union_, so you can handle errors very conveniently:
-
-```ts
-const result = string.safeParse('billie');
-if (!result.success) {
-  // handle error then return
-  result.error;
-} else {
-  // do something
-  result.data;
-}
-```
-
-### `.where`
-
-`.where(condition: (value: T) => boolean, customError?: string | ((value: T) => ParseError | string))`
-
-`where()` lets you provide custom validation logic. You can return a more specific error message by returning a string, or providing a function that returns a string, or a rich `ParseError` object that you can customize.
-
-```ts
-const myNumber = number.where(x => x > 100);
-myNumber.parse(150); // => 150
-myNumber.parse(80); // => throws error
-```
-
-Simple error message:
-
-```ts
-const nonEmptyString = string.where(x => x !== '', 'string should not be empty);
-myNumber.parse('nice'); // => nice
-myNumber.parse(''); // => throws error
-```
-
-using the value for your error
-
-```ts
-const nonEmptyString = string.where(
-  x => x !== '',
-  value => `string: ${value} should not be empty`
-);
-myNumber.parse('nice'); // => nice
-myNumber.parse(''); // => throws error
-```
-
-### `.tweak`
-
-To transform data after parsing, but not change its type:
-
-```ts
-const stringWithWorld = string.tweak(x => x + ' world');
-
-stringWithWorld.parse('hello'); // => "6"
-```
-
-### `.default`
-
-As a convenience, you can provide a default value to be used if the input is `undefined`.
-
-```ts
-const stringWithDefault = string.default('tuna');
-
-stringWithDefault.parse(undefined); // => "tuna"
-```
-
-Optionally, you can pass a function into `.default` that will be re-executed whenever a default value needs to be generated:
-
-```ts
-const numberWithRandomDefault = number.default(Math.random);
-
-numberWithRandomDefault.parse(undefined); // => 0.4413456736055323
-numberWithRandomDefault.parse(undefined); // => 0.1871840107401901
-numberWithRandomDefault.parse(undefined); // => 0.7223408162401552
-```
-
-### `.catch`
-
-Use `.catch()` to provide a "catch value" to be returned in the event of a parsing error.
-
-```ts
-const numberWithCatch = number.catch(42);
-
-numberWithCatch.parse(5); // => 5
-numberWithCatch.parse('tuna'); // => 42
-```
-
-Optionally, you can pass a function into `.catch` that will be re-executed whenever a default value needs to be generated. The caught error will be passed into this function.
-
-```ts
-const numberWithRandomCatch = number.catch(error => Math.random());
-
-numberWithRandomCatch.parse('sup'); // => 0.4413456736055323
-numberWithRandomCatch.parse('sup'); // => 0.1871840107401901
-numberWithRandomCatch.parse('sup'); // => 0.7223408162401552
-```
-
-### `.opt`
-
-A convenience method that returns an optional version of a schema which is a union of your type and `undefined`.
-
-```ts
-const optionalString = string.opt(); // string | undefined
-```
-
-### `.nullable`
-
-A convenience method that returns a nullable version of a schema.
-
-```ts
-const nullableString = string.nullable(); // string | null
-```
-
-### `.nullish`
-
-A convenience method that returns a "nullish" version of a schema. Nullish schemas will accept both `undefined` and `null`. Read more about the concept of "nullish" [in the TypeScript 3.7 release notes](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#nullish-coalescing).
-
-```ts
-const nullishString = string.nullish(); // string | null | undefined
-
-// equivalent to
-string.optional.nullable();
-```
-
-### `.brand`
-
-TBD
-
-### `.to`
-
-See [The overview in the intro of `to`](#user-defined-coercion-and-parsing-with-to)
-
 ## Error handling
 
-> Note work in progress.
+> Note: work in progress.
 
 At the moment, there is a discriminated union called `ParseError` that is returned by `.safeParse()` and `.parse()` when an error occurs.
 
@@ -1238,10 +1176,7 @@ if (!result.success) {
   ] */
 }
 ```
-
-### Error formatting
-
-### `visitErrors`
+### `visitErrors()`
 
 The errors are in a hiearchary of `ParseError` objects. You can use `visitErrors` to traverse the errors and format them as you wish.
 
@@ -1269,3 +1204,47 @@ if (!result.success) {
   }
 }
 ```
+
+## Out of scope
+
+### Intersections
+
+Interesections are not in scope for Nimbit. They have limited use in the real world, and cause immense complications in implementing a type system library. Even though they are present in other libraries like Zod, they end up being somewhat of a dead end as you lose the ability to use pick and omit.
+
+In general, use `merge` and `extend`.
+
+## WIP
+
+### `excludeKind()`
+
+Allows you to remove a `kind` of type from a single union. It does not traverse nested unions. This is presently in the library but has a slight chance of changing
+
+### `flatExcludeKind()`
+
+Flattens the hierarchy of nested Unions and then removes a `kind` of type from all the unions.  A new union is returned.
+
+### Extract / FlatExtract
+
+### Cyclical objects
+
+TBD: Add support in parsing
+
+### Promises
+
+TBD whether to support
+
+### Functions
+
+TBD whether to support
+
+### Custom Types
+
+TODO: document `createType()` and deriving from `Typ` after a round of feedback.
+
+One of the "big deals" about Nimbit is how much of type declaration is pushed into userland so that there is maximum flexibility.  For example, the library does not ship with the more esoteric JS types like [Typed Arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Typed_arrays) like `Int8Array`, `Float32Array`, etc.  However, you can defined these types yourself through exactly the same mechanism that the library uses to define `string`, `number`, etc.  This means that you never need to wait for this library to upgrade to use any types you come across.
+
+Furthermore, this feature is also here in order to lay the groundwork for ORM's to define Database types in a semi-native fashion.  Note: This is considered unstable until this exact scenario is tested.
+
+### `.brand()`
+
+TBD

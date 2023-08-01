@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 export type TypeConverter<TSource, TDestinationType> = (value: TSource) => ParseResult<TDestinationType>;
 
@@ -152,7 +154,7 @@ export function* visitErrors(error: ParseError, path: string[] = []): IterableIt
 
 export function formatError(error: ParseError) {
   return [...visitErrors(error)]
-    .map(([err, path]) => path.toString() + ': ' + err.kind + ', ' + ((err as any).message || ''))
+    .map(([err, path]) => `error: ${err.kind} - ${(err as any).message || ''} [${path}]`)
     .join('\n');
 }
 
