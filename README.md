@@ -1204,7 +1204,7 @@ import {
   array,
   boolean,
   EVIL_PROTO,
-  failinvalidType,
+  failInvalidType,
   lazy,
   nul,
   number,
@@ -1231,7 +1231,7 @@ export function jsonParse(x: string): ParseResult<json> {
   try {
     return pass(JSON.parse(x, (key, value) => (key === EVIL_PROTO ? undefined : value)));
   } catch (err) {
-    return failinvalidType('json', x);
+    return failInvalidType('json', x);
   }
 }
 json.parse('{"a":1}'); //passes and returns { a: 1 }
