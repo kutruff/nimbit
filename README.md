@@ -68,60 +68,68 @@ The documentation here is a modified snap of Zod's documentation to help compare
 **TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing)
 
 - [Introduction](#introduction)
-  * [Requirements](#requirements)
-  * [From `npm`](#from-npm)
+  - [Requirements](#requirements)
+  - [From `npm`](#from-npm)
 - [Basic usage](#basic-usage)
 - [Primitives](#primitives)
 - [Basic Coercion](#basic-coercion)
-  * [`where()` for basic validation](#where-for-basic-validation)
-  * [`to()` for user defined coercion and parsing](#to-for-user-defined-coercion-and-parsing)
+  - [`where()` for basic validation](#where-for-basic-validation)
+  - [`to()` for user defined coercion and parsing](#to-for-user-defined-coercion-and-parsing)
 - [Objects](#objects)
-  * [`.shape`](#shape)
-  * [`.k`](#k)
-  * [`.passthrough()`](#passthrough)
-  * [`.strict`](#strict)
-  * [`.strip()`](#strip)
-  * [`.catchall()`](#catchall)
+  - [`.shape`](#shape)
+  - [`.k`](#k)
+  - [`.passthrough()`](#passthrough)
+  - [`.strict`](#strict)
+  - [`.strip()`](#strip)
+  - [`.catchall()`](#catchall)
 - [Type methods](#type-methods)
-  * [`.parse()`](#parse)
-  * [`.safeParse()`](#safeparse)
-  * [`.where()`](#where)
-  * [`.tweak()`](#tweak)
-  * [`.default()`](#default)
-  * [`.catch()`](#catch)
-  * [`.opt()`](#opt)
-  * [`.nullable()`](#nullable)
-  * [`.nullish()`](#nullish)
+  - [`.parse()`](#parse)
+  - [`.safeParse()`](#safeparse)
+  - [`.where()`](#where)
+  - [`.tweak()`](#tweak)
+  - [`.default()`](#default)
+  - [`.catch()`](#catch)
+  - [`.opt()`](#opt)
+  - [`.nullable()`](#nullable)
+  - [`.nullish()`](#nullish)
+  - [Reflection](#reflection)
+    - [`.kind`](#kind)
+    - [`.name` / `withName()`](#name--withname)
 - [Manipulating Types](#manipulating-types)
-  * [`extend()`](#extend)
-  * [`merge()`](#merge)
-  * [`pick()/omit()`](#pickomit)
-  * [`partial()`](#partial)
-  * [`required()`](#required)
+  - [`extend()`](#extend)
+  - [`merge()`](#merge)
+  - [`pick()/omit()`](#pickomit)
+  - [`partial()`](#partial)
+  - [`required()`](#required)
 - [Literals](#literals)
 - [Enums](#enums)
 - [Native enums](#native-enums)
 - [Arrays](#arrays)
-  * [`.element`](#element)
+  - [`.element`](#element)
 - [Unions](#unions)
+- [Tuples](#tuples)
 - [Records](#records)
 - [Maps](#maps)
 - [Sets](#sets)
 - [Recursive Objects](#recursive-objects)
-  * [Other Recursive Types / JSON](#other-recursive-types--json)
+  - [Other Recursive Types / JSON](#other-recursive-types--json)
 - [Error handling](#error-handling)
-  * [`visitErrors()`](#visiterrors)
+  - [`visitErrors()`](#visiterrors)
+- [TBD](#tbd)
+  - [Fluent interface extension, module augmentation](#fluent-interface-extension-module-augmentation)
+  - [Built-in validators](#built-in-validators)
+  - [Cyclical objects](#cyclical-objects)
+  - [Promises](#promises)
+  - [Functions](#functions)
 - [Out of scope](#out-of-scope)
-  * [Intersections](#intersections)
+  - [Intersections](#intersections)
+  - [Built-in validators](#built-in-validators-1)
 - [WIP](#wip)
-  * [`excludeKind()`](#excludekind)
-  * [`flatExcludeKind()`](#flatexcludekind)
-  * [Extract / FlatExtract](#extract--flatextract)
-  * [Cyclical objects](#cyclical-objects)
-  * [Promises](#promises)
-  * [Functions](#functions)
-  * [Custom Types](#custom-types)
-  * [`.brand()`](#brand)
+  - [`excludeKind()`](#excludekind)
+  - [`flatExcludeKind()`](#flatexcludekind)
+  - [Extract / FlatExtract](#extract--flatextract)
+  - [Custom Types](#custom-types)
+  - [`.brand()`](#brand)
 
 ## Introduction
 
@@ -376,7 +384,7 @@ type Dog = {
 
 ### `.shape`
 
-Use `.shape` to access the schemas for a particular key.  Allows you to reflect against the type.
+Use `.shape` to access the schemas for a particular key. Allows you to reflect against the type.
 
 ```ts
 Dog.shape.name; // => string schema
@@ -647,6 +655,34 @@ const nullishString = string.nullish();
 nullishString.parse('asdf'); // => "asdf"
 nullishString.parse(undefined); // => undefined
 nullishString.parse(null); // => null
+```
+
+### Reflection
+
+#### `.kind`
+
+Use `.kind` to get the broad category of a type. `kind` is always a string literal.
+
+```ts
+string.kind; // => 'string'
+date.kind; // => 'date'
+obj({ property: string }).kind; // => 'object'
+array(number).kind; // => 'array'
+literal('hello').kind; // => 'literal'
+union(string, number).kind; // => 'union'
+```
+
+#### `.name` / `withName()`
+
+All types can be named. This is for the users benefit. It does not enforce any typeing whatsoever
+
+```ts
+const Dog = obj({
+  name: string,
+  age: number
+}).withName('Dog');
+
+Dog.name; // => 'Dog'
 ```
 
 ## Manipulating Types
@@ -931,9 +967,10 @@ FruitEnum.enum.Apple; // "apple"
 
 ```ts
 const stringArray = array(string);
-```
 
-### `.element`
+string.array.parse(['hi', 'there']); // => ['hi', 'there']
+string.array.parse(['hi', 1]); // => fail
+```
 
 Use `.element` to access the schema for an element of the array.
 
@@ -981,6 +1018,23 @@ const nestedUnions = union(string, union(number, undef));
 nestedUnions.members; // => [StringT, [UnionType<..., [NumberT, UndefinedT]>]
 nestedUnions.members[1].members; // => [NumberT, UndefinedT]
 nestedUnions.members[1].members[0].kind; // => 'number'
+```
+
+## Tuples
+
+Unlike arrays, tuples have a fixed number of elements and each element can have a different type.
+
+```ts
+const athleteSchema = tuple([
+  string, // name
+  number, // jersey number
+  obj({
+    pointsScored: number
+  }) // statistics
+]);
+
+type Athlete = Infer<typeof athleteSchema>;
+// type Athlete = [string, number, { pointsScored: number }]
 ```
 
 ## Records
@@ -1176,6 +1230,7 @@ if (!result.success) {
   ] */
 }
 ```
+
 ### `visitErrors()`
 
 The errors are in a hiearchary of `ParseError` objects. You can use `visitErrors` to traverse the errors and format them as you wish.
@@ -1205,25 +1260,38 @@ if (!result.success) {
 }
 ```
 
-## Out of scope
+## TBD
 
-### Intersections
+### Fluent interface extension, module augmentation
 
-Interesections are not in scope for Nimbit. They have limited use in the real world, and cause immense complications in implementing a type system library. Even though they are present in other libraries like Zod, they end up being somewhat of a dead end as you lose the ability to use pick and omit.
+It may be possible and it is desirable for users to be able to augment the built-in types with their own convenience methods. This could be accomplished via class mix-ins or modifying the prototoypes with TypeScript's module augmentation. This is a big decision as there appear to be nuances with TypeScript module augmentation and globabally modifying a prototype may or may not potentially cause problems with multiple libraries modifying the same types.
 
-In general, use `merge` and `extend`.
+### Built-in validators
 
-## WIP
+TBD: There are pros and cons to shipping with built-in validators like `min()`, `nonempty` etc like Zod has. In light of the fact that `where()` handles any possible scenario, and making a reusable validators is as simple as defining simple boolean expressions and making higher order functions.
 
-### `excludeKind()`
+```ts
+const nonEmpty = (x: string) => string !== '' && string != null;
+const min = (min: number) => (x: number) => x >= min;
+const range = (min: number, max: number) => (x: number) => x >= min && x <= max;
+const matches = (regex: RegExp) => (x: string) => regex.test(x);
+const email = string.where(matches(/^([A-Z0-9_+-]+\.?)*[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i));
 
-Allows you to remove a `kind` of type from a single union. It does not traverse nested unions. This is presently in the library but has a slight chance of changing
+const formData = obj({
+  name: name.where(nonEmpty),
+  age: number.where(min(0)),
+  quantity: number.where(range(1, 100)),
+  personalEmail: email
+});
 
-### `flatExcludeKind()`
+formData.parse({
+  name: '',
+  age: -1,
+  quantity: 0
+});
+```
 
-Flattens the hierarchy of nested Unions and then removes a `kind` of type from all the unions.  A new union is returned.
-
-### Extract / FlatExtract
+Note that the regex above is not necessarily to spec, which is why not including it in validator libraries is worthy of consideration.
 
 ### Cyclical objects
 
@@ -1237,13 +1305,39 @@ TBD whether to support
 
 TBD whether to support
 
+## Out of scope
+
+### Intersections
+
+Interesections are not in scope for Nimbit. They have limited use in the real world, and cause immense complications in implementing a type system library. Even though they are present in other libraries like Zod, they end up being somewhat of a dead end as you lose the ability to use pick and omit.
+
+In general, use `merge` and `extend`.
+
+### Built-in validators
+
+Interesections are not in scope for Nimbit. They have limited use in the real world, and cause immense complications in implementing a type system library. Even though they are present in other libraries like Zod, they end up being somewhat of a dead end as you lose the ability to use pick and omit.
+
+In general, use `merge` and `extend`.
+
+## WIP
+
+### `excludeKind()`
+
+Allows you to remove a `kind` of type from a single union. It does not traverse nested unions. This is presently in the library but has a slight chance of changing
+
+### `flatExcludeKind()`
+
+Flattens the hierarchy of nested Unions and then removes a `kind` of type from all the unions. A new union is returned.
+
+### Extract / FlatExtract
+
 ### Custom Types
 
 TODO: document `createType()` and deriving from `Typ` after a round of feedback.
 
-One of the "big deals" about Nimbit is how much of type declaration is pushed into userland so that there is maximum flexibility.  For example, the library does not ship with the more esoteric JS types like [Typed Arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Typed_arrays) like `Int8Array`, `Float32Array`, etc.  However, you can defined these types yourself through exactly the same mechanism that the library uses to define `string`, `number`, etc.  This means that you never need to wait for this library to upgrade to use any types you come across.
+One of the "big deals" about Nimbit is how much of type declaration is pushed into userland so that there is maximum flexibility. For example, the library does not ship with the more esoteric JS types like [Typed Arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Typed_arrays) like `Int8Array`, `Float32Array`, etc. However, you can defined these types yourself through exactly the same mechanism that the library uses to define `string`, `number`, etc. This means that you never need to wait for this library to upgrade to use any types you come across.
 
-Furthermore, this feature is also here in order to lay the groundwork for ORM's to define Database types in a semi-native fashion.  Note: This is considered unstable until this exact scenario is tested.
+Furthermore, this feature is also here in order to lay the groundwork for ORM's to define Database types in a semi-native fashion. Note: This is considered unstable until this exact scenario is tested.
 
 ### `.brand()`
 

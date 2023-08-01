@@ -92,6 +92,69 @@ describe('Type operations', () => {
 
       expect(Result).toEqual(ExpectedDefinitionType);
     });
+
+    it('supports many types without TypeScript dying', () => {
+      const A = t.obj({ prop: t.number, propA: t.string });
+      const B = t.obj({ prop: t.number, propB: t.string, a: A });
+      const C = t.obj({ prop: t.number, propC: t.string, b: B });
+      const D = t.obj({ prop: t.number, propD: t.string, c: C });
+      const E = t.obj({ prop: t.number, propE: t.string, d: D });
+      const F = t.obj({ prop: t.number, propF: t.string, e: E });
+      const G = t.obj({ prop: t.number, propG: t.string, f: F });
+      const H = t.obj({ prop: t.number, propH: t.string, g: G });
+      const I = t.obj({ prop: t.number, propI: t.string, h: H });
+
+      const AB = t.merge(A, B);
+      const ABC = t.merge(AB, C);
+      const ABCD = t.merge(ABC, D);
+      const ABCDE = t.merge(ABCD, E);
+      const ABCDEF = t.merge(ABCDE, F);
+      const ABCDEFG = t.merge(ABCDEF, G);
+      const ABCDEFGH = t.merge(ABCDEFG, H);
+      const ABCDEFGHI = t.merge(ABCDEFGH, I);
+
+      type AB = t.Infer<typeof A>;
+      type ABC = t.Infer<typeof AB>;
+      type ABCD = t.Infer<typeof ABCD>;
+      type ABCDE = t.Infer<typeof ABCDE>;
+      type ABCDEF = t.Infer<typeof ABCDEF>;
+      type ABCDEFG = t.Infer<typeof ABCDEFG>;
+      type ABCDEFGH = t.Infer<typeof ABCDEFGH>;
+      type ABCDEFGHI = t.Infer<typeof ABCDEFGHI>;
+
+      const ABCDEFGH_ABCDEFGHI = t.merge(ABCDEFGH, ABCDEFGHI);
+      type ABCDEFGH_ABCDEFGHI = t.Infer<typeof ABCDEFGH_ABCDEFGHI>;
+      const result: ABCDEFGH_ABCDEFGHI = {} as unknown as ABCDEFGH_ABCDEFGHI;
+
+      class RecADef {
+        recB? = t.obj(RecBDef).opt();
+        strProp = t.string;
+      }
+
+      class RecBDef {
+        recA = t.obj(RecADef);
+        a2 = t.flatExcludeKinds(
+          t.flattenUnion(t.union(t.obj(RecADef), t.union(t.obj(RecBDef), t.undef), t.string)),
+          t.string
+        );
+      }
+      const RecA = t.obj(RecADef);
+      type RecA = t.Infer<typeof RecA>;
+
+      expect(RecA.shape.recB.kind).toEqual('union');
+
+      const RecB = t.obj(RecBDef);
+      type RecB = t.Infer<typeof RecB>;
+
+      const RecA_ABCDEFGH_ABCDEFGHI = t.merge(RecA, ABCDEFGHI);
+      type RecA_ABCDEFGH_ABCDEFGHI = t.Infer<typeof RecA_ABCDEFGH_ABCDEFGHI>;
+
+      expect(RecA_ABCDEFGH_ABCDEFGHI.shape.recB.kind).toEqual('union');
+      expect(RecA_ABCDEFGH_ABCDEFGHI.shape.recB.members[0].shape.a2.members[0].shape.recB.kind).toEqual('union');
+      expect(
+        RecA_ABCDEFGH_ABCDEFGHI.shape.h.shape.g.shape.f.shape.e.shape.d.shape.c.shape.b.shape.a.shape.prop
+      ).toEqual(t.number);
+    });
   });
 
   describe('partial()', () => {

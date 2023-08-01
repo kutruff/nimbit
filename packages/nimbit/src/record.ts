@@ -19,9 +19,10 @@ import {
 
 export function record<TKey extends StringT | NumberT | SymbolT, TValue extends Typ<unknown, unknown>>(
   key: TKey,
-  value: TValue
+  value: TValue,
+  name?: string
 ) {
-  return new RecordType<TKey, TValue, Record<TsType<TKey>, TsType<TValue>>>(key, value);
+  return new RecordType<TKey, TValue, Record<TsType<TKey>, TsType<TValue>>>(key, value, name);
 }
 
 //TODO: is having key and value as extra properties okay for things like intersection and other operators? Will TS handle them correctly?

@@ -23,7 +23,7 @@ export type json = JsonLiterals | json[] | { [key: string]: json };
 
 const jsonSchema: LazyType<json> = lazy(() => union(Literals, array(jsonSchema), record(string, jsonSchema)));
 
-export const json = to(jsonSchema, jsonParse);
+export const json = to(jsonSchema, jsonParse).withName('json');
 
 export function jsonParse(x: string): ParseResult<json> {
   try {

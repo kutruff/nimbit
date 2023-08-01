@@ -1,5 +1,9 @@
 import { _type, failInvalidType, pass, Typ, type Literal, type ParseResult } from '.';
 
+export function literal<T, TLiteralValue>(value: Literal<T, TLiteralValue>, name?: string) {
+  return new LiteralType(value, name);
+}
+
 export class LiteralType<TLiteralValue> extends Typ<'literal', TLiteralValue, TLiteralValue> {
   constructor(public value: TLiteralValue, name?: string) {
     super('literal', value, name);
@@ -13,8 +17,4 @@ export class LiteralType<TLiteralValue> extends Typ<'literal', TLiteralValue, TL
   // areEqual(other: Typ<unknown, unknown>): boolean {
   //   return this.shape === (other as LiteralType<TLiteralValue>).shape;
   // }
-}
-
-export function literal<T, TLiteralValue>(value: Literal<T, TLiteralValue>) {
-  return new LiteralType(value);
 }

@@ -1,7 +1,7 @@
 import { Typ, type ParseResult } from '.';
 
-export function lazy<T>(definition: () => Typ<unknown, unknown, T>): LazyType<T> {
-  return new LazyType<T>(definition);
+export function lazy<T>(definition: () => Typ<unknown, unknown, T>, name?: string): LazyType<T> {
+  return new LazyType<T>(definition, name);
 }
 
 //TODO: add tests

@@ -10,8 +10,8 @@ import {
   type Type
 } from '.';
 
-export function array<TValue extends Type<unknown, unknown>>(value: TValue) {
-  return new ArrayType<TValue, Array<TsType<TValue>>>(value);
+export function array<TValue extends Type<unknown, unknown>>(value: TValue, name?: string) {
+  return new ArrayType<TValue, Array<TsType<TValue>>>(value, name);
 }
 
 export class ArrayType<TValue, T> extends Typ<'array', TValue, T> {

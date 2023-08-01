@@ -72,6 +72,12 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return fail();
   }
 
+  withName(name: string): this {
+    const clone = cloneObject(this);
+    clone.name = name;
+    return clone;
+  }
+
   parse(value: unknown): ParseResult<T> {
     const result = this.safeParse(value);
     if (result.success) {

@@ -10,8 +10,8 @@ import {
   type Type
 } from '.';
 
-export function set<TValue extends Type<unknown, unknown>>(value: TValue) {
-  return new SetType<TValue, Set<TsType<TValue>>>(value);
+export function set<TValue extends Type<unknown, unknown>>(value: TValue, name?: string) {
+  return new SetType<TValue, Set<TsType<TValue>>>(value, name);
 }
 
 export class SetType<TValue, T> extends Typ<'set', TValue, T> {

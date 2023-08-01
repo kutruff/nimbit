@@ -130,7 +130,7 @@ export function* visitErrors(error: ParseError, path: string[] = []): IterableIt
       break;
     case 'union':
       for (let i = 0; i < error.errors.length; i++) {
-        yield* visitErrors(error.errors[i]!, [...path, 'union', i.toString()]);
+        yield* visitErrors(error.errors[i]!, [...path, i.toString()]);
       }
       break;
     case 'array':
@@ -154,7 +154,7 @@ export function* visitErrors(error: ParseError, path: string[] = []): IterableIt
 
 export function formatError(error: ParseError) {
   return [...visitErrors(error)]
-    .map(([err, path]) => `error: ${err.kind} - ${(err as any).message || ''} [${path}]`)
+    .map(([err, path]) => `error: ${err.kind} - ${(err as any).message || ''} [${path.join(', ')}]`)
     .join('\n');
 }
 

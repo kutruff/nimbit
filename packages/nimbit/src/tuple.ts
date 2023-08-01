@@ -67,6 +67,9 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
   // }
 }
 
-export function tuple<TTuple extends [Type<unknown, unknown>, ...Type<unknown, unknown>[]]>(values: TTuple) {
-  return new TupleType(values);
+export function tuple<TTuple extends [Type<unknown, unknown>, ...Type<unknown, unknown>[]]>(
+  values: TTuple,
+  name?: string
+) {
+  return new TupleType(values, name);
 }

@@ -12,9 +12,10 @@ import {
 
 export function map<TKey extends Type<unknown, unknown>, TValue extends Type<unknown, unknown>>(
   key: TKey,
-  value: TValue
+  value: TValue,
+  name?: string
 ) {
-  return new MapType<TKey, TValue, Map<TsType<TKey>, TsType<TValue>>>(key, value);
+  return new MapType<TKey, TValue, Map<TsType<TKey>, TsType<TValue>>>(key, value, name);
 }
 
 //TODO: is having key and value as extra properties okay for things like intersection and other operators? Will TS handle them correctly?
