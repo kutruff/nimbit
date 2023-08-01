@@ -40,7 +40,7 @@ export class EnumType<TEnumValues extends unknown[], TMapOfEnumKeyToValue> exten
   }
 
   // areEqual(other: Type<unknown, unknown>): boolean {
-  //   const otherT = other as typeof this;
+  //   const otherT = other as this;
 
   //   const values = this.shape;
   //   const otherValues = otherT.shape;

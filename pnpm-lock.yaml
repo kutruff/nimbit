@@ -88,6 +88,34 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
 
+  packages/example:
+    dependencies:
+      nimbit:
+        specifier: workspace:^
+        version: link:../nimbit
+    devDependencies:
+      '@kutruff-planner/eslint-config':
+        specifier: ^0.1.0
+        version: link:../config/eslint
+      dotenv-cli:
+        specifier: ^7.2.1
+        version: 7.2.1
+      eslint:
+        specifier: ^8.42.0
+        version: 8.42.0
+      jest-presets:
+        specifier: workspace:^
+        version: link:../jest-presets
+      tsup:
+        specifier: ^7.1.0
+        version: 7.1.0(typescript@5.1.6)
+      tsx:
+        specifier: ^3.12.7
+        version: 3.12.7
+      typescript:
+        specifier: ^5.1.6
+        version: 5.1.6
+
   packages/jest-presets:
     dependencies:
       ts-jest:

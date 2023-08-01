@@ -66,25 +66,25 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
     super('object', shape, name);
   }
 
-  strict(): typeof this {
+  strict(): this {
     return this.changePropertyPolicy(PropertyPolicy.strict);
   }
 
-  strip(): typeof this {
+  strip(): this {
     return this.changePropertyPolicy(PropertyPolicy.strip);
   }
 
-  passthrough(): typeof this {
+  passthrough(): this {
     return this.changePropertyPolicy(PropertyPolicy.passthrough);
   }
 
-  catchall(catchallType: Typ<unknown, unknown, unknown> | undefined): typeof this {
+  catchall(catchallType: Typ<unknown, unknown, unknown> | undefined): this {
     const clone = cloneObject(this);
     clone.catchallType = catchallType;
     return clone;
   }
 
-  changePropertyPolicy(policy: PropPolicy): typeof this {
+  changePropertyPolicy(policy: PropPolicy): this {
     const clone = cloneObject(this);
     clone.propertyPolicy = policy;
     return clone;
@@ -142,7 +142,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   }
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
-  //   const otherT = other as typeof this;
+  //   const otherT = other as this;
 
   //   const shape = this.shape as Shape;
   //   const otherShape = otherT.shape as Shape;

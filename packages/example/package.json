@@ -1,0 +1,57 @@
+{
+  "name": "nimbit-example",
+  "version": "0.3.2",
+  "description": "Exmaple node project",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules dist",
+    "build": "tsup",
+    "build:minify": "tsup --minify",
+    "build:tar": "tar -czf dist.tar.gz dist/index.js",
+    "build:size": "pnpm build:minify && pnpm build:tar && echo zipped bytes: $(stat --printf=\"%s\" dist.tar.gz) && rm dist.tar.gz",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit",
+    "start": "pnpm with-env tsx index.ts",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {    
+    "nimbit": "workspace:^"
+  },
+  "jest": {
+    "preset": "jest-presets/jest/node"
+  },
+  "devDependencies": {
+    "@kutruff-planner/eslint-config": "^0.1.0",
+    "dotenv-cli": "^7.2.1",
+    "eslint": "^8.42.0",
+    "jest-presets": "workspace:^",
+    "tsup": "^7.1.0",
+    "tsx": "^3.12.7",
+    "typescript": "^5.1.6"
+  },
+  "tsup": {
+    "dts": true,
+    "treeshake": true,
+    "clean": true,
+    "format": [
+      "esm"
+    ],
+    "entry": [
+      "index.ts"
+    ]
+  }
+}

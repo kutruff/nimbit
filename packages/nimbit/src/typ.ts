@@ -53,17 +53,17 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return false;
   }
 
-  opt(): UnionType<[typeof this, UndefinedT], T | undefined> {
+  opt(): UnionType<[this, UndefinedT], T | undefined> {
     return union(this, undef) as any;
   }
 
   // nullable(): Typ<TKind | 'null', TShape | null, T | null> {
-  nullable(): UnionType<[typeof this, NullT], T | null> {
+  nullable(): UnionType<[this, NullT], T | null> {
     return union(this, nul) as any;
   }
 
   // nullish(): Typ<TKind | 'undefined' | 'null', TShape | undefined | null, T | undefined | null> {
-  nullish(): UnionType<[typeof this, NullT, UndefinedT], T | null | undefined> {
+  nullish(): UnionType<[this, NullT, UndefinedT], T | null | undefined> {
     return union(this, undef, nul) as any;
   }
 
@@ -92,7 +92,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   //   return this.kind === other.kind;
   // }
 
-  default(defaultValue: T | (() => T)): typeof this {
+  default(defaultValue: T | (() => T)): this {
     const valueGetter: () => T = typeof defaultValue === 'function' ? (defaultValue as () => T) : () => defaultValue;
     const [clone, originalParse] = overrideSafeParse(this);
     clone.safeParse = function (value: T | undefined) {
@@ -101,7 +101,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return clone;
   }
 
-  catch(valueOnError: T | ((error: ParseError) => T)): typeof this {
+  catch(valueOnError: T | ((error: ParseError) => T)): this {
     const valueGetter: (error: ParseError) => T =
       typeof valueOnError === 'function' ? (valueOnError as (error: ParseError) => T) : () => valueOnError;
     const [clone, originalParse] = overrideSafeParse(this);
@@ -112,7 +112,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return clone;
   }
 
-  where(condition: (value: T) => boolean, customError?: string | ((value: T) => ParseError | string)): typeof this {
+  where(condition: (value: T) => boolean, customError?: string | ((value: T) => ParseError | string)): this {
     const [clone, originalParse] = overrideSafeParse(this);
     const errorCreator = getErrorCreator<T>(customError, (actual, message) => ({ kind: 'condition', actual, message }));
     clone.safeParse = function (value: T) {
@@ -122,12 +122,12 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return clone;
   }
 
-  tweak(converter: (value: T) => T, customError?: string | ((value: T) => ParseError | string)): typeof this;
-  tweak(converter: TypeConverter<T, T>): typeof this;
+  tweak(converter: (value: T) => T, customError?: string | ((value: T) => ParseError | string)): this;
+  tweak(converter: TypeConverter<T, T>): this;
   tweak(
     converter: ((value: T) => T) | TypeConverter<T, T>,
     customError?: string | ((value: T) => ParseError | string)
-  ): typeof this {
+  ): this {
     return this.to(this, converter as any, customError);
   }
 

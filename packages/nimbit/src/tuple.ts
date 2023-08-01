@@ -51,7 +51,7 @@ export class TupleType<TElements extends [Type<unknown, unknown>, ...Type<unknow
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
   //   const elements = this.elementTypes as unknown as Typ<unknown, unknown>[];
-  //   const otherElements = (other as typeof this).elementTypes;
+  //   const otherElements = (other as this).elementTypes;
 
   //   if (elements.length !== otherElements.length) {
   //     return false;
