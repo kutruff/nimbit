@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from '.';
-import { string } from '.';
+import { number, obj, string } from '.';
 import { expectTypesSupportAssignment } from './test/utilities';
 
 describe('Typ', () => {
@@ -134,6 +134,29 @@ describe('Typ', () => {
       if (!result.success) {
         console.log(t.formatError(result.error));
       }
+    });
+
+    it.skip('allows reuse like documentation', () => {
+      const nonEmpty = (x: string) => x !== '' && string != null;
+      const min = (min: number) => (x: number) => x >= min;
+      const range = (min: number, max: number) => (x: number) => x >= min && x <= max;
+      const matches = (regex: RegExp) => (x: string) => regex.test(x);
+      const email = string.where(matches(/^([A-Z0-9_+-]+\.?)*[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i));
+
+      email.parse('one@two.com');
+      const formData = obj({
+        name: string.where(nonEmpty),
+        age: number.where(min(0)),
+        quantity: number.where(range(1, 100)),
+        mainEmail: email
+      });
+
+      formData.parse({
+        name: '',
+        age: -1,
+        quantity: 0,
+        mainEmail: 'bob@fcom'
+      });
     });
   });
 

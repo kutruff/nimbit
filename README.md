@@ -264,11 +264,40 @@ myNumber.parse(80); // => throws error
 
 ```ts
 const nonEmptyString = string.where(x => x !== '');
-myNumber.parse('nice'); // => nice
-myNumber.parse(''); // => throws error
+nonEmptyString.parse('nice'); // => nice
+nonEmptyString.parse(''); // => throws error
 ```
 
-There are a few overloads to `where()` that let you customize the error message.
+You can create reusable validators as functions as well:
+
+```ts
+const nonEmpty = (x: string) => x !== '' && string != null;
+
+//To make it paramaterizes just wrap it in a function that grabs your params.
+const min = (min: number) => (x: number) => x >= min;
+const range = (min: number, max: number) => (x: number) => x >= min && x <= max;
+
+const matches = (regex: RegExp) => (x: string) => regex.test(x);
+const email = string.where(matches(/^([A-Z0-9_+-]+\.?)*[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i));
+
+const formData = obj({
+  name: string.where(nonEmpty),
+  age: number.where(min(0)),
+  quantity: number.where(range(1, 100)),
+  mainEmail: email
+});
+
+//all of these would fail
+formData.parse({
+  name: '',
+  age: -1,
+  quantity: 0,
+  mainEmail: 'bob@fcom'
+});
+
+```
+
+There are a few overloads to `where()` that let you customize the error message. 
 
 ### `to()` for user defined coercion and parsing
 
@@ -1271,24 +1300,26 @@ It may be possible and it is desirable for users to be able to augment the built
 TBD: There are pros and cons to shipping with built-in validators like `min()`, `nonempty` etc like Zod has. In light of the fact that `where()` handles any possible scenario, and making a reusable validators is as simple as defining simple boolean expressions and making higher order functions.
 
 ```ts
-const nonEmpty = (x: string) => string !== '' && string != null;
+const nonEmpty = (x: string) => x !== '' && string != null;
 const min = (min: number) => (x: number) => x >= min;
 const range = (min: number, max: number) => (x: number) => x >= min && x <= max;
 const matches = (regex: RegExp) => (x: string) => regex.test(x);
 const email = string.where(matches(/^([A-Z0-9_+-]+\.?)*[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i));
 
 const formData = obj({
-  name: name.where(nonEmpty),
+  name: string.where(nonEmpty),
   age: number.where(min(0)),
   quantity: number.where(range(1, 100)),
-  personalEmail: email
+  mainEmail: email
 });
 
 formData.parse({
   name: '',
   age: -1,
-  quantity: 0
+  quantity: 0,
+  mainEmail: 'bob@fcom'
 });
+
 ```
 
 Note that the regex above is not necessarily to spec, which is why not including it in validator libraries is worthy of consideration.
