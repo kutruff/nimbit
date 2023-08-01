@@ -68,7 +68,7 @@ export const never: NeverT = new Typ<'never', never, never>('never', undefined a
 // ): Typ<TKind, TType, TType> {
 //   const instance = new Typ<TKind, TType, TType>(kind, undefined as TType, kind);
 //   instance.safeParse =
-//     safeParser || ((value: TType) => (typeof value === kind ? pass(value) : failWrongType(kind, value)));
+//     safeParser || ((value: TType) => (typeof value === kind ? pass(value) : failInvalidType(kind, value)));
 //   return instance;
 // }
 

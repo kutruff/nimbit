@@ -1,6 +1,6 @@
 export * from './generics';
 export * from './reflection';
-export * from './types';
+export * from './typ';
 export * from './primitives';
 export * from './obj';
 export * from './union';

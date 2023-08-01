@@ -26,7 +26,7 @@ npm install nimbit
 
 Nimbit is an evolution of Zod's excellent design, and has all the best parts of Zod with a bunch of improvements.
 
-    ✅ Insanely tiny footprint.
+    ✅ Super tiny footprint.
     ✅ Less noise in your code - no longer need parenthesis everywhere.
     ✅ Reflection/introspection always guaranteed.
     ✅ Object recursion and mutual recursion is more natural and easy.
@@ -120,9 +120,9 @@ The documentation here is a modified snap of Zod's documentation to help compare
   - [`.nullish`](#nullish-1)
   - [`.brand`](#brand)
   - [`.to`](#to)
-  - [Error handling](#error-handling)
+- [Error handling](#error-handling)
   - [Error formatting](#error-formatting)
-    - [`visitErrors`](#visiterrors)
+  - [`visitErrors`](#visiterrors)
 
 ## Introduction
 
@@ -319,13 +319,13 @@ Now, since this is going to be used a lot let's just skip the pipelining of `to(
 ```ts
 const asNumber = to(number, (value: unknown) => {
   const result = Number(value);
-  return !isNaN(result) ? pass(result) : failWrongType('asNumber', value);
+  return !isNaN(result) ? pass(result) : failInvalidType('asNumber', value);
 });
 ```
 
 You have complete control of what happens when you try to coerce a value and how the error handling will happen. The above also lets you omit `unknown.to()` if you wish. `unknown.to()` as it is implied.
 
-If the coercion succeeds you just need to return `pass(result)`. If the coercion fails, return `fail()`. You can also pass a rich error object to `fail()` to provide a custom error message. There's also a convenience method for describing type conversion failures that show the expected result vs supplied value `failWrongType('asNumber', value)` See custom error types for fully being able to customize your error messages.
+If the coercion succeeds you just need to return `pass(result)`. If the coercion fails, return `fail()`. You can also pass a rich error object to `fail()` to provide a custom error message. There's also a convenience method for describing type conversion failures that show the expected result vs supplied value `failInvaldType('asNumber', value)` See custom error types for fully being able to customize your error messages.
 
 If your coercion throws an error, there is also a convenience overload that lets you return whatever error you wish.
 
@@ -333,7 +333,7 @@ If your coercion throws an error, there is also a convenience overload that lets
 export const asBigint = to(
   bigint,
   (value: string | number | bigint | boolean) => BigInt(value),
-  value => wrongTypeError('asBigint', value)
+  value => invalidTypeError('asBigint', value)
 );
 ```
 
@@ -1004,7 +1004,7 @@ import {
   array,
   boolean,
   EVIL_PROTO,
-  failWrongType,
+  failinvalidType,
   lazy,
   nul,
   number,
@@ -1031,7 +1031,7 @@ export function jsonParse(x: string): ParseResult<json> {
   try {
     return pass(JSON.parse(x, (key, value) => (key === EVIL_PROTO ? undefined : value)));
   } catch (err) {
-    return failWrongType('json', x);
+    return failinvalidType('json', x);
   }
 }
 json.parse('{"a":1}'); //passes and returns { a: 1 }
@@ -1080,7 +1080,7 @@ If you don't want to throw errors when validation fails, use `.safeParse`. This 
 
 ```ts
 string.safeParse(12);
-// => { success: false; error: WrongTypeError }
+// => { success: false; error: invalidTypeError }
 
 string.safeParse('billie');
 // => { success: true; data: 'billie' }
@@ -1216,7 +1216,7 @@ TBD
 
 See [The overview in the intro of `to`](#user-defined-coercion-and-parsing-with-to)
 
-### Error handling
+## Error handling
 
 > Note work in progress.
 
@@ -1241,7 +1241,7 @@ if (!result.success) {
 
 ### Error formatting
 
-#### `visitErrors`
+### `visitErrors`
 
 The errors are in a hiearchary of `ParseError` objects. You can use `visitErrors` to traverse the errors and format them as you wish.
 

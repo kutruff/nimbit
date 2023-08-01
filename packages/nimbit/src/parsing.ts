@@ -66,12 +66,14 @@ export interface UnionParseError {
 
 export interface GeneralError {
   kind: 'general';
+  actual?: unknown;
   message?: string;
 }
 
 export interface ThrownError {
   kind: 'thrown';
   error: unknown;
+  actual: unknown;
   message?: string;
 }
 
@@ -105,7 +107,7 @@ export function invalidTypeError(expected: string, actual: unknown, message?: st
 // declare module '../message' {
 //   // Where you define MessageTypes
 //   interface ParseErrorTypes {
-//     WrongType: WrongTypeError;
+//    InvalidType: InvalidTypeError;
 //   }
 // }
 
@@ -152,7 +154,6 @@ export function formatError(error: ParseError) {
   return [...visitErrors(error)]
     .map(([err, path]) => path.toString() + ': ' + err.kind + ', ' + ((err as any).message || ''))
     .join('\n');
-
 }
 
 // export interface Issue {

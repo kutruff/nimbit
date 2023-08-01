@@ -142,7 +142,12 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     const [clone, destinationParse] = overrideSafeParse(destination);
     const source = this;
 
-    const errorCreator = getErrorCreator<T>(customError, (_, message, error) => ({ kind: 'thrown', error, message }));
+    const errorCreator = getErrorCreator<T>(customError, (value, message, error) => ({
+      kind: 'thrown',
+      error,
+      message,
+      actual: value
+    }));
 
     clone.safeParse = function (value: T) {
       const sourceResult = source.safeParse(value);
@@ -222,6 +227,6 @@ export function getErrorCreator<T>(
     ? (value, ...rest) => defaultError(value, errorParams, ...rest)
     : value => {
         const result = errorParams(value);
-        return typeof result === 'string' ? { kind: 'general', message: result } : result;
+        return typeof result === 'string' ? { kind: 'general', actual: value, message: result } : result;
       };
 }
