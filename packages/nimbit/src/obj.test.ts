@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as t from '.';
-import { _type, type Resolve } from '.';
+import { _type, asString, boolean, number, obj, string, type Resolve } from '.';
 import { expectType, expectTypesSupportAssignment, TypeOf, type TypeEqual } from './test/utilities';
 
 describe('obj()', () => {
@@ -175,6 +175,88 @@ describe('obj()', () => {
       isActive: true,
       age: 3252
     });
+  });
+
+  type ShapeRemapper<T> = {
+    //  [P in keyof T]: (x: Exclude<T[P], undefined>) => t.Typ<unknown, unknown, unknown>;
+    [P in keyof T]: (x: Exclude<T[P], undefined>) => t.Typ<unknown, unknown, unknown>;
+    // [P in keyof T]: unknown;
+  };
+
+  type ShapeRemapperResult<T> = {
+    [P in keyof T]: T[P] extends (...args: any) => infer R ? R : never;
+  };
+
+  function expand<TShape, T, TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
+    objType: t.ObjType<TShape, T>,
+    remapShape: TRemapper
+  ): t.ShapeDefinitionToObjType<Resolve<ShapeRemapperResult<TRemapper>>> {
+    const resultShape = { ...objType.shape } as any;
+    for (const key of Reflect.ownKeys(remapShape)) {
+      const keyRemapper = (remapShape as any)[key] as (x: unknown) => unknown;
+      resultShape[key] = keyRemapper((objType.shape as any)[key]);
+    }
+
+    return t.obj(resultShape) as any;
+  }
+
+  type testing = ShapeRemapperResult<{
+    name: (x: string) => number;
+  }>;
+
+  it('allows remapping', () => {
+    const Person = obj({
+      name: string,
+      age: number,
+      isActive: boolean,
+      address: obj({ street: string, city: string }),
+      title: string
+      // optProp: t.string.opt()
+    });
+
+    const personVerifier = expand(Person, {
+      name: p => p.opt(),
+      age: p => p.to(asString),
+      isActive: p => p.where(x => x === true),
+      address: p => expand(p, { street: p => p.where(x => x === '123 Main St.') }),
+      
+    });
+
+    const PersonVerfier = obj({
+      name: string.opt(),
+      age: number.to(asString),
+      isActive: boolean.where(x => x === true),
+      address: obj({ street: string.where(x => x === '123 Main St.'), city: string }),
+      title: string      
+    });
+    
+    //notice that 
+    const p = Person.shape;
+    const pa = Person.shape.address.shape;
+
+    const personVerifierWithShape = obj({
+      ...p,
+      name: p.name.opt(),
+      age: p.age.to(t.asString),
+      isActive: p.isActive.where(x => x === true),
+      address: obj({ ...pa, street: pa.street.where(x => x === '123 Main St.') })
+    });
+
+    // const personVerifierWithShape = obj({
+    //   ...Person.shape,
+    //   name: Person.shape.name.opt(),
+    //   age: Person.shape.age.to(t.asString),
+    //   isActive: Person.shape.isActive.where(x => x === true),
+    //   address: { ...Person.shape.address, street: Person.shape.address.shape.street.where(x => x === '123 Main St.') }
+    // });
+
+    type fadfaf = typeof personVerifier;
+    type resType = t.Infer<typeof personVerifier>;
+
+    // const personVerifier = remap(Person, ({name,}) => {
+    //   x.name.where((x) => x === 'bob');
+    //   x.age.to((x) => x === 'bob');
+    // });
   });
 
   it('allows self recursion', () => {

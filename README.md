@@ -30,8 +30,9 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
     ✅ Less noise in your code - no longer need parenthesis everywhere.
     ✅ Reflection/introspection always guaranteed.
     ✅ Object recursion and mutual recursion is more natural and easy.
+    ✅ Type to type property mapping.
     ✅ Coercion and pipelining are streamlined.
-    ✅ Everything is pushed to userland as much as possible.
+    ✅ Everything is pushed to userland as much as possible.    
 
 Nimbit is in alpha.
 
@@ -65,7 +66,7 @@ NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 
 The documentation here is a modified snap of Zod's documentation to help compare Nimbit to Zod.
 
-**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing)
+**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapProps), [`mapPickedProps()`](#mapPickedProps)
 
 - [Introduction](#introduction)
   - [Requirements](#requirements)
@@ -96,6 +97,8 @@ The documentation here is a modified snap of Zod's documentation to help compare
     - [`.kind`](#kind)
     - [`.name` / `withName()`](#name--withname)
 - [Manipulating Types](#manipulating-types)
+  - [`mapProps()`](#mapProps)
+  - [`mapPickedProps()`](#mapPickedProps)
   - [`extend()`](#extend)
   - [`merge()`](#merge)
   - [`pick()/omit()`](#pickomit)
@@ -294,10 +297,9 @@ formData.parse({
   quantity: 0,
   mainEmail: 'bob@fcom'
 });
-
 ```
 
-There are a few overloads to `where()` that let you customize the error message. 
+There are a few overloads to `where()` that let you customize the error message.
 
 ### `to()` for user defined coercion and parsing
 
@@ -715,6 +717,67 @@ Dog.name; // => 'Dog'
 ```
 
 ## Manipulating Types
+
+### `mapProps()`
+
+You can use `mapProps()` to base a new type on an existing type's properties. This is very useful for adding validations on an existing type and building up validations and transformations from simpler types.
+
+Simply supply an object with properties of the same name as your existing type. Each property is a function that is passed the existing property on the same type. You can then add whatever validations you wish to the property or you may even override it completely.
+
+Note that any properties not specified in the object will be copied over as is. If you wish to remove a property, you can use `mapPickedProps()`.
+
+```ts
+const Person = obj({
+  name: string,
+  age: number,
+  isActive: boolean,
+  address: obj({ street: string, city: string }),
+  title: string
+});
+
+const PersonValidator = mapProps(Person, {
+  name: p => p.opt(), //name is now optional
+  age: p => p.to(asString), //age will be coerced to a string
+  isActive: p => p.where(x => x === true),
+  address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') })
+});
+type PersonValidator = Infer<typeof PersonValidator>;
+```
+
+Notice that the `title` property is not mentioned in the arguments. It will be copied over.
+
+The above is equivalent to:
+
+```ts
+const p = Person.shape;
+const pa = Person.shape.address.shape;
+
+const personVerifierWithShape = obj({
+  ...p,
+  name: p.name.opt(),
+  age: p.age.to(t.asString),
+  isActive: p.isActive.where(x => x === true),
+  address: obj({ ...pa, street: pa.street.where(x => x === '123 Main St.') })
+});
+```
+
+### `mapPickedProps()`
+
+`mapPickedProps()` behaves exactly like `mapProps()` except properties that only the properties in the mapping object will be included in the type. The rest of the properties on the original type will be omitted. 
+
+This is a great and safe way to validate API requests without having to repeat property names and keeping types in sync with your underlying data model.
+
+```ts
+const Person = obj({
+  name: string,
+  age: number
+});
+
+const ChangeNameRequest = mapPickedProps(Person, {
+  name: p => p.where(x => x !== '')
+});
+ChangeNameRequest.parse({ name: 'Bob', age: 42 }); // { name: 'Bob' }
+```
 
 ### `extend()`
 
@@ -1319,7 +1382,6 @@ formData.parse({
   quantity: 0,
   mainEmail: 'bob@fcom'
 });
-
 ```
 
 Note that the regex above is not necessarily to spec, which is why not including it in validator libraries is worthy of consideration.

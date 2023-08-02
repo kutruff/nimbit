@@ -2,7 +2,7 @@
 import ts from 'typescript';
 
 import * as t from '.';
-import { getKeys, type ParseResult } from '.';
+import { asString, boolean, getKeys, mapPickedProps, mapProps, number, obj, string, type ParseResult } from '.';
 import { expectType, expectTypesSupportAssignment, type TypeEqual, type TypeOf } from './test/utilities';
 
 describe('Type operations', () => {
@@ -157,6 +157,198 @@ describe('Type operations', () => {
     });
   });
 
+  describe('mapProps()', () => {
+    it('remaps properties', () => {
+      const Person = obj({
+        name: string,
+        age: number,
+        isActive: boolean,
+        address: obj({ street: string, city: string }),
+        title: string
+      });
+
+      const Result = mapProps(Person, {
+        name: p => p.opt(),
+        age: p => p.to(asString),
+        isActive: p => p.where(x => x === true),
+        address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') })
+      });
+      type Result = t.Infer<typeof Result>;
+      const Expected = obj({
+        name: string.opt(),
+        age: number.to(asString),
+        isActive: boolean.where(x => x === true),
+        address: obj({ street: string.where(x => x === '123 Main St.'), city: string }),
+        title: Person.shape.title
+      });
+
+      expectType<TypeEqual<typeof Result, typeof Expected>>(true);
+
+      const validParseResult = Result.safeParse({
+        name: undefined,
+        age: 42,
+        isActive: true,
+        title: 'Mr.',
+        address: { street: '123 Main St.', city: 'Anytown' }
+      });
+      expect(validParseResult.success).toEqual(true);
+
+      if (validParseResult.success) {
+        expect(validParseResult.data).toEqual({
+          name: undefined,
+          age: '42',
+          isActive: true,
+          title: 'Mr.',
+          address: { street: '123 Main St.', city: 'Anytown' }
+        });
+      }
+
+      const invalidParseResult = Result.safeParse({
+        name: undefined,
+        age: 42,
+        isActive: true,
+        title: 'Mr.',
+        address: { street: 'wrong address', city: 'Anytown' }
+      });
+
+      expect(invalidParseResult.success).toEqual(false);
+    });
+
+    it('supports many types without TypeScript dying', () => {
+      const A = t.obj({ prop: t.number, propA: t.string, sub: t.obj({ prop: t.number }) });
+      const B = t.obj({ prop: t.number, propB: t.string, a: A });
+      const C = t.obj({ prop: t.number, propC: t.string, b: B });
+      const D = t.obj({ prop: t.number, propD: t.string, c: C });
+      const E = t.obj({ prop: t.number, propE: t.string, d: D });
+      const F = t.obj({ prop: t.number, propF: t.string, e: E });
+      const G = t.obj({ prop: t.number, propG: t.string, f: F });
+      const H = t.obj({ prop: t.number, propH: t.string, g: G });
+      const I = t.obj({ prop: t.number, propI: t.string, h: H });
+
+      const AB = t.mapProps(A, {
+        prop: p => p.tweak(x => x + 1),
+        sub: p => mapProps(p, { prop: p => obj({ a: p }) })
+      });
+      const ABC = t.mapProps(AB, {
+        prop: p => p.tweak(x => x + 1),
+        sub: p => mapProps(p, { prop: p => obj({ b: p }) })
+      });
+      const ABCD = t.mapProps(ABC, {
+        prop: p => p.tweak(x => x + 1),
+        sub: p => mapProps(p, { prop: p => obj({ c: p }) })
+      });
+      const ABCDE = t.mapProps(ABCD, {
+        prop: p => p.tweak(x => x + 1),
+        sub: p => mapProps(p, { prop: p => obj({ d: p }) })
+      });
+      const ABCDEF = t.mapProps(ABCDE, {
+        prop: p => p.tweak(x => x + 1),
+        sub: p => mapProps(p, { prop: p => obj({ e: p }) })
+      });
+      const ABCDEFG = t.mapProps(ABCDEF, {
+        prop: p => p.tweak(x => x + 1),
+        sub: p => mapProps(p, { prop: p => obj({ f: p }) })
+      });
+      const ABCDEFGH = t.mapProps(ABCDEFG, {
+        prop: p => p.tweak(x => x + 1),
+        sub: p => mapProps(p, { prop: p => obj({ g: p }) })
+      });
+      const ABCDEFGHI = t.mapProps(ABCDEFGH, {
+        prop: p => p.tweak(x => x + 1),
+        sub: p => mapProps(p, { prop: p => obj({ h: p }) })
+      });
+
+      type AB = t.Infer<typeof A>;
+      type ABC = t.Infer<typeof AB>;
+      type ABCD = t.Infer<typeof ABCD>;
+      type ABCDE = t.Infer<typeof ABCDE>;
+      type ABCDEF = t.Infer<typeof ABCDEF>;
+      type ABCDEFG = t.Infer<typeof ABCDEFG>;
+      type ABCDEFGH = t.Infer<typeof ABCDEFGH>;
+      type ABCDEFGHI = t.Infer<typeof ABCDEFGHI>;
+
+      const ABCDEFGH_ABCDEFGHI = t.merge(ABCDEFGH, ABCDEFGHI);
+      type ABCDEFGH_ABCDEFGHI = t.Infer<typeof ABCDEFGH_ABCDEFGHI>;
+      const result: ABCDEFGH_ABCDEFGHI = {} as unknown as ABCDEFGH_ABCDEFGHI;
+
+      class RecADef {
+        recB? = t.obj(RecBDef).opt();
+        strProp = t.string;
+        massiveProp = ABCDEFGHI;
+      }
+      class RecBDef {
+        recA = t.obj(RecADef);
+        a2 = t.flatExcludeKinds(
+          t.flattenUnion(t.union(t.obj(RecADef), t.union(t.obj(RecBDef), t.undef), t.string)),
+          t.string
+        );
+      }
+
+      const RecA = t.obj(RecADef);
+      type RecA = t.Infer<typeof RecA>;
+
+      expect(RecA.shape.recB.kind).toEqual('union');
+
+      const RecB = t.obj(RecBDef);
+      type RecB = t.Infer<typeof RecB>;
+
+      const RecA_ABCDEFGH_ABCDEFGHI = t.mapProps(RecA, { recB: p => p.where(x => x?.recA.strProp === '123') });
+      type RecA_ABCDEFGH_ABCDEFGHI = t.Infer<typeof RecA_ABCDEFGH_ABCDEFGHI>;
+
+      expect(
+        RecA_ABCDEFGH_ABCDEFGHI.shape.recB.shape[0].shape.recA.shape.massiveProp.shape.sub.shape.prop.shape.h.shape.g
+          .shape.f.shape.e.shape.d.shape.c.shape.b.shape.a.kind
+      ).toEqual('number');
+    });
+  });
+
+  describe('mapPickedProps()', () => {
+    it('remaps properties and removes unpicked properties', () => {
+      const Person = obj({
+        name: string,
+        age: number,
+        isActive: boolean,
+        address: obj({ street: string, city: string }),
+        title: string
+      });
+
+      const Result = mapPickedProps(Person, {
+        name: p => p.opt(),
+        age: p => p.to(asString),
+        isActive: p => p.where(x => x === true),
+        address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') })
+      });
+
+      type Result = t.Infer<typeof Result>;
+      const Expected = obj({
+        name: string.opt(),
+        age: number.to(asString),
+        isActive: boolean.where(x => x === true),
+        address: obj({ street: string.where(x => x === '123 Main St.'), city: string })
+      });
+
+      expectType<TypeEqual<typeof Result, typeof Expected>>(true);
+
+      const validParseResult = Result.safeParse({
+        name: undefined,
+        age: 42,
+        isActive: true,
+        title: 'Mr.',
+        address: { street: '123 Main St.', city: 'Anytown' }
+      });
+      expect(validParseResult.success).toEqual(true);
+
+      if (validParseResult.success) {
+        expect(validParseResult.data).toEqual({
+          name: undefined,
+          age: '42',
+          isActive: true,
+          title: undefined,
+          address: { street: '123 Main St.', city: 'Anytown' }
+        });
+      }      
+    });
+  });
   describe('partial()', () => {
     it('makes required properites into optionals', () => {
       const target = t.obj({ prop: t.string, prop3: t.record(t.string, t.number) });

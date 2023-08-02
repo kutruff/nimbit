@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -54,6 +56,40 @@ export type PartialType<T> = {
     ? UnionType<[T[P], UndefinedT], T[P][typeof _type] | undefined>
     : never;
 };
+
+type ShapeRemapper<T> = {
+  [P in keyof T]: (x: Exclude<T[P], undefined>) => Typ<unknown, unknown, unknown>;
+};
+
+type ShapeRemapperResult<T> = {
+  [P in keyof T]: T[P] extends (...args: any) => infer R ? R : never;
+};
+
+export function mapProps<TShape, T, TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
+  objType: ObjType<TShape, T>,
+  remapShape: TRemapper
+): ShapeDefinitionToObjType<Extend<TShape, ShapeRemapperResult<TRemapper>>> {
+  const resultShape = { ...objType.shape } as any;
+  for (const key of Reflect.ownKeys(remapShape)) {
+    resultShape[key] = (remapShape as any)[key]((objType.shape as any)[key]);
+  }
+
+  return obj(resultShape) as any;
+}
+
+export function mapPickedProps<
+  TShape,
+  T,
+  TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>
+>(objType: ObjType<TShape, T>, remapShape: TRemapper): ShapeDefinitionToObjType<ShapeRemapperResult<TRemapper>> {
+  const resultShape = pickProps(objType, Reflect.ownKeys(remapShape) as any) as any;
+
+  for (const key of Reflect.ownKeys(remapShape)) {
+    resultShape[key] = (remapShape as any)[key]((objType.shape as any)[key]);
+  }
+
+  return obj(resultShape) as any;
+}
 
 //TODO: add object pick syntax for {a: 1, b: 1}
 export function partial<TShape, T>(objType: ObjType<TShape, T>): ObjType<PartialType<TShape>, Partial<T>>;
