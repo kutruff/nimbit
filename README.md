@@ -20,12 +20,16 @@
 <!--
 [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=size)](https://bundlephobia.com/result?p=nimbit@latest) -->
 
+
 ```bash
 npm install nimbit
 ```
 
 Nimbit is an evolution of Zod's excellent design, and has all the best parts of Zod with a bunch of improvements.
 
+|                                       [Nimbit](https://github.com/kutruff/nimbit)                                       |                                     [Zod](https://github.com/colinhacks/zod)                                      |
+| :---------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
+| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
     ✅ Super tiny footprint.
     ✅ Less noise in your code - no longer need parenthesis everywhere.
     ✅ Reflection/introspection always guaranteed.
@@ -34,11 +38,10 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
     ✅ Coercion and pipelining are streamlined.
     ✅ Everything is pushed to userland as much as possible.
 
+**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapprops), [`mapPickedProps()`](#mappickedprops) 
+
 Nimbit is in alpha.
 
-|                                       [Nimbit](https://github.com/kutruff/nimbit)                                       |                                     [Zod](https://github.com/colinhacks/zod)                                      |
-| :---------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
-| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
 
 <!-- ## Library Features and Comparison
 
@@ -65,8 +68,6 @@ NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 ## Docs
 
 The documentation here is a modified snap of Zod's documentation to help compare Nimbit to Zod.
-
-**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapprops), [`mapPickedProps()`](#mappickedprops) 
 
 - [Introduction](#introduction)
   - [Requirements](#requirements)
