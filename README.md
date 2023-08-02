@@ -4,7 +4,7 @@
     Ultra-tiny TypeScript schema validation with static type inference and guaranteed reflection.
   </p>
   <p align="center">            
-    <a href="https://bundlephobia.com/result?p=nimbit"><img src="https://img.shields.io/bundlephobia/minzip/nimbit?label=size"" alt="Nimbit Size" /></a>
+    <a href="https://bundlephobia.com/result?p=nimbit@0.5.1"><img src="https://img.shields.io/bundlephobia/minzip/nimbit@0.5.1?label=size"" alt="Nimbit Size" /></a>
     <a href="https://github.com/kutruff/nimbit/actions?query=branch%3Amain"><img src="https://github.com/kutruff/nimbit/actions/workflows/ci.yml/badge.svg?event=push&branch=main" alt="Nimbit CI status" /></a>
   </p>
 </p>
@@ -29,7 +29,7 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
 
 |                                       [Nimbit](https://github.com/kutruff/nimbit)                                       |                                     [Zod](https://github.com/colinhacks/zod)                                      |
 | :---------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
-| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit?label=size)](https://bundlephobia.com/result?p=nimbit) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
+| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@0.5.1?label=size)](https://bundlephobia.com/result?p=nimbit@0.5.1) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
     ✅ Super tiny footprint.
     ✅ Less noise in your code - no longer need parenthesis everywhere.
     ✅ Reflection/introspection always guaranteed.
