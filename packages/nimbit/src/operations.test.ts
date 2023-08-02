@@ -346,7 +346,7 @@ describe('Type operations', () => {
           title: undefined,
           address: { street: '123 Main St.', city: 'Anytown' }
         });
-      }      
+      }
     });
   });
   describe('partial()', () => {

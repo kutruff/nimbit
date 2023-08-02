@@ -218,8 +218,7 @@ describe('obj()', () => {
       name: p => p.opt(),
       age: p => p.to(asString),
       isActive: p => p.where(x => x === true),
-      address: p => expand(p, { street: p => p.where(x => x === '123 Main St.') }),
-      
+      address: p => expand(p, { street: p => p.where(x => x === '123 Main St.') })
     });
 
     const PersonVerfier = obj({
@@ -227,10 +226,10 @@ describe('obj()', () => {
       age: number.to(asString),
       isActive: boolean.where(x => x === true),
       address: obj({ street: string.where(x => x === '123 Main St.'), city: string }),
-      title: string      
+      title: string
     });
-    
-    //notice that 
+
+    //notice that
     const p = Person.shape;
     const pa = Person.shape.address.shape;
 
@@ -274,6 +273,9 @@ describe('obj()', () => {
     type ExpectedAShape = { self?: A };
     expectTypesSupportAssignment<ExpectedAShape, A>();
     expectTypesSupportAssignment<A, ExpectedAShape>();
+
+    const result = A.strict().parse({ self: { self: {} } });
+    expect(result.success).toEqual(true);
   });
 
   it('recursive category example', () => {
@@ -284,7 +286,7 @@ describe('obj()', () => {
     const Category = t.obj(CategoryDef);
     type Category = t.Infer<typeof Category>;
 
-    Category.safeParse({
+    const result = Category.safeParse({
       name: 'People',
       subcategories: [
         {
@@ -298,6 +300,11 @@ describe('obj()', () => {
         }
       ]
     }); // passes
+
+    expect(result.success).toEqual(true);
+    if(result.success) {
+      expect(result.data.subcategories[0]?.subcategories[0]?.name).toEqual('Presidents');
+    }
   });
 
   it('allows classes for obj()', () => {

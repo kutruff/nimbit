@@ -182,5 +182,3 @@ describe('Object parsing', () => {
     expect(result.success).toEqual(false);
   });
 });
-
-;
