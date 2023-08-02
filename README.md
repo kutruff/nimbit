@@ -273,7 +273,7 @@ You can create reusable validators as functions as well:
 ```ts
 const nonEmpty = (x: string) => x !== '' && string != null;
 
-//To make it paramaterizes just wrap it in a function that grabs your params.
+// Just wrap validators with parameters in another function.
 const min = (min: number) => (x: number) => x >= min;
 const range = (min: number, max: number) => (x: number) => x >= min && x <= max;
 
