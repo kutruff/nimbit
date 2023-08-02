@@ -133,7 +133,7 @@ The documentation here is a modified snap of Zod's documentation to help compare
 
 ## Introduction
 
-Nimbit is a TypeScript-first schema declaration and validation library just like Zod. However, it is extremely small and strives to keep as much functinality and typing in userland as possible. Furthermore, Nimbit ensures all types are always guaranteed to be reflected upon no matter what.
+Nimbit is a TypeScript-first schema declaration and validation library just like Zod. However, it is extremely small and strives to keep as much functionality and typing in userland as possible. Furthermore, Nimbit ensures all types are always guaranteed to be reflected upon no matter what.
 
 ### Requirements
 
