@@ -66,7 +66,7 @@ NOTE: THIS IS PLACEHOLDER. NEED TO VERIFY EACH CLAIM.
 
 The documentation here is a modified snap of Zod's documentation to help compare Nimbit to Zod.
 
-**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapProps), [`mapPickedProps()`](#mapPickedProps)
+**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapprops), [`mapPickedProps()`](#mappickedprops) 
 
 - [Introduction](#introduction)
   - [Requirements](#requirements)
@@ -97,8 +97,8 @@ The documentation here is a modified snap of Zod's documentation to help compare
     - [`.kind`](#kind)
     - [`.name` / `withName()`](#name--withname)
 - [Manipulating Types](#manipulating-types)
-  - [`mapProps()`](#mapProps)
-  - [`mapPickedProps()`](#mapPickedProps)
+  * [`mapProps()`](#mapprops)
+  * [`mapPickedProps()`](#mappickedprops)
   - [`extend()`](#extend)
   - [`merge()`](#merge)
   - [`pick()/omit()`](#pickomit)
