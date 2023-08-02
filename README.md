@@ -4,7 +4,7 @@
     Ultra-tiny TypeScript schema validation with static type inference and guaranteed reflection.
   </p>
   <p align="center">            
-    <a href="https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=bundle%20size"><img src="https://img.shields.io/bundlephobia/minzip/nimbit?label=size"" alt="Nimbit Size" /></a>
+    <a href="https://bundlephobia.com/result?p=nimbit"><img src="https://img.shields.io/bundlephobia/minzip/nimbit?label=size"" alt="Nimbit Size" /></a>
     <a href="https://github.com/kutruff/nimbit/actions?query=branch%3Amain"><img src="https://github.com/kutruff/nimbit/actions/workflows/ci.yml/badge.svg?event=push&branch=main" alt="Nimbit CI status" /></a>
   </p>
 </p>
@@ -32,7 +32,7 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
     ✅ Object recursion and mutual recursion is more natural and easy.
     ✅ Type to type property mapping.
     ✅ Coercion and pipelining are streamlined.
-    ✅ Everything is pushed to userland as much as possible.    
+    ✅ Everything is pushed to userland as much as possible.
 
 Nimbit is in alpha.
 
@@ -763,7 +763,7 @@ const personVerifierWithShape = obj({
 
 ### `mapPickedProps()`
 
-`mapPickedProps()` behaves exactly like `mapProps()` except properties that only the properties in the mapping object will be included in the type. The rest of the properties on the original type will be omitted. 
+`mapPickedProps()` behaves exactly like `mapProps()` except properties that only the properties in the mapping object will be included in the type. The rest of the properties on the original type will be omitted.
 
 This is a great and safe way to validate API requests without having to repeat property names and keeping types in sync with your underlying data model.
 
