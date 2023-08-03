@@ -35,16 +35,15 @@
     "set-token": "pnpm set //registry.npmjs.org/:_authToken",
     "do-publish": "pnpm build && cp ../../README.md . && pnpm publish --no-git-checks && rm README.md"
   },
-  "dependencies": {},
   "jest": {
     "preset": "jest-presets/jest/node"
   },
   "devDependencies": {
     "@kutruff-planner/eslint-config": "^0.1.0",
     "dotenv-cli": "^7.2.1",
-    "eslint": "^8.42.0",
+    "eslint": "^8.46.0",
     "jest-presets": "workspace:^",
-    "tsup": "^7.1.0",
+    "tsup": "^7.2.0",
     "tsx": "^3.12.7",
     "typescript": "^5.1.6"
   },

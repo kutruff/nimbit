@@ -8,7 +8,7 @@
   "scripts": {
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
-    "clean:workspace": "turbo clean",        
+    "clean:workspace": "turbo clean",
     "dev": "turbo dev --parallel",
     "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,md,json}\" --ignore-path .gitignore",
     "lint": "turbo lint",
@@ -17,16 +17,15 @@
     "type-check": "turbo type-check"
   },
   "dependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "^4.0.2",
+    "@ianvs/prettier-plugin-sort-imports": "^4.1.0",
     "@kutruff-planner/eslint-config": "^0.1.0",
     "@types/jest": "^29.5.3",
-    "@types/prettier": "^2.7.3",
-    "eslint": "^8.42.0",
-    "jest": "^29.6.1",
-    "prettier": "^2.8.8",
-    "prettier-plugin-tailwindcss": "^0.3.0",
-    "ts-jest": "^29.1.0",
-    "turbo": "^1.10.3",
+    "eslint": "^8.46.0",
+    "jest": "^29.6.2",
+    "prettier": "^3.0.1",
+    "prettier-plugin-tailwindcss": "^0.4.1",
+    "ts-jest": "^29.1.1",
+    "turbo": "^1.10.12",
     "typescript": "^5.1.6"
   }
 }
