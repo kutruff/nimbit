@@ -79,6 +79,13 @@ The documentation here is a modified snap of Zod's documentation to help compare
 - [Objects](#objects)
   - [`.shape`](#shape)
   - [`.k`](#k)
+  - [`.mapProps()`](#mapprops)
+  - [`.mapPickedProps()`](#mappickedprops)
+  * [`.extend()`](#extend)
+  * [`.merge()`](#merge)
+  * [`.pick()/.omit()`](#pickomit)
+  * [`.partial()`](#partial)
+  * [`.required()`](#required)
   - [`.passthrough()`](#passthrough)
   - [`.strict`](#strict)
   - [`.strip()`](#strip)
@@ -96,14 +103,6 @@ The documentation here is a modified snap of Zod's documentation to help compare
   - [Reflection](#reflection)
     - [`.kind`](#kind)
     - [`.name` / `withName()`](#name--withname)
-- [Manipulating Types](#manipulating-types)
-  - [`mapProps()`](#mapprops)
-  - [`mapPickedProps()`](#mappickedprops)
-  * [`extend()`](#extend)
-  * [`merge()`](#merge)
-  * [`pick()/omit()`](#pickomit)
-  * [`partial()`](#partial)
-  * [`required()`](#required)
 - [Literals](#literals)
 - [Enums](#enums)
 - [Native enums](#native-enums)
@@ -430,6 +429,268 @@ Use `.k` to get an autocompletable set of the shape's keys.
 Dog.k; // => {name: "name", age: "age"]}
 ```
 
+### `.mapProps()`
+
+You can use `mapProps()` to add validations and coercions to existing types. This makes it natural to validate inputs with the goal of reaching an underlying model type.
+
+Given a source type, pass an object with properties mapping function for the properties on the source type. Each property is a function that is passed the existing property from the source type. You can then add whatever validations you wish to the property or you may even override it completely.
+
+Note that any properties not specified in the object will be copied over as is. If you wish to remove a property, you can use `mapPickedProps()`.
+
+```ts
+const Person = obj({
+  name: string,
+  age: number
+});
+
+//Lets add some validations to Person
+const PersonInput = Person.mapProps({
+  name: p => p.opt(), //name is now optional
+  age: p => p.where(x => x > 10) // age now must be greater than 10
+});
+
+PersonInput.parse({ age: 42 }); // { age: 42 }
+PersonInput.parse({ name: 'Bob', age: 42 }); // { name: 'Bob', age: 42 }
+PersonInput.parse({ name: 'Bob', age: 9 }); // fail: age must be greater than 10
+
+type PersonInput = Infer<typeof PersonInput>;
+// {
+//     name?: string | undefined;
+//     age: number;
+// }
+```
+
+Here's a more complex example. Notice that we put an validator on age and we still want that validation to execute.
+
+```ts
+const Person = obj({
+  name: string,
+  age: number.where(x => x > 0), //An existing validation
+  isActive: boolean,
+  address: obj({ street: string, city: string }),
+  title: string
+});
+
+const PersonInput = Person.mapProps({
+  name: p => p.default(''), //name will default to empty string
+  age: p => asNumber.to(p), //age is coerced to a number and then passed to original age and verified > 10
+  isActive: p => enumm('state', ['active', 'inactive']).to(p, x => x === 'active'), //enum coerced to bool
+  address: p => p.mapProps({ street: p => p.where(x => x === '123 Main St.') }) // nested objects work as well
+});
+
+type PersonInput = Infer<typeof PersonValidator>;
+// type PersonInput = {
+//     name: string;
+//     isActive: boolean;
+//     title: string;
+//     age: number;
+//     address: {
+//         street: string;
+//         city: string;
+//     };
+// }
+
+const result = PersonInput.parse({
+  age: '42',
+  isActive: 'active',
+  title: 'Mr.',
+  address: { street: '123 Main St.', city: 'Anytown' }
+});
+// success: true
+// {
+//   name: '',
+//   age: 42,
+//   isActive: true,
+//   title: 'Mr.',
+//   address: { street: '123 Main St.', city: 'Anytown' }
+// }
+```
+
+Notice that the `title` property is not mentioned in the arguments. It will be copied over from `Person` as is.
+
+The example above is equivalent to:
+
+```ts
+const person = Person.shape;
+const address = Person.shape.address.shape;
+
+const personVerifierWithShape = obj({
+  ...person,
+  name: person.name.default(''),
+  age: asNumber.to(person.age),
+  isActive: enumm('state', ['active', 'inactive']).to(person.isActive, x => x === 'active'),
+  address: obj({ ...address, street: address.street.where(x => x === '123 Main St.') })
+});
+```
+
+### `.mapPickedProps()`
+
+`mapPickedProps()` behaves exactly like `mapProps()` except the properties that you don't mention will be omitted from the output type
+
+This is a great and safe way to validate API requests without having to repeat property names and keeping types in sync with your underlying data model.
+
+```ts
+const Person = obj({
+  name: string,
+  age: number
+});
+
+const ChangeNameRequest = Person.mapPickedProps( {
+  name: p => p.where(x => x !== '')
+});
+ChangeNameRequest.parse({ name: 'Bob', age: 42 }); // { name: 'Bob' }
+
+const ChangeAgeRequest = Person.mapPickedProps({
+  name: p => asNumber.to(p);
+});
+ChangeAgeRequest.parse({ '42' }); // { age: 42 }
+```
+
+### `.extend()`
+
+You can add additional fields to an object schema with the `extend` function.
+
+```ts
+const DogWithBreed = Dog.extend({
+  breed: string
+});
+```
+
+You can use `extend` to overwrite fields! Be careful with this power!
+
+### `.merge()`
+
+Equivalent to `A.extend(B.shape)`.
+
+```ts
+const BaseTeacher = obj({ students: array(string) });
+const HasID = obj({ id: string });
+
+const Teacher = BaseTeacher.merge(HasID);
+type Teacher = Infer<typeof Teacher>; // => { students: string[], id: string }
+```
+
+> If the two schemas share keys, the properties of B overrides the property of A. The returned schema also inherits the "unknownKeys" policy (strip/strict/passthrough) and the catchall schema of B.
+
+### `.pick()/.omit()`
+
+You may use `pick()` and `omit()` to get a modified version of an `object` schema. Consider this Recipe schema:
+
+```ts
+const Recipe = obj({
+  id: string,
+  name: string,
+  ingredients: array(string)
+});
+```
+
+To only keep certain keys, use `pick()` .
+
+```ts
+const JustTheName = Recipe.pick(Recipe.k.name);
+type JustTheName = Infer<typeof JustTheName>;
+// => { name: string }
+```
+
+You could also just pass the property name directly.
+
+```ts
+const JustTheName = Recipe.pick('name');
+```
+
+There's also the `getKeys()` convenience function if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typed.
+
+```ts
+const JustTheName = Recipe.pick(...getKeys({ id: 1, name: 1 }));
+```
+
+To remove certain keys, use `omit()` in the same fashion as `pick()`
+
+```ts
+const JustRecipeName = required(User, 'id', 'ingredients);
+type JustRecipeName = Infer<typeof JustRecipeName>;
+// => { name: string }
+
+//alternative ways of omitting properties by name
+const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
+const JustRecipeName = omit(Recipe, ...getKeys({id: 1, ingredients: 1}));
+```
+
+### `.partial()`
+
+Just like built-in TypeScript utility type [Partial](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype), the `partial` function makes all properties optional.
+
+Starting from this object:
+
+```ts
+const User = obj({
+  email: string
+  username: string,
+});
+// { email: string; username: string }
+```
+
+We can create a partial version:
+
+```ts
+const partialUser = User.partial();
+// { email?: string | undefined; username?: string | undefined }
+```
+
+You can also specify which properties to make optional:
+
+```ts
+const optionalEmail = User.partial(User.k.email);
+
+/*
+{
+  email?: string | undefined;
+  username: string
+}
+*/
+
+//alternative ways of picking propertis to the above
+const optionalEmail = User.partial('email');
+const optionalEmail = User.partial(...getKeys({email: 1}));
+```
+
+### `required()`
+
+Contrary to the `partial` function, the `required` function makes all properties required.
+
+Starting from this object:
+
+```ts
+const User = obj({
+  email: string.opt()
+  username: string.opt(),
+});
+// { email?: string | undefined; username?: string | undefined }
+```
+
+We can create a required version:
+
+```ts
+const requiredUser = User.required();
+// { email: string; username: string }
+```
+
+You can also specify which properties to make required:
+
+```ts
+const requiredEmail = User.required(User.k.email);
+/*
+{
+  email: string;
+  username?: string | undefined;
+}
+*/
+
+//alternative ways of picking properties by name
+const requiredEmail = User.required('email');
+const requiredEmail = User.required(...getKeys({email: 1}));
+```
+
 ### `.passthrough()`
 
 By default object schemas strip out unrecognized keys during parsing.
@@ -714,270 +975,6 @@ const Dog = obj({
 }).withName('Dog');
 
 Dog.name; // => 'Dog'
-```
-
-## Manipulating Types
-
-### `mapProps()`
-
-You can use `mapProps()` to add validations and coercions to existing types. This makes it natural to validate inputs with the goal of reaching an underlying model type.
-
-Given a source type, pass an object with properties  mapping function for the properties on the source type. Each property is a function that is passed the existing property from the source type. You can then add whatever validations you wish to the property or you may even override it completely.
-
-Note that any properties not specified in the object will be copied over as is. If you wish to remove a property, you can use `mapPickedProps()`.
-
-```ts
-const Person = obj({
-  name: string,
-  age: number
-});
-
-//Lets add some validations to Person
-const PersonInput = mapProps(Person, {
-  name: p => p.opt(), //name is now optional
-  age: p => p.where(x => x > 10) // age now must be greater than 10
-});
-
-PersonInput.parse({ age: 42 }); // { age: 42 }
-PersonInput.parse({ name: 'Bob', age: 42 }); // { name: 'Bob', age: 42 }
-PersonInput.parse({ name: 'Bob', age: 9 }); // fail: age must be greater than 10
-
-type PersonInput = Infer<typeof PersonInput>;
-// {
-//     name?: string | undefined;
-//     age: number;
-// }
-```
-
-Here's a more complex example. Notice that we put an validator on age and we still want that validation to execute.
-
-```ts
-const Person = obj({
-  name: string,
-  age: number.where(x => x > 0), //An existing validation
-  isActive: boolean,
-  address: obj({ street: string, city: string }),
-  title: string
-});
-
-const PersonInput = mapProps(Person, {
-  name: p => p.default(''), //name will default to empty string
-  age: p => asNumber.to(p), //age is coerced to a number and then passed to original age and verified > 10
-  isActive: p => enumm('state', ['active', 'inactive']).to(p, x => x === 'active'), //enum coerced to bool
-  address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') }) // nested objects work as well
-});
-
-type PersonInput = Infer<typeof PersonValidator>;
-// type PersonInput = {
-//     name: string;
-//     isActive: boolean;
-//     title: string;
-//     age: number;
-//     address: {
-//         street: string;
-//         city: string;
-//     };
-// }
-
-const result = PersonInput.parse({
-  age: '42',
-  isActive: 'active',
-  title: 'Mr.',
-  address: { street: '123 Main St.', city: 'Anytown' }
-});
-// success: true
-// {
-//   name: '',
-//   age: 42,
-//   isActive: true,
-//   title: 'Mr.',
-//   address: { street: '123 Main St.', city: 'Anytown' }
-// }
-```
-
-Notice that the `title` property is not mentioned in the arguments. It will be copied over from `Person` as is.
-
-The example above is equivalent to:
-
-```ts
-const person = Person.shape;
-const address = Person.shape.address.shape;
-
-const personVerifierWithShape = obj({
-  ...person,
-  name: person.name.default(''),
-  age: asNumber.to(person.age),
-  isActive: enumm('state', ['active', 'inactive']).to(person.isActive, x => x === 'active'),
-  address: obj({ ...address, street: address.street.where(x => x === '123 Main St.') })
-});
-```
-
-### `mapPickedProps()`
-
-`mapPickedProps()` behaves exactly like `mapProps()` except the properties that you don't mention will be omitted from the output type
-
-This is a great and safe way to validate API requests without having to repeat property names and keeping types in sync with your underlying data model.
-
-```ts
-const Person = obj({
-  name: string,
-  age: number
-});
-
-const ChangeNameRequest = mapPickedProps(Person, {
-  name: p => p.where(x => x !== '')
-});
-ChangeNameRequest.parse({ name: 'Bob', age: 42 }); // { name: 'Bob' }
-
-const ChangeAgeRequest = mapPickedProps(Person, {
-  name: p => asNumber.to(p);
-});
-ChangeAgeRequest.parse({ '42' }); // { age: 42 }
-```
-
-### `extend()`
-
-You can add additional fields to an object schema with the `extend` function.
-
-```ts
-const DogWithBreed = extend(Dog, {
-  breed: string
-});
-```
-
-You can use `extend` to overwrite fields! Be careful with this power!
-
-### `merge()`
-
-Equivalent to `extend(A, B.shape)`.
-
-```ts
-const BaseTeacher = obj({ students: array(string) });
-const HasID = obj({ id: string });
-
-const Teacher = BaseTeacher.merge(HasID);
-type Teacher = Infer<typeof Teacher>; // => { students: string[], id: string }
-```
-
-> If the two schemas share keys, the properties of B overrides the property of A. The returned schema also inherits the "unknownKeys" policy (strip/strict/passthrough) and the catchall schema of B.
-
-### `pick()/omit()`
-
-You may use `pick()` and `omit()` to get a modified version of an `object` schema. Consider this Recipe schema:
-
-```ts
-const Recipe = obj({
-  id: string,
-  name: string,
-  ingredients: array(string)
-});
-```
-
-To only keep certain keys, use `pick()` .
-
-```ts
-const JustTheName = pick(Recipe, Recipe.k.name);
-type JustTheName = Infer<typeof JustTheName>;
-// => { name: string }
-```
-
-You could also just pass the property name directly.
-
-```ts
-const JustTheName = pick(Recipe, 'name');
-```
-
-There's also the `getKeys()` convenience function if you wish to use a property map. The keys of the passed object with be used and everything will be strongly typed.
-
-```ts
-const JustTheName = pick(Recipe, ...getKeys({ id: 1, name: 1 }));
-```
-
-To remove certain keys, use `omit()` in the same fashion as `pick()`
-
-```ts
-const JustRecipeName = required(User, 'id', 'ingredients);
-type JustRecipeName = Infer<typeof JustRecipeName>;
-// => { name: string }
-
-//alternative ways of omitting properties by name
-const JustRecipeName = omit(Recipe, Recipe.k.id, Recipe.k.ingredients);
-const JustRecipeName = omit(Recipe, ...getKeys({id: 1, ingredients: 1}));
-```
-
-### `partial()`
-
-Just like built-in TypeScript utility type [Partial](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype), the `partial` function makes all properties optional.
-
-Starting from this object:
-
-```ts
-const User = obj({
-  email: string
-  username: string,
-});
-// { email: string; username: string }
-```
-
-We can create a partial version:
-
-```ts
-const partialUser = partial(User);
-// { email?: string | undefined; username?: string | undefined }
-```
-
-You can also specify which properties to make optional:
-
-```ts
-const optionalEmail = partial(User, User.k.email);
-
-/*
-{
-  email?: string | undefined;
-  username: string
-}
-*/
-
-//alternative ways of picking propertis to the above
-const optionalEmail = partial(User, 'email');
-const optionalEmail = partial(User, ...getKeys({email: 1}));
-```
-
-### `required()`
-
-Contrary to the `partial` function, the `required` function makes all properties required.
-
-Starting from this object:
-
-```ts
-const User = partial(obj({
-  email: string
-  username: string,
-}));
-// { email?: string | undefined; username?: string | undefined }
-```
-
-We can create a required version:
-
-```ts
-const requiredUser = required(User);
-// { email: string; username: string }
-```
-
-You can also specify which properties to make required:
-
-```ts
-const requiredEmail = required(User, User.k.email);
-/*
-{
-  email: string;
-  username?: string | undefined;
-}
-*/
-
-//alternative ways of picking properties by name
-const requiredEmail = required(User, 'email');
-const requiredEmail = required(User, ...getKeys({email: 1}));
 ```
 
 ## Literals

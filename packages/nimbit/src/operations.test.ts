@@ -2,20 +2,7 @@
 import ts from 'typescript';
 
 import * as t from '.';
-import {
-  asBoolean,
-  asNumber,
-  asString,
-  boolean,
-  enumm,
-  getKeys,
-  mapPickedProps,
-  mapProps,
-  number,
-  obj,
-  string,
-  type ParseResult
-} from '.';
+import { asBoolean, asNumber, asString, boolean, enumm, getKeys, number, obj, string, type ParseResult } from '.';
 import { expectType, expectTypesSupportAssignment, type TypeEqual, type TypeOf } from './test/utilities';
 
 describe('Type operations', () => {
@@ -23,7 +10,7 @@ describe('Type operations', () => {
     it('overrides distinct properties', () => {
       const objA = t.obj({ propA: t.string });
       const shapeB = { propB: t.number };
-      const Result = t.extend(objA, shapeB);
+      const Result = objA.extend(shapeB);
       type Result = t.Infer<typeof Result>;
       type ResultT = t.Resolve<typeof Result>;
       const ExpectedDefinitionType = t.obj({
@@ -44,7 +31,7 @@ describe('Type operations', () => {
     it('overrides conflicting properties from B over A', () => {
       const objA = t.obj({ prop: t.number, propA: t.string });
       const shapeB = { prop: t.string, propB: t.number };
-      const Result = t.extend(objA, shapeB);
+      const Result = objA.extend(shapeB);
       type Result = t.Infer<typeof Result>;
 
       const ExpectedDefinitionType = t.obj({
@@ -67,7 +54,7 @@ describe('Type operations', () => {
     it('overrides distinct properties', () => {
       const objA = t.obj({ propA: t.string });
       const objB = t.obj({ propB: t.number });
-      const Result = t.merge(objA, objB);
+      const Result = objA.merge(objB);
       type Result = t.Infer<typeof Result>;
       type ResultT = t.Resolve<typeof Result>;
       const ExpectedDefinitionType = t.obj({
@@ -88,7 +75,7 @@ describe('Type operations', () => {
     it('overrides conflicting properties from B over A', () => {
       const objA = t.obj({ prop: t.number, propA: t.string });
       const objB = t.obj({ prop: t.string, propB: t.number });
-      const Result = t.merge(objA, objB);
+      const Result = objA.merge(objB);
       type Result = t.Infer<typeof Result>;
 
       const ExpectedDefinitionType = t.obj({
@@ -117,14 +104,14 @@ describe('Type operations', () => {
       const H = t.obj({ prop: t.number, propH: t.string, g: G });
       const I = t.obj({ prop: t.number, propI: t.string, h: H });
 
-      const AB = t.merge(A, B);
-      const ABC = t.merge(AB, C);
-      const ABCD = t.merge(ABC, D);
-      const ABCDE = t.merge(ABCD, E);
-      const ABCDEF = t.merge(ABCDE, F);
-      const ABCDEFG = t.merge(ABCDEF, G);
-      const ABCDEFGH = t.merge(ABCDEFG, H);
-      const ABCDEFGHI = t.merge(ABCDEFGH, I);
+      const AB = A.merge(B);
+      const ABC = AB.merge(C);
+      const ABCD = ABC.merge(D);
+      const ABCDE = ABCD.merge(E);
+      const ABCDEF = ABCDE.merge(F);
+      const ABCDEFG = ABCDEF.merge(G);
+      const ABCDEFGH = ABCDEFG.merge(H);
+      const ABCDEFGHI = ABCDEFGH.merge(I);
 
       type AB = t.Infer<typeof A>;
       type ABC = t.Infer<typeof AB>;
@@ -135,7 +122,7 @@ describe('Type operations', () => {
       type ABCDEFGH = t.Infer<typeof ABCDEFGH>;
       type ABCDEFGHI = t.Infer<typeof ABCDEFGHI>;
 
-      const ABCDEFGH_ABCDEFGHI = t.merge(ABCDEFGH, ABCDEFGHI);
+      const ABCDEFGH_ABCDEFGHI = ABCDEFGH.merge(ABCDEFGHI);
       type ABCDEFGH_ABCDEFGHI = t.Infer<typeof ABCDEFGH_ABCDEFGHI>;
       const result: ABCDEFGH_ABCDEFGHI = {} as unknown as ABCDEFGH_ABCDEFGHI;
 
@@ -159,7 +146,7 @@ describe('Type operations', () => {
       const RecB = t.obj(RecBDef);
       type RecB = t.Infer<typeof RecB>;
 
-      const RecA_ABCDEFGH_ABCDEFGHI = t.merge(RecA, ABCDEFGHI);
+      const RecA_ABCDEFGH_ABCDEFGHI = RecA.merge(ABCDEFGHI);
       type RecA_ABCDEFGH_ABCDEFGHI = t.Infer<typeof RecA_ABCDEFGH_ABCDEFGHI>;
 
       expect(RecA_ABCDEFGH_ABCDEFGHI.shape.recB.kind).toEqual('union');
@@ -180,11 +167,11 @@ describe('Type operations', () => {
         title: string
       });
 
-      const PersonInput = mapProps(Person, {
+      const PersonInput = Person.mapProps({
         name: p => p.default(''), // name is optional and will default to empty string
         age: p => asNumber.to(p), //age is coerced to a number and then passed to original age and verified > 10
         isActive: p => enumm('state', ['active', 'inactive']).to(p, x => x === 'active'), // expect enum then coerce to bool
-        address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') }) // nested objects work as well
+        address: p => p.mapProps({ street: p => p.where(x => x === '123 Main St.') }) // nested objects work as well
       });
 
       type PersonInput = t.Infer<typeof PersonInput>;
@@ -227,7 +214,7 @@ describe('Type operations', () => {
         name: string,
         age: number
       });
-      const PersonValidator2 = mapProps(Person2, {
+      const PersonValidator2 = Person2.mapProps({
         name: p => p.opt(), //name is now optional
         age: p => p.where(x => x > 10) // age now must be greater than 10
       });
@@ -249,37 +236,37 @@ describe('Type operations', () => {
       const H = t.obj({ prop: t.number, propH: t.string, g: G });
       const I = t.obj({ prop: t.number, propI: t.string, h: H });
 
-      const AB = t.mapProps(A, {
+      const AB = A.mapProps({
         prop: p => p.tweak(x => x + 1),
-        sub: p => mapProps(p, { prop: p => obj({ a: p }) })
+        sub: p => p.mapProps({ prop: p => obj({ a: p }) })
       });
-      const ABC = t.mapProps(AB, {
+      const ABC = AB.mapProps({
         prop: p => p.tweak(x => x + 1),
-        sub: p => mapProps(p, { prop: p => obj({ b: p }) })
+        sub: p => p.mapProps({ prop: p => obj({ b: p }) })
       });
-      const ABCD = t.mapProps(ABC, {
+      const ABCD = ABC.mapProps({
         prop: p => p.tweak(x => x + 1),
-        sub: p => mapProps(p, { prop: p => obj({ c: p }) })
+        sub: p => p.mapProps({ prop: p => obj({ c: p }) })
       });
-      const ABCDE = t.mapProps(ABCD, {
+      const ABCDE = ABCD.mapProps({
         prop: p => p.tweak(x => x + 1),
-        sub: p => mapProps(p, { prop: p => obj({ d: p }) })
+        sub: p => p.mapProps({ prop: p => obj({ d: p }) })
       });
-      const ABCDEF = t.mapProps(ABCDE, {
+      const ABCDEF = ABCDE.mapProps({
         prop: p => p.tweak(x => x + 1),
-        sub: p => mapProps(p, { prop: p => obj({ e: p }) })
+        sub: p => p.mapProps({ prop: p => obj({ e: p }) })
       });
-      const ABCDEFG = t.mapProps(ABCDEF, {
+      const ABCDEFG = ABCDEF.mapProps({
         prop: p => p.tweak(x => x + 1),
-        sub: p => mapProps(p, { prop: p => obj({ f: p }) })
+        sub: p => p.mapProps({ prop: p => obj({ f: p }) })
       });
-      const ABCDEFGH = t.mapProps(ABCDEFG, {
+      const ABCDEFGH = ABCDEFG.mapProps({
         prop: p => p.tweak(x => x + 1),
-        sub: p => mapProps(p, { prop: p => obj({ g: p }) })
+        sub: p => p.mapProps({ prop: p => obj({ g: p }) })
       });
-      const ABCDEFGHI = t.mapProps(ABCDEFGH, {
+      const ABCDEFGHI = ABCDEFGH.mapProps({
         prop: p => p.tweak(x => x + 1),
-        sub: p => mapProps(p, { prop: p => obj({ h: p }) })
+        sub: p => p.mapProps({ prop: p => obj({ h: p }) })
       });
 
       type AB = t.Infer<typeof A>;
@@ -291,7 +278,7 @@ describe('Type operations', () => {
       type ABCDEFGH = t.Infer<typeof ABCDEFGH>;
       type ABCDEFGHI = t.Infer<typeof ABCDEFGHI>;
 
-      const ABCDEFGH_ABCDEFGHI = t.merge(ABCDEFGH, ABCDEFGHI);
+      const ABCDEFGH_ABCDEFGHI = ABCDEFGH.merge(ABCDEFGHI);
       type ABCDEFGH_ABCDEFGHI = t.Infer<typeof ABCDEFGH_ABCDEFGHI>;
       const result: ABCDEFGH_ABCDEFGHI = {} as unknown as ABCDEFGH_ABCDEFGHI;
 
@@ -316,7 +303,7 @@ describe('Type operations', () => {
       const RecB = t.obj(RecBDef);
       type RecB = t.Infer<typeof RecB>;
 
-      const RecA_ABCDEFGH_ABCDEFGHI = t.mapProps(RecA, { recB: p => p.where(x => x?.recA.strProp === '123') });
+      const RecA_ABCDEFGH_ABCDEFGHI = RecA.mapProps({ recB: p => p.where(x => x?.recA.strProp === '123') });
       type RecA_ABCDEFGH_ABCDEFGHI = t.Infer<typeof RecA_ABCDEFGH_ABCDEFGHI>;
 
       expect(
@@ -336,11 +323,11 @@ describe('Type operations', () => {
         title: string
       });
 
-      const Result = mapPickedProps(Person, {
+      const Result = Person.mapPickedProps({
         name: p => p.opt(),
         age: p => p.to(asString),
         isActive: p => p.where(x => x === true),
-        address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') })
+        address: p => p.mapProps({ street: p => p.where(x => x === '123 Main St.') })
       });
 
       type Result = t.Infer<typeof Result>;
@@ -373,10 +360,11 @@ describe('Type operations', () => {
       }
     });
   });
+
   describe('partial()', () => {
     it('makes required properites into optionals', () => {
       const target = t.obj({ prop: t.string, prop3: t.record(t.string, t.number) });
-      const Result = t.partial(target);
+      const Result = target.partial();
       type Result = t.Infer<typeof Result>;
 
       const ExpectedDefinition = t.obj({ prop: t.string.opt(), prop3: t.union(t.record(t.string, t.number), t.undef) });
@@ -395,7 +383,7 @@ describe('Type operations', () => {
 
     it('allows me to pick subset of properties', () => {
       const target = t.obj({ prop0: t.string, prop1: t.number, prop2: t.bigint, prop3: t.record(t.string, t.number) });
-      const Result = t.partial(target, ...getKeys({ prop0: 1, prop1: 1, prop3: 1 }));
+      const Result = target.partial(...getKeys({ prop0: 1, prop1: 1, prop3: 1 }));
       type Result = t.Infer<typeof Result>;
 
       const ExpectedDefinition = t.obj({
@@ -420,7 +408,7 @@ describe('Type operations', () => {
     it('is shallow', () => {
       const nestedObj = t.obj({ prop: t.bigint });
       const target = t.obj({ prop: t.string, nested: nestedObj });
-      const Result = t.partial(target);
+      const Result = target.partial();
       type Result = t.Infer<typeof Result>;
 
       const ExpectedResult = t.obj({
@@ -444,7 +432,7 @@ describe('Type operations', () => {
   describe('required()', () => {
     it('makes optional properites into required properties', () => {
       const target = t.obj({ optProp: t.string.opt(), normalProp: t.number });
-      const result = t.required(target);
+      const result = target.required();
       type result = t.Resolve<typeof result>;
       type Result = t.Infer<typeof result>;
 
@@ -462,7 +450,7 @@ describe('Type operations', () => {
 
     it('allows me to pick a subset of properites into required properties', () => {
       const target = t.obj({ prop0: t.string.opt(), prop1: t.number, prop3: t.bigint.opt() });
-      const result = t.required(target, ...getKeys({ prop3: 1 }));
+      const result = target.required(...getKeys({ prop3: 1 }));
       type result = t.Resolve<typeof result>;
       type Result = t.Infer<typeof result>;
 
@@ -481,7 +469,7 @@ describe('Type operations', () => {
     it('is shallow', () => {
       const nestedObj = t.obj({ prop: t.bigint.opt() });
       const target = t.obj({ prop: t.string.opt(), nested: nestedObj.opt() });
-      const result = t.required(target);
+      const result = target.required();
       type Result = t.Infer<typeof result>;
 
       const ExpectedResult = t.obj({
@@ -552,8 +540,8 @@ describe('Type operations', () => {
   describe('pick()', () => {
     it('selects correct properties', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
-      const result = t.pick(target, 'prop0');
-      const resultadf = t.pick(target, ...getKeys({ prop0: true, prop1: 1 }));
+      const result = target.pick('prop0');
+      const resultadf = target.pick(...getKeys({ prop0: true, prop1: 1 }));
       type ResultTsType = t.Infer<typeof result>;
       expect(result.shape.prop0).toEqual(t.string);
       expect(result.shape).not.toHaveProperty('prop1');
@@ -561,7 +549,7 @@ describe('Type operations', () => {
 
     it('selects correct properties with getKeys', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
-      const result = t.pick(target, ...getKeys({ prop1: 1 }));
+      const result = target.pick(...getKeys({ prop1: 1 }));
       type ResultTsType = t.Infer<typeof result>;
       expect(result.shape.prop1).toEqual(t.bigint);
       expect(result.shape).not.toHaveProperty('prop0');
@@ -571,7 +559,7 @@ describe('Type operations', () => {
   describe('omit()', () => {
     it('removes correct properties', () => {
       const target = t.obj({ prop0: t.string, prop1: t.bigint });
-      const Result = t.omit(target, 'prop0');
+      const Result = target.omit('prop0');
       type Result = t.Infer<typeof Result>;
 
       expectType<TypeEqual<Result, { prop1: bigint }>>(true);

@@ -9,19 +9,25 @@ import {
   EVIL_PROTO,
   fail,
   failInvalidType,
+  flatExcludeKinds,
   isBasicObject,
   pass,
   propertyMap,
   Typ,
+  undef,
+  union,
   type _type,
   type Constructor,
+  type ExcludeFlattenedType,
   type MakeUndefinedOptional,
   type ObjectKeyMap,
   type ParseError,
   type ParseResult,
   type PropertyErrorMap,
   type Resolve,
-  type Type
+  type Type,
+  type UndefinedT,
+  type UnionType
 } from '.';
 
 export interface ObjTypShape {
@@ -53,6 +59,26 @@ function addPropertyError(map: PropertyErrorMap | undefined, key: PropertyKey, e
   map.set(key, error);
   return map;
 }
+
+export type Extend<TA, TB> = Resolve<Omit<TA, keyof TB> & TB>;
+
+type ShapeRemapper<T> = {
+  [P in keyof T]: (x: Exclude<T[P], undefined>) => Typ<unknown, unknown, unknown>;
+};
+
+type ShapeRemapperResult<T> = {
+  [P in keyof T]: T[P] extends (...args: any) => infer R ? R : never;
+};
+
+export type PartialType<T> = {
+  [P in keyof T]: T[P] extends Typ<unknown, unknown>
+    ? UnionType<[T[P], UndefinedT], T[P][typeof _type] | undefined>
+    : never;
+};
+
+type RequiredType<T> = {
+  [P in keyof T]: T[P] extends Typ<unknown, unknown> ? ExcludeFlattenedType<T[P], [UndefinedT]> : never;
+};
 
 export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   private _k?: ObjectKeyMap<TShape>;
@@ -139,6 +165,101 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
       }
     }
     return errorMap === undefined ? pass(result) : fail({ kind: 'object', errors: errorMap });
+  }
+
+  mapProps<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
+    remapShape: TRemapper
+  ): ShapeDefinitionToObjType<Extend<TShape, ShapeRemapperResult<TRemapper>>> {
+    const resultShape = { ...this.shape } as any;
+    for (const key of Reflect.ownKeys(remapShape)) {
+      resultShape[key] = (remapShape as any)[key]((this.shape as any)[key]);
+    }
+
+    return obj(resultShape) as any;
+  }
+
+  mapPickedProps<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
+    remapShape: TRemapper
+  ): ShapeDefinitionToObjType<ShapeRemapperResult<TRemapper>> {
+    const resultShape = this.pickProps(Reflect.ownKeys(remapShape) as any) as any;
+
+    for (const key of Reflect.ownKeys(remapShape)) {
+      resultShape[key] = (remapShape as any)[key]((this.shape as any)[key]);
+    }
+
+    return obj(resultShape) as any;
+  }
+
+  //TODO: figure out why this resolve is required for assignment checks in the unit test
+  merge<TObjB extends ObjType<unknown, unknown>>(
+    objB: TObjB
+  ): ObjType<Extend<TShape, TObjB['shape']>, Extend<T, TObjB[typeof _type]>> {
+    return obj({ ...this.shape, ...(objB as any).shape }, undefined, objB.propertyPolicy) as any;
+  }
+
+  //TODO: figure out why this resolve is required for assignment checks in the unit test
+  extend<
+    TShapeDefinition extends ObjShapeDefinition,
+    TObjB extends ObjType<unknown, unknown> = ShapeDefinitionToObjType<TShapeDefinition>
+  >(shape: TShapeDefinition): ObjType<Extend<TShape, TObjB['shape']>, Extend<T, TObjB[typeof _type]>> {
+    return obj({ ...this.shape, ...shape }) as any;
+  }
+
+  pick<K extends keyof TShape & keyof T>(...keys: Array<K>): ObjType<Pick<TShape, K>, Pick<T, K>> {
+    const result = this.pickProps(keys);
+
+    return obj(result as any) as unknown as ObjType<Pick<TShape, K>, Pick<T, K>>;
+  }
+
+  pickProps<K extends keyof TShape & keyof T>(keys: K[]): Pick<TShape, K> {
+    const result = {} as Pick<TShape, K>;
+
+    for (const key of keys) {
+      result[key] = this.shape[key];
+    }
+    return result;
+  }
+
+  omit<K extends keyof TShape & keyof T>(...keys: Array<K>): ObjType<Omit<TShape, K>, Omit<T, K>> {
+    const result = { ...this.shape };
+
+    for (const key of keys) {
+      delete result[key];
+    }
+
+    //TODO: should strictness be preserved?
+    return obj(result as any) as any;
+  }
+
+  //TODO: add object pick syntax for {a: 1, b: 1}
+  partial(): ObjType<PartialType<TShape>, Partial<T>>;
+  partial<K extends keyof TShape & keyof T>(
+    ...keys: Array<K>
+  ): ObjType<Extend<TShape, PartialType<Pick<TShape, K>>>, Extend<T, Partial<Pick<T, K>>>>;
+  partial<TShape, K extends keyof TShape & keyof T, T>(...keys: Array<K>): ObjType<PartialType<TShape>, Partial<T>> {
+    const result = {} as ObjTypShape;
+    const source = (keys.length === 0 ? this.shape : this.pickProps(keys as any)) as ObjTypShape;
+
+    for (const key of Reflect.ownKeys(source)) {
+      result[key] = union(source[key] as any, undef);
+    }
+
+    return obj({ ...this.shape, ...result }) as any;
+  }
+
+  required(): ObjType<RequiredType<TShape>, Required<T>>;
+  required<K extends keyof TShape & keyof T>(
+    ...keys: Array<K>
+  ): ObjType<Extend<TShape, RequiredType<Pick<TShape, K>>>, Extend<T, Required<Pick<T, K>>>>;
+  required<K extends keyof TShape & keyof T, T>(...keys: Array<K>): ObjType<RequiredType<TShape>, Required<T>> {
+    const result = {} as ObjTypShape;
+    const source = (keys.length === 0 ? this.shape : this.pickProps(keys as any)) as ObjTypShape;
+
+    for (const key of Reflect.ownKeys(source)) {
+      result[key] = flatExcludeKinds(source[key] as any, undef);
+    }
+
+    return obj({ ...this.shape, ...result }) as any;
   }
 
   // areEqual(other: Typ<unknown, unknown>, cache: ComparisonCache): boolean {
