@@ -70,7 +70,7 @@ export class UnionType<TMembers, T> extends Typ<'union', TMembers, T> implements
   unwrap(): ExcludeType<TMembers, [Typ<'undefined', unknown, unknown>, Typ<'null', unknown, unknown>]> {
     return excludeKinds(this, undef, nul) as any;
   }
-
+  
   safeParse(value: unknown): ParseResult<T> {
     const errors: ParseError[] = [];
 

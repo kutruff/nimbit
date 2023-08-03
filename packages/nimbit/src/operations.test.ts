@@ -2,7 +2,20 @@
 import ts from 'typescript';
 
 import * as t from '.';
-import { asString, boolean, getKeys, mapPickedProps, mapProps, number, obj, string, type ParseResult } from '.';
+import {
+  asBoolean,
+  asNumber,
+  asString,
+  boolean,
+  enumm,
+  getKeys,
+  mapPickedProps,
+  mapProps,
+  number,
+  obj,
+  string,
+  type ParseResult
+} from '.';
 import { expectType, expectTypesSupportAssignment, type TypeEqual, type TypeOf } from './test/utilities';
 
 describe('Type operations', () => {
@@ -161,33 +174,33 @@ describe('Type operations', () => {
     it('remaps properties', () => {
       const Person = obj({
         name: string,
-        age: number,
+        age: number.where(x => x > 10),
         isActive: boolean,
         address: obj({ street: string, city: string }),
         title: string
       });
 
-      const Result = mapProps(Person, {
-        name: p => p.opt(),
-        age: p => p.to(asString),
-        isActive: p => p.where(x => x === true),
-        address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') })
+      const PersonInput = mapProps(Person, {
+        name: p => p.default(''), // name is optional and will default to empty string
+        age: p => asNumber.to(p), //age is coerced to a number and then passed to original age and verified > 10
+        isActive: p => enumm('state', ['active', 'inactive']).to(p, x => x === 'active'), // expect enum then coerce to bool
+        address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') }) // nested objects work as well
       });
-      type Result = t.Infer<typeof Result>;
+
+      type PersonInput = t.Infer<typeof PersonInput>;
       const Expected = obj({
-        name: string.opt(),
-        age: number.to(asString),
-        isActive: boolean.where(x => x === true),
+        name: string.default(''),
+        age: number,
+        isActive: boolean,
         address: obj({ street: string.where(x => x === '123 Main St.'), city: string }),
         title: Person.shape.title
       });
 
-      expectType<TypeEqual<typeof Result, typeof Expected>>(true);
+      expectType<TypeEqual<typeof PersonInput, typeof Expected>>(true);
 
-      const validParseResult = Result.safeParse({
-        name: undefined,
-        age: 42,
-        isActive: true,
+      const validParseResult = PersonInput.safeParse({
+        age: '42',
+        isActive: 'active',
         title: 'Mr.',
         address: { street: '123 Main St.', city: 'Anytown' }
       });
@@ -195,22 +208,33 @@ describe('Type operations', () => {
 
       if (validParseResult.success) {
         expect(validParseResult.data).toEqual({
-          name: undefined,
-          age: '42',
+          name: '',
+          age: 42,
           isActive: true,
           title: 'Mr.',
           address: { street: '123 Main St.', city: 'Anytown' }
         });
       }
 
-      const invalidParseResult = Result.safeParse({
-        name: undefined,
+      const invalidParseResult = PersonInput.safeParse({
+        name: '',
         age: 42,
-        isActive: true,
+        isActive: 'active',
         title: 'Mr.',
         address: { street: 'wrong address', city: 'Anytown' }
       });
-
+      const Person2 = obj({
+        name: string,
+        age: number
+      });
+      const PersonValidator2 = mapProps(Person2, {
+        name: p => p.opt(), //name is now optional
+        age: p => p.where(x => x > 10) // age now must be greater than 10
+      });
+      PersonValidator2.parse({ age: 42 }); // { age: 42 }
+      PersonValidator2.parse({ name: 'Bob', age: 42 }); // { name: 'Bob', age: 42 }
+      expect(PersonValidator2.safeParse({ name: 'Bob', age: 9 }).success).toEqual(false); // fail: age must be greater than 10
+      type PersonValidator2 = t.Infer<typeof PersonValidator2>;
       expect(invalidParseResult.success).toEqual(false);
     });
 

@@ -20,16 +20,16 @@
 <!--
 [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@latest?label=size)](https://bundlephobia.com/result?p=nimbit@latest) -->
 
-
 ```bash
 npm install nimbit
 ```
 
 Nimbit is an evolution of Zod's excellent design, and has all the best parts of Zod with a bunch of improvements.
 
-|                                       [Nimbit](https://github.com/kutruff/nimbit)                                       |                                     [Zod](https://github.com/colinhacks/zod)                                      |
-| :---------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
+|                                             [Nimbit](https://github.com/kutruff/nimbit)                                             |                                     [Zod](https://github.com/colinhacks/zod)                                      |
+| :---------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
 | [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@0.5.1?label=size)](https://bundlephobia.com/result?p=nimbit@0.5.1) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
+
     ✅ Super tiny footprint.
     ✅ Less noise in your code - no longer need parenthesis everywhere.
     ✅ Reflection/introspection always guaranteed.
@@ -38,10 +38,9 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
     ✅ Coercion and pipelining are streamlined.
     ✅ Everything is pushed to userland as much as possible.
 
-**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapprops), [`mapPickedProps()`](#mappickedprops) 
+**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapprops), [`mapPickedProps()`](#mappickedprops)
 
-Nimbit is in alpha.
-
+Nimbit is open for feedback and is approaching 1.0.
 
 <!-- ## Library Features and Comparison
 
@@ -98,13 +97,13 @@ The documentation here is a modified snap of Zod's documentation to help compare
     - [`.kind`](#kind)
     - [`.name` / `withName()`](#name--withname)
 - [Manipulating Types](#manipulating-types)
-  * [`mapProps()`](#mapprops)
-  * [`mapPickedProps()`](#mappickedprops)
-  - [`extend()`](#extend)
-  - [`merge()`](#merge)
-  - [`pick()/omit()`](#pickomit)
-  - [`partial()`](#partial)
-  - [`required()`](#required)
+  - [`mapProps()`](#mapprops)
+  - [`mapPickedProps()`](#mappickedprops)
+  * [`extend()`](#extend)
+  * [`merge()`](#merge)
+  * [`pick()/omit()`](#pickomit)
+  * [`partial()`](#partial)
+  * [`required()`](#required)
 - [Literals](#literals)
 - [Enums](#enums)
 - [Native enums](#native-enums)
@@ -721,50 +720,101 @@ Dog.name; // => 'Dog'
 
 ### `mapProps()`
 
-You can use `mapProps()` to base a new type on an existing type's properties. This is very useful for adding validations on an existing type and building up validations and transformations from simpler types.
+You can use `mapProps()` to add validations and coercions to existing types. This makes it natural to validate inputs with the goal of reaching an underlying model type.
 
-Simply supply an object with properties of the same name as your existing type. Each property is a function that is passed the existing property on the same type. You can then add whatever validations you wish to the property or you may even override it completely.
+Given a source type, pass an object with properties  mapping function for the properties on the source type. Each property is a function that is passed the existing property from the source type. You can then add whatever validations you wish to the property or you may even override it completely.
 
 Note that any properties not specified in the object will be copied over as is. If you wish to remove a property, you can use `mapPickedProps()`.
 
 ```ts
 const Person = obj({
   name: string,
-  age: number,
+  age: number
+});
+
+//Lets add some validations to Person
+const PersonInput = mapProps(Person, {
+  name: p => p.opt(), //name is now optional
+  age: p => p.where(x => x > 10) // age now must be greater than 10
+});
+
+PersonInput.parse({ age: 42 }); // { age: 42 }
+PersonInput.parse({ name: 'Bob', age: 42 }); // { name: 'Bob', age: 42 }
+PersonInput.parse({ name: 'Bob', age: 9 }); // fail: age must be greater than 10
+
+type PersonInput = Infer<typeof PersonInput>;
+// {
+//     name?: string | undefined;
+//     age: number;
+// }
+```
+
+Here's a more complex example. Notice that we put an validator on age and we still want that validation to execute.
+
+```ts
+const Person = obj({
+  name: string,
+  age: number.where(x => x > 0), //An existing validation
   isActive: boolean,
   address: obj({ street: string, city: string }),
   title: string
 });
 
-const PersonValidator = mapProps(Person, {
-  name: p => p.opt(), //name is now optional
-  age: p => p.to(asString), //age will be coerced to a string
-  isActive: p => p.where(x => x === true),
-  address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') })
+const PersonInput = mapProps(Person, {
+  name: p => p.default(''), //name will default to empty string
+  age: p => asNumber.to(p), //age is coerced to a number and then passed to original age and verified > 10
+  isActive: p => enumm('state', ['active', 'inactive']).to(p, x => x === 'active'), //enum coerced to bool
+  address: p => mapProps(p, { street: p => p.where(x => x === '123 Main St.') }) // nested objects work as well
 });
-type PersonValidator = Infer<typeof PersonValidator>;
+
+type PersonInput = Infer<typeof PersonValidator>;
+// type PersonInput = {
+//     name: string;
+//     isActive: boolean;
+//     title: string;
+//     age: number;
+//     address: {
+//         street: string;
+//         city: string;
+//     };
+// }
+
+const result = PersonInput.parse({
+  age: '42',
+  isActive: 'active',
+  title: 'Mr.',
+  address: { street: '123 Main St.', city: 'Anytown' }
+});
+// success: true
+// {
+//   name: '',
+//   age: 42,
+//   isActive: true,
+//   title: 'Mr.',
+//   address: { street: '123 Main St.', city: 'Anytown' }
+// }
 ```
 
-Notice that the `title` property is not mentioned in the arguments. It will be copied over.
+Notice that the `title` property is not mentioned in the arguments. It will be copied over from `Person` as is.
 
-The above is equivalent to:
+The example above is equivalent to:
 
 ```ts
-const p = Person.shape;
-const pa = Person.shape.address.shape;
+const person = Person.shape;
+const address = Person.shape.address.shape;
 
 const personVerifierWithShape = obj({
-  ...p,
-  name: p.name.opt(),
-  age: p.age.to(t.asString),
-  isActive: p.isActive.where(x => x === true),
-  address: obj({ ...pa, street: pa.street.where(x => x === '123 Main St.') })
+  ...person,
+  name: person.name.default(''),
+  age: asNumber.to(person.age),
+  isActive: enumm('state', ['active', 'inactive']).to(person.isActive, x => x === 'active'),
+  address: obj({ ...address, street: address.street.where(x => x === '123 Main St.') })
 });
 ```
 
 ### `mapPickedProps()`
 
-`mapPickedProps()` behaves exactly like `mapProps()` except properties that only the properties in the mapping object will be included in the type. The rest of the properties on the original type will be omitted.
+`mapPickedProps()` behaves exactly like `mapProps()` except the properties that you don't mention will be omitted from the output type
 
 This is a great and safe way to validate API requests without having to repeat property names and keeping types in sync with your underlying data model.
 
@@ -778,6 +828,11 @@ const ChangeNameRequest = mapPickedProps(Person, {
   name: p => p.where(x => x !== '')
 });
 ChangeNameRequest.parse({ name: 'Bob', age: 42 }); // { name: 'Bob' }
+
+const ChangeAgeRequest = mapPickedProps(Person, {
+  name: p => asNumber.to(p);
+});
+ChangeAgeRequest.parse({ '42' }); // { age: 42 }
 ```
 
 ### `extend()`
