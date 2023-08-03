@@ -223,6 +223,20 @@ describe('Type operations', () => {
       expect(PersonValidator2.safeParse({ name: 'Bob', age: 9 }).success).toEqual(false); // fail: age must be greater than 10
       type PersonValidator2 = t.Infer<typeof PersonValidator2>;
       expect(invalidParseResult.success).toEqual(false);
+
+      // The shape is mapped
+      const PersonInputShape = Person.mapShape({
+        name: p => boolean
+      });
+
+      //Now to get an object
+      const PersonInputMapped = obj(PersonInputShape)
+      type PersonInputMapped = t.Infer<typeof PersonInputMapped>;
+      const PersonInputShapePicked = Person.mapShapePicked({
+        name: p => number
+      });
+      const PersonInputMapPicked = obj(PersonInputShapePicked)
+      type PersonInputMapPicked = t.Infer<typeof PersonInputMapPicked>;
     });
 
     it('supports many types without TypeScript dying', () => {
@@ -313,7 +327,7 @@ describe('Type operations', () => {
     });
   });
 
-  describe('mapPickedProps()', () => {
+  describe('mapPropsPicked()', () => {
     it('remaps properties and removes unpicked properties', () => {
       const Person = obj({
         name: string,
@@ -323,7 +337,7 @@ describe('Type operations', () => {
         title: string
       });
 
-      const Result = Person.mapPickedProps({
+      const Result = Person.mapPropsPicked({
         name: p => p.opt(),
         age: p => p.to(asString),
         isActive: p => p.where(x => x === true),

@@ -88,7 +88,11 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   }
   catchallType?: Typ<unknown, unknown, unknown>;
 
-  constructor(shape: TShape, name?: string, public propertyPolicy?: PropPolicy) {
+  constructor(
+    shape: TShape,
+    name?: string,
+    public propertyPolicy?: PropPolicy
+  ) {
     super('object', shape, name);
   }
 
@@ -170,17 +174,29 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   mapProps<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
     remapShape: TRemapper
   ): ShapeDefinitionToObjType<Extend<TShape, ShapeRemapperResult<TRemapper>>> {
+    return obj(this.mapShape(remapShape) as any) as any;
+  }
+
+  mapShape<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
+    remapShape: TRemapper
+  ): Extend<TShape, ShapeRemapperResult<TRemapper>> {
     const resultShape = { ...this.shape } as any;
     for (const key of Reflect.ownKeys(remapShape)) {
       resultShape[key] = (remapShape as any)[key]((this.shape as any)[key]);
     }
 
-    return obj(resultShape) as any;
+    return resultShape;
   }
 
-  mapPickedProps<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
+  mapPropsPicked<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
     remapShape: TRemapper
   ): ShapeDefinitionToObjType<ShapeRemapperResult<TRemapper>> {
+    return obj(this.mapShapePicked(remapShape) as any) as any;
+  }
+
+  mapShapePicked<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
+    remapShape: TRemapper
+  ): ShapeRemapperResult<TRemapper> {
     const resultShape = this.pickProps(Reflect.ownKeys(remapShape) as any) as any;
 
     for (const key of Reflect.ownKeys(remapShape)) {

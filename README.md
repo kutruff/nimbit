@@ -4,7 +4,7 @@
     Ultra-tiny TypeScript schema validation with static type inference and guaranteed reflection.
   </p>
   <p align="center">            
-    <a href="https://bundlephobia.com/result?p=nimbit@0.6.1"><img src="https://img.shields.io/bundlephobia/minzip/nimbit@0.6.1?label=size"" alt="Nimbit Size" /></a>
+    <a href="https://bundlephobia.com/result?p=nimbit@0.7.0"><img src="https://img.shields.io/bundlephobia/minzip/nimbit@0.7.0?label=size"" alt="Nimbit Size" /></a>
     <a href="https://github.com/kutruff/nimbit/actions?query=branch%3Amain"><img src="https://github.com/kutruff/nimbit/actions/workflows/ci.yml/badge.svg?event=push&branch=main" alt="Nimbit CI status" /></a>
   </p>
 </p>
@@ -28,7 +28,7 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
 
 |                                             [Nimbit](https://github.com/kutruff/nimbit)                                             |                                     [Zod](https://github.com/colinhacks/zod)                                      |
 | :---------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
-| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@0.6.1?label=size)](https://bundlephobia.com/result?p=nimbit@0.6.1) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
+| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@0.7.0?label=size)](https://bundlephobia.com/result?p=nimbit@0.7.0) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
 
     ✅ Super tiny footprint.
     ✅ Less noise in your code - no longer need parenthesis everywhere.
@@ -38,7 +38,7 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
     ✅ Coercion and pipelining are streamlined.
     ✅ Everything is pushed to userland as much as possible.
 
-**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapprops), [`mapPickedProps()`](#mappickedprops)
+**TLDR;** Zod differentiators: [Recursive Objects](#recursive-objects), [Objects](#objects), [`to()`](#to-for-user-defined-coercion-and-parsing), [`mapProps()`](#mapprops), [`mapPropsPicked()`](#mapPropsPicked)
 
 Nimbit is open for feedback and is approaching 1.0.
 
@@ -80,7 +80,8 @@ The documentation here is a modified snap of Zod's documentation to help compare
   - [`.shape`](#shape)
   - [`.k`](#k)
   - [`.mapProps()`](#mapprops)
-  - [`.mapPickedProps()`](#mappickedprops)
+  - [`.mapPropsPicked()`](#mappropspicked)
+  - [`.mapShape()/.mapShapePicked()`](#mapshapemapshapepicked)
   * [`.extend()`](#extend)
   * [`.merge()`](#merge)
   * [`.pick()/.omit()`](#pickomit)
@@ -435,7 +436,7 @@ You can use `mapProps()` to add validations and coercions to existing types. Thi
 
 Given a source type, pass an object with properties mapping function for the properties on the source type. Each property is a function that is passed the existing property from the source type. You can then add whatever validations you wish to the property or you may even override it completely.
 
-Note that any properties not specified in the object will be copied over as is. If you wish to remove a property, you can use `mapPickedProps()`.
+Note that any properties not specified in the object will be copied over as is. If you wish to remove a property, you can use `mapPropsPicked()`.
 
 ```ts
 const Person = obj({
@@ -523,9 +524,9 @@ const personVerifierWithShape = obj({
 });
 ```
 
-### `.mapPickedProps()`
+### `.mapPropsPicked()`
 
-`mapPickedProps()` behaves exactly like `mapProps()` except the properties that you don't mention will be omitted from the output type
+`mapPropsPicked()` behaves exactly like `mapProps()` except the properties that you don't mention will be omitted from the output type
 
 This is a great and safe way to validate API requests without having to repeat property names and keeping types in sync with your underlying data model.
 
@@ -535,12 +536,12 @@ const Person = obj({
   age: number
 });
 
-const ChangeNameRequest = Person.mapPickedProps( {
+const ChangeNameRequest = Person.mapPropsPicked( {
   name: p => p.where(x => x !== '')
 });
 ChangeNameRequest.parse({ name: 'Bob', age: 42 }); // { name: 'Bob' }
 
-const ChangeAgeRequest = Person.mapPickedProps({
+const ChangeAgeRequest = Person.mapPropsPicked({
   name: p => asNumber.to(p);
 });
 ChangeAgeRequest.parse({ '42' }); // { age: 42 }
@@ -557,6 +558,20 @@ const DogWithBreed = Dog.extend({
 ```
 
 You can use `extend` to overwrite fields! Be careful with this power!
+
+### `.mapShape()/.mapShapePicked()`
+
+These are identical to `mapProps()` and `mapPropsPicked()` except they return only the shape of the mapped object. This is useful for providing ultimate flexibility.
+
+```ts
+// The shape is mapped
+const PersonInputShape = Person.mapShape({
+  name: p => p.where(x => x !== '')
+});
+
+//Now to get an object
+const PersonInput = obj(PersonInputShape);
+```
 
 ### `.merge()`
 
