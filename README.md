@@ -478,7 +478,7 @@ const PersonInput = Person.mapProps({
   address: p => p.mapProps({ street: p => p.where(x => x === '123 Main St.') }) // nested objects work as well
 });
 
-type PersonInput = Infer<typeof PersonValidator>;
+type PersonInput = Infer<typeof PersonInput>;
 // type PersonInput = {
 //     name: string;
 //     isActive: boolean;
