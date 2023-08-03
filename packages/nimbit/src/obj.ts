@@ -203,7 +203,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
       resultShape[key] = (remapShape as any)[key]((this.shape as any)[key]);
     }
 
-    return obj(resultShape) as any;
+    return resultShape as any;
   }
 
   //TODO: figure out why this resolve is required for assignment checks in the unit test
