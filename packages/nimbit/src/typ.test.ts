@@ -132,7 +132,7 @@ describe('Typ', () => {
 
       expect(result.success).toEqual(false);
       if (!result.success) {
-        console.log(t.formatError(result.error));
+        // console.log(t.formatError(result.error));
       }
     });
 

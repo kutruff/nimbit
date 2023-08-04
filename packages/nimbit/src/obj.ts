@@ -66,8 +66,12 @@ type ShapeRemapper<T> = {
   [P in keyof T]: (x: Exclude<T[P], undefined>) => Typ<unknown, unknown, unknown>;
 };
 
-type ShapeRemapperResult<T> = {
+type RemapperResult<T> = {
   [P in keyof T]: T[P] extends (...args: any) => infer R ? R : never;
+};
+
+type Remapper<T> = {
+  [P in keyof T]: (x: Exclude<T[P], undefined>) => unknown;
 };
 
 export type PartialType<T> = {
@@ -173,37 +177,26 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
 
   mapProps<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
     remapShape: TRemapper
-  ): ShapeDefinitionToObjType<Extend<TShape, ShapeRemapperResult<TRemapper>>> {
+  ): ShapeDefinitionToObjType<Extend<TShape, RemapperResult<TRemapper>>> {
     return obj(this.mapShape(remapShape) as any) as any;
   }
 
   mapShape<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
     remapShape: TRemapper
-  ): Extend<TShape, ShapeRemapperResult<TRemapper>> {
-    const resultShape = { ...this.shape } as any;
-    for (const key of Reflect.ownKeys(remapShape)) {
-      resultShape[key] = (remapShape as any)[key]((this.shape as any)[key]);
-    }
-
-    return resultShape;
+  ): Extend<TShape, RemapperResult<TRemapper>> {
+    return mapProps(this.shape, remapShape) as any;
   }
 
   mapPropsPicked<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
     remapShape: TRemapper
-  ): ShapeDefinitionToObjType<ShapeRemapperResult<TRemapper>> {
+  ): ShapeDefinitionToObjType<RemapperResult<TRemapper>> {
     return obj(this.mapShapePicked(remapShape) as any) as any;
   }
 
   mapShapePicked<TRemapper extends Partial<ShapeRemapper<TShape>> = Partial<ShapeRemapper<TShape>>>(
     remapShape: TRemapper
-  ): ShapeRemapperResult<TRemapper> {
-    const resultShape = this.pickProps(Reflect.ownKeys(remapShape) as any) as any;
-
-    for (const key of Reflect.ownKeys(remapShape)) {
-      resultShape[key] = (remapShape as any)[key]((this.shape as any)[key]);
-    }
-
-    return resultShape as any;
+  ): RemapperResult<TRemapper> {
+    return mapPropsPicked(this.shape, remapShape) as any;
   }
 
   //TODO: figure out why this resolve is required for assignment checks in the unit test
@@ -222,18 +215,9 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   }
 
   pick<K extends keyof TShape & keyof T>(...keys: Array<K>): ObjType<Pick<TShape, K>, Pick<T, K>> {
-    const result = this.pickProps(keys);
+    const result = pickProps(this.shape, keys as any);
 
     return obj(result as any) as unknown as ObjType<Pick<TShape, K>, Pick<T, K>>;
-  }
-
-  pickProps<K extends keyof TShape & keyof T>(keys: K[]): Pick<TShape, K> {
-    const result = {} as Pick<TShape, K>;
-
-    for (const key of keys) {
-      result[key] = this.shape[key];
-    }
-    return result;
   }
 
   omit<K extends keyof TShape & keyof T>(...keys: Array<K>): ObjType<Omit<TShape, K>, Omit<T, K>> {
@@ -254,7 +238,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   ): ObjType<Extend<TShape, PartialType<Pick<TShape, K>>>, Extend<T, Partial<Pick<T, K>>>>;
   partial<TShape, K extends keyof TShape & keyof T, T>(...keys: Array<K>): ObjType<PartialType<TShape>, Partial<T>> {
     const result = {} as ObjTypShape;
-    const source = (keys.length === 0 ? this.shape : this.pickProps(keys as any)) as ObjTypShape;
+    const source = (keys.length === 0 ? this.shape : pickProps(this.shape, keys as any)) as ObjTypShape;
 
     for (const key of Reflect.ownKeys(source)) {
       result[key] = union(source[key] as any, undef);
@@ -269,7 +253,7 @@ export class ObjType<TShape, T> extends Typ<'object', TShape, T> {
   ): ObjType<Extend<TShape, RequiredType<Pick<TShape, K>>>, Extend<T, Required<Pick<T, K>>>>;
   required<K extends keyof TShape & keyof T, T>(...keys: Array<K>): ObjType<RequiredType<TShape>, Required<T>> {
     const result = {} as ObjTypShape;
-    const source = (keys.length === 0 ? this.shape : this.pickProps(keys as any)) as ObjTypShape;
+    const source = (keys.length === 0 ? this.shape : pickProps(this.shape, keys as any)) as ObjTypShape;
 
     for (const key of Reflect.ownKeys(source)) {
       result[key] = flatExcludeKinds(source[key] as any, undef);
@@ -326,4 +310,38 @@ export function obj<TShapeDefinition extends ObjShapeDefinition>(
   }
   resultObj.shape = { ...shapeDefinition };
   return resultObj;
+}
+
+export function pickProps<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+
+  for (const key of keys) {
+    result[key] = obj[key];
+  }
+  return result;
+}
+
+export function mapProps<T, TRemapper extends Partial<Remapper<T>> = Partial<Remapper<T>>>(
+  obj: T,
+  remapper: TRemapper
+): Extend<T, RemapperResult<TRemapper>> {
+  const resultShape = { ...obj } as any;
+  for (const key of Reflect.ownKeys(remapper)) {
+    resultShape[key] = (remapper as any)[key]((obj as any)[key]);
+  }
+
+  return resultShape;
+}
+
+export function mapPropsPicked<T, TRemapper extends Partial<Remapper<T>> = Partial<Remapper<T>>>(
+  obj: T,
+  remapper: TRemapper
+): RemapperResult<TRemapper> {
+  const resultShape = pickProps(obj, Reflect.ownKeys(remapper) as any) as any;
+
+  for (const key of Reflect.ownKeys(remapper)) {
+    resultShape[key] = (remapper as any)[key]((obj as any)[key]);
+  }
+
+  return resultShape as any;
 }

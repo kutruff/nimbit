@@ -2,7 +2,19 @@
 import ts from 'typescript';
 
 import * as t from '.';
-import { asBoolean, asNumber, asString, boolean, enumm, getKeys, number, obj, string, type ParseResult } from '.';
+import {
+  asBoolean,
+  asNumber,
+  asString,
+  boolean,
+  enumm,
+  getKeys,
+  mapProps,
+  number,
+  obj,
+  string,
+  type ParseResult
+} from '.';
 import { expectType, expectTypesSupportAssignment, type TypeEqual, type TypeOf } from './test/utilities';
 
 describe('Type operations', () => {
@@ -157,6 +169,61 @@ describe('Type operations', () => {
     });
   });
 
+  describe('functional mapProps()', () => {
+    it('remaps properties', () => {
+      const target = {
+        name: 'hello',
+        age: 43,
+        sub: {
+          one: 'one',
+          two: 1n
+        },
+        title: 'there is no title'
+      };
+      const result = mapProps(target, {
+        name: p => p + ' world',
+        age: p => p + 1,
+        sub: p => mapProps(p, { one: p => p + 'hello', two: p => p + 1n })
+      });
+      expect(result).toEqual({
+        name: 'hello world',
+        age: 44,
+        sub: {
+          one: 'onehello',
+          two: 2n
+        },
+        title: 'there is no title'
+      });
+    });
+  });
+
+  describe('functional mapPropsPicked()', () => {
+    it('remaps properties but omits unmentioned', () => {
+      const target = {
+        name: 'hello',
+        age: 43,
+        sub: {
+          one: 'one',
+          two: 1n
+        },
+        title: 'there is no title'
+      };
+      const result = t.mapPropsPicked(target, {
+        name: p => p + ' world',
+        age: p => p + 1,
+        sub: p => mapProps(p, { one: p => p + 'hello', two: p => p + 1n })
+      });
+      expect(result).toEqual({
+        name: 'hello world',
+        age: 44,
+        sub: {
+          one: 'onehello',
+          two: 2n
+        }
+      });
+    });
+  });
+
   describe('mapProps()', () => {
     it('remaps properties', () => {
       const Person = obj({
@@ -179,11 +246,9 @@ describe('Type operations', () => {
         name: string.default(''),
         age: number,
         isActive: boolean,
-        address: obj({ street: string.where(x => x === '123 Main St.'), city: string }),
+        address: obj({ street: string, city: string }),
         title: Person.shape.title
       });
-
-      expectType<TypeEqual<typeof PersonInput, typeof Expected>>(true);
 
       const validParseResult = PersonInput.safeParse({
         age: '42',
@@ -192,6 +257,8 @@ describe('Type operations', () => {
         address: { street: '123 Main St.', city: 'Anytown' }
       });
       expect(validParseResult.success).toEqual(true);
+
+      expectType<TypeEqual<typeof PersonInput, typeof Expected>>(true);
 
       if (validParseResult.success) {
         expect(validParseResult.data).toEqual({
@@ -214,10 +281,12 @@ describe('Type operations', () => {
         name: string,
         age: number
       });
+
       const PersonValidator2 = Person2.mapProps({
         name: p => p.opt(), //name is now optional
         age: p => p.where(x => x > 10) // age now must be greater than 10
       });
+
       PersonValidator2.parse({ age: 42 }); // { age: 42 }
       PersonValidator2.parse({ name: 'Bob', age: 42 }); // { name: 'Bob', age: 42 }
       expect(PersonValidator2.safeParse({ name: 'Bob', age: 9 }).success).toEqual(false); // fail: age must be greater than 10
@@ -230,12 +299,12 @@ describe('Type operations', () => {
       });
 
       //Now to get an object
-      const PersonInputMapped = obj(PersonInputShape)
+      const PersonInputMapped = obj(PersonInputShape);
       type PersonInputMapped = t.Infer<typeof PersonInputMapped>;
       const PersonInputShapePicked = Person.mapShapePicked({
         name: p => number
       });
-      const PersonInputMapPicked = obj(PersonInputShapePicked)
+      const PersonInputMapPicked = obj(PersonInputShapePicked);
       type PersonInputMapPicked = t.Infer<typeof PersonInputMapPicked>;
     });
 
