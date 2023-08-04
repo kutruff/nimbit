@@ -275,7 +275,6 @@ describe('obj()', () => {
     expectTypesSupportAssignment<A, ExpectedAShape>();
 
     const result = A.strict().parse({ self: { self: {} } });
-    expect(result.success).toEqual(true);
   });
 
   it('recursive category example', () => {
@@ -302,7 +301,7 @@ describe('obj()', () => {
     }); // passes
 
     expect(result.success).toEqual(true);
-    if(result.success) {
+    if (result.success) {
       expect(result.data.subcategories[0]?.subcategories[0]?.name).toEqual('Presidents');
     }
   });

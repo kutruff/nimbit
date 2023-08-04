@@ -43,7 +43,11 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
   // otherwise we may just be able to use strict object equality and use the instance
   // hasBeenCustomized = false;
 
-  constructor(public kind: TKind, public shape: TShape, public name?: string) {}
+  constructor(
+    public kind: TKind,
+    public shape: TShape,
+    public name?: string
+  ) {}
 
   // errorMessageOnFail(value: T, opts: ParseOptions): string | undefined {
   //   return undefined;
@@ -78,10 +82,10 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
     return clone;
   }
 
-  parse(value: unknown): ParseResult<T> {
+  parse(value: unknown): T {
     const result = this.safeParse(value);
     if (result.success) {
-      return result;
+      return result.data;
     }
 
     throw result.error;
