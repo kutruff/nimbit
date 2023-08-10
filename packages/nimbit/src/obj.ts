@@ -343,5 +343,5 @@ export function mapPropsPicked<T, TRemapper extends Partial<Remapper<T>> = Parti
     resultShape[key] = (remapper as any)[key]((obj as any)[key]);
   }
 
-  return resultShape as any;
+  return resultShape;
 }

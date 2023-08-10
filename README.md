@@ -4,7 +4,7 @@
     Ultra-tiny TypeScript schema validation with static type inference and guaranteed reflection.
   </p>
   <p align="center">            
-    <a href="https://bundlephobia.com/result?p=nimbit@0.8.0"><img src="https://img.shields.io/bundlephobia/minzip/nimbit@0.8.0?label=size"" alt="Nimbit Size" /></a>
+    <a href="https://bundlephobia.com/result?p=nimbit@0.8.1"><img src="https://img.shields.io/bundlephobia/minzip/nimbit@0.8.1?label=size"" alt="Nimbit Size" /></a>
     <a href="https://github.com/kutruff/nimbit/actions?query=branch%3Amain"><img src="https://github.com/kutruff/nimbit/actions/workflows/ci.yml/badge.svg?event=push&branch=main" alt="Nimbit CI status" /></a>
   </p>
 </p>
@@ -28,7 +28,7 @@ Nimbit is an evolution of Zod's excellent design, and has all the best parts of 
 
 |                                             [Nimbit](https://github.com/kutruff/nimbit)                                             |                                     [Zod](https://github.com/colinhacks/zod)                                      |
 | :---------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
-| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@0.8.0?label=size)](https://bundlephobia.com/result?p=nimbit@0.8.0) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
+| [![Build Size](https://img.shields.io/bundlephobia/minzip/nimbit@0.8.1?label=size)](https://bundlephobia.com/result?p=nimbit@0.8.1) | [![Build Size](https://img.shields.io/bundlephobia/minzip/zod?label=size)](https://bundlephobia.com/result?p=zod) |
 
     ✅ Super tiny footprint.
     ✅ Less noise in your code - no longer need parenthesis everywhere.
@@ -464,46 +464,55 @@ type PersonInput = Infer<typeof PersonInput>;
 Here's a more complex example. Notice that we put an validator on age and we still want that validation to execute.
 
 ```ts
+const Address = obj({ street: string, zipcode: string }); //.where(x => x.length === 5) });
+
 const Person = obj({
   name: string,
   age: number.where(x => x > 0), //An existing validation
+  address: Address,
   isActive: boolean,
-  address: obj({ street: string, city: string }),
   title: string
 });
 
 const PersonInput = Person.mapProps({
   name: p => p.default(''), //name will default to empty string
-  age: p => asNumber.to(p), //age is coerced to a number and then passed to original age and verified > 10
-  isActive: p => enumm('state', ['active', 'inactive']).to(p, x => x === 'active'), //enum coerced to bool
-  address: p => p.mapProps({ street: p => p.where(x => x === '123 Main St.') }) // nested objects work as well
+  age: p => asNumber.to(p), //age is coerced to a number and then passed to original age and verified > 0
+  address: p =>
+    p.mapProps({
+      street: p => p.where(x => x.includes('St.')), //validate nested property
+      zipcode: p => number.to(asString).to(p) //require number but coerce to string and Address will verify length.
+    }),
+  isActive: p => enumm('state', ['active', 'inactive']).to(p, x => x === 'active') //enum coerced to bool
 });
-
 type PersonInput = Infer<typeof PersonInput>;
 // type PersonInput = {
-//     name: string;
-//     isActive: boolean;
-//     title: string;
-//     age: number;
-//     address: {
-//         street: string;
-//         city: string;
-//     };
+//   name: string;
+//   age: number;
+//   title: string;
+//   address: {
+//       street: string;
+//       zipcode: number;
+//   };
+//   isActive: boolean;
 // }
+// try {
 
 const result = PersonInput.parse({
   age: '42',
   isActive: 'active',
   title: 'Mr.',
-  address: { street: '123 Main St.', city: 'Anytown' }
+  address: { street: '123 Main St.', zipcode: 10101 }
 });
 // success: true
 // {
-//   name: '',
-//   age: 42,
-//   isActive: true,
-//   title: 'Mr.',
-//   address: { street: '123 Main St.', city: 'Anytown' }
+//   name: '',                   // string;
+//   age: 42,                    // number;
+//   title: 'Mr.',               // string;
+//   address: {
+//       street: '123 Main St.', // string;
+//       zipcode: '10101',       // string;
+//   },
+//   isActive: true              // boolean;
 // }
 ```
 
