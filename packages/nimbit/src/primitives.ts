@@ -5,12 +5,12 @@
 import { createType, failInvalidType, invalidTypeError, pass, to, Typ } from '.';
 
 export interface NullT extends Typ<'null', null, null> {}
-export const nul: NullT = createType('null', (value: null) =>
+export const nul: NullT = createType('null', (value: unknown) =>
   value === null ? pass(value) : failInvalidType('null', value)
 );
 
 export interface UndefinedT extends Typ<'undefined', undefined, undefined> {}
-export const undef: UndefinedT = createType('undefined', (value: undefined) =>
+export const undef: UndefinedT = createType('undefined', (value: unknown) =>
   value === undefined ? pass(value) : failInvalidType('undefined', value)
 );
 
@@ -50,7 +50,7 @@ export interface SymbolT extends Typ<'symbol', symbol, symbol> {}
 export const symbol: SymbolT = createType('symbol');
 
 export interface DateT extends Typ<'date', Date, Date> {}
-export const date: DateT = createType('date', (value: Date) =>
+export const date: DateT = createType('date', (value: unknown) =>
   value instanceof Date && !isNaN(value.getTime()) ? pass(value) : failInvalidType('date', value)
 );
 

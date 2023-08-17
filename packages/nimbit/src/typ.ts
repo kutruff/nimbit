@@ -187,11 +187,11 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
 
 export function createType<TKind extends string, TType>(
   kind: TKind,
-  safeParser?: (value: TType) => ParseResult<TType>
+  safeParser?: (value: unknown) => ParseResult<TType>
 ): Typ<TKind, TType, TType> {
   const instance = new Typ<TKind, TType, TType>(kind, undefined as TType, kind);
   instance.safeParse =
-    safeParser || ((value: TType) => (typeof value === kind ? pass(value) : failInvalidType(kind, value)));
+    safeParser || ((value: unknown) => (typeof value === kind ? pass(value as TType) : failInvalidType(kind, value)));
   return instance;
 }
 
