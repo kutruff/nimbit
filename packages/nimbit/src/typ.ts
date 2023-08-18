@@ -168,7 +168,7 @@ export class Typ<TKind = unknown, TShape = unknown, T = unknown> implements Type
       if (converter) {
         try {
           const convertedResult = converter(sourceResult.data);
-          if ((convertedResult as any)[_result] === 1) {
+          if (convertedResult && (convertedResult as any)[_result] === 1) {
             const asParseResult = convertedResult as ParseResult<unknown>;
             return asParseResult.success ? destinationParse(asParseResult.data) : asParseResult;
           } else {
